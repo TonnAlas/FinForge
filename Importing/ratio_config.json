@@ -1,0 +1,58 @@
+{
+  "high price ratio": {
+    "formula": "P: High Price",
+    "notes": ""
+  },
+  "growth": {
+    "formula": "= P: Change Percent [-10D]",
+    "notes": ""
+  },
+  "ratio-22": {
+    "formula": "= P: Close Price [-15D]",
+    "notes": ""
+  },
+  "TEST: Close Price": {
+    "formula": "P: Close Price",
+    "notes": "TJust some notes"
+  },
+  "TEST: Open Price": {
+    "formula": "P: Open Price",
+    "notes": "Test - Current open price"
+  },
+  "TEST: Low Price": {
+    "formula": "P: Low Price",
+    "notes": "Test - Current low price"
+  },
+  "TEST: Volume": {
+    "formula": "P: Volume",
+    "notes": "Test - Current volume"
+  },
+  "TEST: Dividends": {
+    "formula": "P: Dividends",
+    "notes": "Test - Current dividends"
+  },
+  "TEST: Stock Splits": {
+    "formula": "P: Stock Splits",
+    "notes": "Test - Current stock splits"
+  },
+  "TEST: Close 15D Ago": {
+    "formula": "= P: Close Price [-15D]",
+    "notes": "Test - Close price 15 trading days ago"
+  },
+  "TEST: High 30D Ago": {
+    "formula": "= P: High Price [-30D]",
+    "notes": "Test - High price 30 trading days ago"
+  },
+  "TEST: Change % 10D": {
+    "formula": "= P: Change Percent [-10D]",
+    "notes": "Test - Percent change vs 10 days ago"
+  },
+  "TEST: Change % 30D": {
+    "formula": "= P: Change Percent [-30D]",
+    "notes": "Test - Percent change vs 30 days ago"
+  },
+  "close price -10d": {
+    "formula": "= P: Close Price [-10D]",
+    "notes": ""
+  }
+}

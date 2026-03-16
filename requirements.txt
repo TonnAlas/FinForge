@@ -1,0 +1,25 @@
+# FinForge - Required Python Packages
+# Install with: pip install -r requirements.txt
+
+# Core Data Handling
+pandas>=2.0.0
+numpy>=1.24.0
+pyarrow>=15.0.0
+
+# Stock Data API
+yfinance>=0.2.40
+
+# Excel Integration
+xlwings>=0.30.0
+openpyxl>=3.1.0
+
+# GUI Framework
+PySide6>=6.5.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Web Framework (for optional web dashboard)
+# dash>=2.0.0
+# flask>=3.0.0
+# plotly>=5.0.0

@@ -1,0 +1,61 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+desktop.ini
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Excel temporary files
+~$*.xlsx
+~$*.xlsm
+~$*.xls
+
+# Logs
+*.log
+
+# Local configuration (if any)
+.env
+.env.local
+config.local.json
+
+# Temporary folder contents (keep the folder, ignore contents)
+Temporary/*
+!Temporary/.gitkeep
+
+# User data (optional - uncomment if you want to exclude user data)
+# data/prices/
+# data/fundamentals/
+# data/holders/
+# data/metadata/
+# data/tickers.json
+# data/pending_deletions.json
+
+# Backup files
+*.bak
+*.backup
+Backups/

@@ -1,6 +1,6 @@
 # FinForge Documentation
 
-Welcome to the FinForge documentation. This folder contains all guides and reference materials for using and developing the application.
+Welcome to the FinForge documentation. This folder contains guides and reference materials for using the application.
 
 ---
 
@@ -9,8 +9,7 @@ Welcome to the FinForge documentation. This folder contains all guides and refer
 ```
 Guides/
 ├── README.md          ← You are here
-├── User/              ← End-user documentation
-└── Developer/         ← Technical documentation
+└── User/              ← End-user documentation
 ```
 
 ---
@@ -31,6 +30,7 @@ For day-to-day use of FinForge:
 | [08_Available_Data_Reference](User/08_Available_Data_Reference.md) | Complete list of available data fields |
 | [09_Color_Reference](User/09_Color_Reference.md) | Color scheme reference |
 | [10_Data_Cleanup](User/10_Data_Cleanup.md) | Automatic data cleanup system |
+| [11_Uninstalling_FinForge](User/11_Uninstalling_FinForge.md) | Reverse setup and remove environment components |
 
 ### Quick Start Path
 
@@ -70,5 +70,65 @@ For technical reference and development:
 | Import balance sheet | [Importing Data → Balance Sheets](User/03_Importing_Data.md#importing-balance-sheets) |
 | Create a ratio | [Creating Ratios → Your First Ratio](User/04_Creating_Ratios.md#creating-your-first-ratio) |
 | Assign ratio to column | [Assigning Ratios](User/05_Assigning_Ratios.md) |
-| See all available fields | [Available Data Reference](User/09_Available_Data_Reference.md) |
+| See all available fields | [Available Data Reference](User/08_Available_Data_Reference.md) |
 
+### Formula Examples
+
+| Ratio | Formula |
+|-------|---------|
+| Gross Margin | `(IS: Total Revenue - IS: Cost Of Revenue) / IS: Total Revenue` |
+| Current Ratio | `BS: Current Assets / BS: Current Liabilities` |
+| ROE | `IS: Net Income / BS: Stockholders Equity` |
+| Debt to Equity | `BS: Total Debt / BS: Stockholders Equity` |
+
+See [Creating Ratios](User/04_Creating_Ratios.md#formula-examples) for more examples.
+
+---
+
+## Application Overview
+
+### What is FinForge?
+
+A comprehensive financial analysis tool that:
+- **Fetches** real-time data from Yahoo Finance
+- **Stores** data efficiently in Parquet format
+- **Imports** financial statements into Excel
+- **Calculates** custom financial ratios
+- **Displays** analysis in an organized dashboard
+
+### Key Components
+
+| Component | Purpose |
+|-----------|---------|
+| FinForge Launcher | Main application entry point, ticker management |
+| Excel Dashboard | Display and analysis interface |
+| Ratio Maker | Create custom financial ratios |
+| Ratio Manager | Assign ratios to Excel columns |
+| Data Importer | Transfer data from Parquet to Excel |
+
+### Data Flow
+
+```
+Yahoo Finance API
+       ↓
+  Fetch Script (fetch_stocks.py)
+       ↓
+  Parquet Storage (data/ folder)
+       ↓
+  Import Scripts → Excel Sheets
+       ↓
+  Ratio Calculator → Ratios Sheet
+```
+
+---
+
+## Need Help?
+
+1. **Check the relevant guide** in the User folder
+2. **Search for keywords** in the guides
+3. **Check troubleshooting sections** at the end of each guide
+4. **Use the complete user guide** for a full walkthrough: [Complete User Guide](User/Complete_User_Guide.md)
+
+---
+
+*Last Updated: March 2026*

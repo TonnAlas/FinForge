@@ -33,9 +33,20 @@ A comprehensive financial analysis tool that fetches stock data from Yahoo Finan
 ### Quick Setup (Recommended)
 
 1. **Download** this repository (Code > Download ZIP) and extract it
-2. **Run** `setup.bat` by double-clicking it
-3. **Wait** for the setup to complete (installs all dependencies)
-4. **Done!** Launch the app with `launch_finforge.bat`
+2. **Move** the extracted folder to a short path (recommended: `C:\FinForge`)
+3. **Run** `setup.bat` by double-clicking it
+4. **Wait** for the setup to complete (installs all dependencies)
+5. **Done!** Launch the app with `launch_finforge.bat`
+
+### Uninstall
+
+To remove FinForge setup components from this folder, run:
+
+1. Double-click `uninstall.bat`
+2. Choose what to remove (virtual environment, xlwings setup, workbook, temp files)
+3. Wait for the uninstall summary
+
+This is designed to reverse setup changes without deleting source code.
 
 ### Manual Setup
 
@@ -93,6 +104,7 @@ FinForge/
 +-- FinForge.xlsm          # Main Excel workbook
 +-- launch_finforge.bat    # Quick launcher
 +-- setup.bat              # First-time setup
++-- uninstall.bat          # Uninstall wizard
 +-- requirements.txt       # Python dependencies
 +-- data/                  # Stock data storage
 |   +-- fundamentals/      # Financial statements
@@ -101,7 +113,6 @@ FinForge/
 |   +-- prices/            # Price history
 +-- Guides/                # Documentation
 |   +-- User/              # User guides
-|   +-- Developer/         # Technical docs
 +-- Internal/              # Core modules
 +-- Importing/             # Import scripts
 ```
@@ -115,7 +126,7 @@ See the [Guides](Guides/README.md) folder for detailed documentation:
 - [Getting Started](Guides/User/01_Getting_Started.md) - First-time setup
 - [Ticker Management](Guides/User/02_Ticker_Management.md) - Managing stocks
 - [Creating Ratios](Guides/User/04_Creating_Ratios.md) - Building custom ratios
-- [Available Data](Guides/User/09_Available_Data_Reference.md) - All available data fields
+- [Available Data](Guides/User/08_Available_Data_Reference.md) - All available data fields
 
 ---
 
@@ -131,6 +142,11 @@ For full functionality, you need to:
    - The setup script installs this automatically
    - If needed, run: `xlwings addin install`
 
+3. **Unblock the workbook file in Windows**
+   - Right-click `FinForge.xlsm` > **Properties** > **General** tab
+   - Under **Security**, check **Unblock** ("This file came from another computer and might be blocked")
+   - Click **Apply** and **OK** before launching from Excel
+
 ---
 
 ## Troubleshooting
@@ -143,9 +159,19 @@ For full functionality, you need to:
 - Run `setup.bat` again to reinstall dependencies
 - Or manually: `pip install -r requirements.txt`
 
+### "Could not install packages due to an OSError" (long path)
+- Move the project to a shorter folder path like `C:\FinForge`
+- Make sure the project is fully extracted before running `setup.bat` (do not run from inside a ZIP)
+- Enable Windows Long Paths (Group Policy or Registry `LongPathsEnabled=1`) and retry setup
+
 ### "Macros disabled in Excel"
 - Enable macros in Trust Center settings
 - Click "Enable Content" when opening the workbook
+
+### "Buttons/macros still blocked after setup"
+- Right-click `FinForge.xlsm` > Properties > General
+- Under Security, check **Unblock**, then click **Apply** and **OK**
+- Close and reopen Excel and the workbook
 
 ### Data not loading
 - Check your internet connection

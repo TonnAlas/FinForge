@@ -1,4 +1,4 @@
-# 🎨 Ratio Maker - Syntax Highlighting Color Reference
+# Ratio Maker - Syntax Highlighting Color Reference
 
 ## Color Palette
 

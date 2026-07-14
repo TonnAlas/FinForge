@@ -23,6 +23,15 @@ Before importing:
 
 ## Importing Balance Sheets
 
+### From the FinForge Terminal
+
+1. Open the FinForge home window
+2. Go to the Import tab
+3. Select the Balance sheet scope if needed
+4. Click `Import`
+
+The button saves the current selected line settings and runs the Python importer directly.
+
 ### From Excel (VBA Macro)
 
 1. Open `FinForge.xlsm`
@@ -35,7 +44,7 @@ Before importing:
 ### From Python
 
 ```powershell
-cd C:\Users\tonna\Desktop\Stocks
+cd <project-root>
 .\.venv\Scripts\Activate.ps1
 python -c "from Importing.import_balance_sheets import main; main()"
 ```
@@ -64,6 +73,15 @@ python -c "from Importing.import_balance_sheets import main; main()"
 
 ## Importing Income Statements
 
+### From the FinForge Terminal
+
+1. Open the FinForge home window
+2. Go to the Import tab
+3. Select the Income statement scope
+4. Click `Import`
+
+The button saves the current selected line settings and runs the Python importer directly.
+
 ### From Excel (VBA Macro)
 
 1. Open `FinForge.xlsm`
@@ -76,7 +94,7 @@ python -c "from Importing.import_balance_sheets import main; main()"
 ### From Python
 
 ```powershell
-cd C:\Users\tonna\Desktop\Stocks
+cd <project-root>
 .\.venv\Scripts\Activate.ps1
 python -c "from Importing.import_income_statements import main; main()"
 ```
@@ -85,11 +103,11 @@ python -c "from Importing.import_income_statements import main; main()"
 
 ## Customizing Which Items to Import
 
-### Using the Settings Sheet
+### Using the Settings File
 
-1. Go to the "Settings" sheet in Excel
-2. Find the section for Balance Sheet or Income Statement items
-3. List the items you want to import (one per row)
+1. Open `data/statement_settings.json`
+2. Edit the `balanceSheet.selected` or `incomeStatement.selected` array
+3. Save the file, or use the Import tab and click `Save`
 4. Run the import again
 
 **Example Settings:**

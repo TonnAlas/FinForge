@@ -1,16 +1,16 @@
-# 🎨 Ratio Maker - Quick Reference Card
+# Ratio Maker - Quick Reference Card
 
 ## Color Guide (At-a-Glance)
 
 ```
-🟠 Orange        →  Operators      →  + - * /
-🟡 Yellow        →  Brackets       →  ( )
-🟢 Green         →  IS: Items      →  Revenue, Net Income, EBITDA
-🔵 Light Blue    →  BS: Items      →  Total Assets, Cash, Debt
-🟣 Purple        →  P: Items       →  Closing Price, Volume
-🟡 Yellow-Orange →  Functions      →  AVERAGE, SUM, MAX, MIN
-🔵 Light Blue    →  Numbers        →  100, 1.5, 3.14
-🔴 Red + Wave    →  Errors         →  Typos, invalid fields
+Orange        ->  Operators      ->  + - * /
+Yellow        ->  Brackets       ->  ( )
+Green         ->  IS: Items      ->  Revenue, Net Income, EBITDA
+Light Blue    ->  BS: Items      ->  Total Assets, Cash, Debt
+Purple        ->  P:/CF: Items  ->  Closing Price, Free Cash Flow
+Yellow-Orange ->  Functions      ->  AVERAGE, SUM, MAX, MIN
+Light Blue    ->  Numbers        ->  100, 1.5, 3.14
+Red + Wave    ->  Errors         ->  Typos, invalid fields
 ```
 
 ---
@@ -64,13 +64,13 @@ BS: Current Assets - BS: Current Liabilities
 
 ## Error Detection
 
-### ✅ Valid
+### Valid
 ```
 IS: Revenue / IS: Cost of Revenue
 ```
 All green/blue, no red!
 
-### ❌ Invalid (Typos)
+### Invalid (Typos)
 ```
 IS: Reveneu / BS: Totl Assets
 ```
@@ -89,11 +89,11 @@ Red wavy underlines on typos!
 
 ## Pre-Save Checklist
 
-1. ✓ No red errors
-2. ✓ All fields are green/blue/purple
-3. ✓ Operators are orange/yellow
-4. ✓ Brackets match
-5. ✓ Formula makes sense
+1. No red errors
+2. All fields are green/blue/purple
+3. Operators are orange/yellow
+4. Brackets match
+5. Formula makes sense
 
 ---
 
@@ -101,11 +101,11 @@ Red wavy underlines on typos!
 
 | Action | How |
 |--------|-----|
-| Add field | Select → Insert Field |
+| Add field | Select then Insert Field |
 | Add operator | Click operator button |
-| Add function | Click 📊 Advanced Functions |
-| Add notes | Click 📝 Notes |
-| Save ratio | Click green Save |
+| Add function | Click Advanced Functions |
+| Add notes | Click Notes |
+| Save ratio | Click Save |
 | Cancel | Click Cancel |
 
 ---
@@ -140,10 +140,10 @@ AVERAGE(IS: Revenue, 50 periods)
 Look for this row above the formula preview:
 
 ```
-● Operators  ● Brackets  ● IS: Items  ● BS: Items  ● P: Items  ● Functions  ● Errors
+[Operators] [Brackets] [IS: Items] [BS: Items] [P: Items] [Functions] [Errors]
 ```
 
-Each bullet matches its color!
+Each label matches its color!
 
 ---
 
@@ -151,8 +151,8 @@ Each bullet matches its color!
 
 | Issue | Solution |
 |-------|----------|
-| No colors | Check PySide6 installed |
-| Everything red | Verify Excel file open & fields loaded |
+| No colors | Check PySide6 installed (Python mode) |
+| Everything red | Verify fields loaded correctly |
 | Button doesn't change | Toggle fraction checkbox |
 | Can't save | Fix red errors first |
 
@@ -161,25 +161,22 @@ Each bullet matches its color!
 ## File Locations
 
 - **Ratio Config**: `Importing/ratio_config.json`
-- **Main App**: `Importing/ratio_maker.py`
-- **Test Script**: `test_ratio_maker.py`
-- **Demo Script**: `demo_ratio_maker.py`
+- **Python App**: `Importing/ratio_maker.py`
+- **Electron App**: `ElectronHome/src/renderer.js` (Ratios tab)
 
 ---
 
 ## Documentation
 
-1. **Enhanced_Ratio_Maker_Guide.md** - Full feature guide
-2. **Color_Reference.md** - Complete color palette
-3. **Enhancement_Summary.md** - Technical details
+1. `06_Advanced_Ratio_Features.md` - Full feature guide
+2. `09_Color_Reference.md` - Complete color palette
+3. `04_Creating_Ratios.md` - Creating ratios guide
 
-All in `Guides/` folder!
+All in `Guides/User/` folder!
 
 ---
 
-**Version**: 2.0 Enhanced (Nov 2025)
+**Version**: Current
 **Theme**: Dark with VS Code colors
 **Layout**: Horizontal operators
 **Highlighting**: Real-time syntax colors
-
-*Keep this card handy for quick reference!* 📌

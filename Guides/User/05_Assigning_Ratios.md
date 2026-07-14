@@ -1,21 +1,20 @@
-# 📊 New Ratio Assignment System - User Guide
+# Ratio Assignment System - User Guide
 
 ## Overview
 A clean, efficient ratio management system with minimal VBA dependency. All logic is in Python for reliability and ease of maintenance.
 
 ---
 
-## 🎯 Key Features
+## Key Features
 
-### ✅ What You Can Do:
+### What You Can Do:
 1. **Assign Ratios**: Assign any created ratio to Excel columns (B, C, D, etc.)
 2. **View Status**: See which ratios are assigned and to which columns
 3. **View Notes**: Read ratio notes/descriptions
-4. **Unassign Ratios**: Quick one-click unassignment
-5. **Calculate Ratios**: Compute all ratios for all tickers using Parquet data
-6. **Manual Tickers**: Enter tickers manually in Column A
+4. **Calculate Ratios**: Compute all ratios for all tickers using Parquet data
+5. **Manual Tickers**: Enter tickers manually in Column A
 
-### ⚡ Benefits:
+### Benefits:
 - **Fast**: Uses Parquet data for quick calculations
 - **Reliable**: Minimal VBA, all logic in Python
 - **Simple**: Clean UI with clear feedback
@@ -23,79 +22,81 @@ A clean, efficient ratio management system with minimal VBA dependency. All logi
 
 ---
 
-## 📋 Excel Layout (Ratios Sheet)
+## Excel Layout (Ratios Sheet)
 
 ```
 Row 1: Financial Ratios [Title]
 Row 2: [Empty]
 Row 3: [Empty]
 Row 4: Ticker | Ratio1 Name | Ratio2 Name | Ratio3 Name | ...
-Row 5: ↻ Refresh | ✕ Unassign | ✕ Unassign | ✕ Unassign | ...
-Row 6: [Empty - Reserved]
-Row 7: AAPL | 1.2500 | 0.8500 | 2.4500 | ...
-Row 8: MSFT | 1.3000 | 0.9200 | 2.5000 | ...
-Row 9: GOOGL | 1.1800 | 0.7800 | 2.3200 | ...
+Row 5: [Empty - Reserved]
+Row 6: AAPL | 1.2500 | 0.8500 | 2.4500 | ...
+Row 7: MSFT | 1.3000 | 0.9200 | 2.5000 | ...
+Row 8: GOOGL | 1.1800 | 0.7800 | 2.3200 | ...
 ...
 ```
 
 ### Column Structure:
-- **Column A**: Ticker symbols (enter manually from Row 7 onwards)
+- **Column A**: Ticker symbols (enter manually from Row 6 onwards)
 - **Column B+**: Assigned ratios with calculated values
 
 ### Row Functions:
 - **Row 4**: Ratio names (set by assignment)
-- **Row 5**: Click to unassign ratio from that column
-- **Row 7+**: Your data (tickers + calculated ratios)
+- **Row 5**: Reserved and left empty
+- **Row 6+**: Your data (tickers + calculated ratios)
 
 ---
 
-## 🚀 How to Use
+## How to Use
 
-### 1️⃣ **Open Ratio Manager**
+### 1. Open Ratio Manager
 
 **From Excel:**
 - Run VBA macro: `OpenRatioManager()`
-- Or create a button assigned to this macro
 
 **From Python:**
 ```python
 python -c "from Internal.Ratios.ratio_manager_ui import launch_ratio_manager; launch_ratio_manager()"
 ```
 
-### 2️⃣ **Assign a Ratio**
+### 2. Assign a Ratio
 
 In Ratio Manager UI:
 1. Select a ratio from the list
-2. Click **"📌 Assign to Column"**
+2. Click **"Assign to Column"**
 3. Enter column letter (B, C, D, etc.)
 4. Click OK
 
-Result: Ratio name appears in Row 4, unassign button in Row 5
+Result: Ratio name appears in Row 4, Row 5 stays empty
 
 **Rules:**
 - Can only assign to columns B and onwards
 - Cannot assign same ratio to multiple columns
-- Cannot assign to a column that's already in use
+- Cannot assign to a column that is already in use
 
-### 3️⃣ **View Ratio Notes**
+### 3. View Ratio Notes
 
 In Ratio Manager UI:
 1. Select a ratio
-2. Click **"📝 View Notes"**
+2. Click **"View Notes"**
 3. Read notes in popup dialog
 
-### 4️⃣ **Enter Tickers**
+### 4. Enter Tickers
 
 In Excel (Ratios sheet):
-1. Go to Column A, Row 7
+1. Go to Column A, Row 6
 2. Type ticker symbol (e.g., "AAPL")
 3. Continue adding tickers in rows below
 
-### 5️⃣ **Calculate Ratios**
+### 5. Calculate Ratios
+
+**From the FinForge Workspace:**
+1. Open the FinForge workspace window
+2. Go to the Ratios tab
+3. Click **"Refresh ratios sheet"**
 
 **Option A - From Excel:**
 - Run VBA macro: `RefreshRatios()`
-- Or click the "↻ Refresh" indicator in A5
 
 **Option B - From Python:**
 ```python
@@ -109,21 +110,15 @@ python -c "from Internal.Ratios.ratio_calculator import calculate_ratios; calcul
 - Writes results to Excel
 - Shows progress dialog
 
-### 6️⃣ **Unassign a Ratio**
+### 6. Update an Assignment
 
-**Simple Method:**
-1. In Excel, click the cell in Row 5 under the ratio you want to unassign
-2. Confirm the dialog
-3. Done! Column is cleared and ready for new assignment
-
-**Alternative - Via UI:**
 1. Open Ratio Manager
-2. The assigned ratio will show its column
-3. Use unassign from Excel (Row 5)
+2. Change the ratio assignment in Row 4 if needed
+3. Refresh the sheet so calculations use the updated layout
 
 ---
 
-## 🔧 VBA Macros (Minimal)
+## VBA Macros (Minimal)
 
 ### Essential Functions:
 
@@ -131,43 +126,37 @@ python -c "from Internal.Ratios.ratio_calculator import calculate_ratios; calcul
 ' Open the Ratio Manager UI
 OpenRatioManager()
 
-' Unassign ratio (automatic when clicking Row 5)
-UnassignRatio()
-
 ' Calculate all ratios
 RefreshRatios()
 ```
 
 ### Setting Up Buttons:
 
-1. **Insert Developer Tab** → Insert → Button
+1. **Insert Developer Tab** -> Insert -> Button
 2. **Assign macro** to button:
-   - "Manage Ratios" → `OpenRatioManager`
-   - "Calculate Ratios" → `RefreshRatios`
+   - "Manage Ratios" -> `OpenRatioManager`
+   - "Calculate Ratios" -> `RefreshRatios`
 
 ---
 
-## 📁 File Structure
+## File Structure
 
 ```
-Stocks/
-├── Internal/Ratios/
-│   ├── ratio_handeling.py ✅ (Config management)
-│   ├── ratio_manager_ui.py 🆕 (Main UI)
-│   ├── ratio_unassign.py 🆕 (Unassign handler)
-│   └── ratio_calculator.py 🆕 (Calculation engine)
-├── Importing/
-│   ├── ratio_config.json ✅ (Ratio storage)
-│   └── ratio_maker.py ✅ (Create ratios)
-├── data/
-│   ├── balance_sheet.parquet 📊 (BS data)
-│   └── income_statement.parquet 📊 (IS data)
-└── vba_code.txt 🆕 (Minimal VBA)
+FinForge/
++-- Internal/Ratios/
+|   +-- ratio_handeling.py       (Config management)
+|   +-- ratio_manager_ui.py      (Main UI)
+|   +-- ratio_calculator.py      (Calculation engine)
++-- Importing/
+|   +-- ratio_config.json        (Ratio storage)
+|   +-- ratio_maker.py           (Create ratios)
++-- data/
+|   +-- fundamentals/            (Financial data in Parquet)
 ```
 
 ---
 
-## 💡 Example Workflow
+## Example Workflow
 
 ### Complete Example:
 
@@ -179,8 +168,8 @@ Stocks/
    - See both ratios as "Not assigned"
 
 3. **Assign Ratios**
-   - Current Ratio → Column B
-   - Quick Ratio → Column C
+   - Current Ratio -> Column B
+   - Quick Ratio -> Column C
 
 4. **Enter Tickers**
    ```
@@ -190,7 +179,7 @@ Stocks/
    ```
 
 5. **Calculate**
-   - Click "↻ Refresh" or run `RefreshRatios()`
+   - Click "Refresh ratios sheet" in FinForge or run `RefreshRatios()`
    - See results:
    ```
    B7: 1.2500    C7: 0.8500
@@ -198,8 +187,8 @@ Stocks/
    B9: 1.1800    C9: 0.7800
    ```
 
-6. **Unassign if Needed**
-   - Click cell B5 or C5 to unassign
+6. **Update if Needed**
+   - Adjust the Row 4 assignments, then refresh again
 
 ---
 
@@ -209,14 +198,14 @@ Stocks/
 - **Solution**: Create ratios first using Ratio Maker
 
 ### "No tickers found"
-- **Solution**: Enter tickers in Column A starting from Row 7
+- **Solution**: Enter tickers in Column A starting from Row 6
 
 ### "Failed to load Parquet data"
 - **Solution**: Make sure `data/balance_sheet.parquet` and `data/income_statement.parquet` exist
 - Run data import first if needed
 
 ### "Column already in use"
-- **Solution**: Unassign the existing ratio first (click Row 5)
+- **Solution**: Reassign the ratio in Row 4 and refresh the sheet
 
 ### Calculation shows "N/A"
 - **Reason**: Financial data not found for that ticker/item
@@ -233,13 +222,13 @@ Stocks/
 ### Ratio Manager Window:
 - **Title**: Shows current mode
 - **List**: All ratios with assignment status
-  - ✓ Green = Assigned (shows column)
-  - ✗ Gray = Not assigned
-- **Buttons**: 
-  - Assign to Column
-  - View Notes
-  - Refresh list
-  - Close
+   - ✓ Green = Assigned (shows column)
+   - ✗ Gray = Not assigned
+- **Buttons**:
+   - Assign to Column
+   - View Notes
+   - Refresh list
+   - Close
 
 ### Progress Dialog:
 - Shows during calculation
@@ -247,7 +236,6 @@ Stocks/
 - Can cancel if needed
 
 ### Confirmation Dialogs:
-- Before unassigning
 - After successful operations
 - Error messages if something fails
 

@@ -23,6 +23,7 @@ if /i not "%CONFIRM_UNINSTALL%"=="Y" (
 )
 
 call :prompt_yes_no "Remove virtual environment (.venv)" "Y" REMOVE_VENV
+call :prompt_yes_no "Remove Node.js packages (ElectronHome/node_modules)" "Y" REMOVE_NODE_MODULES
 call :prompt_yes_no "Remove xlwings Excel add-in for this Windows user" "Y" REMOVE_XLWINGS_ADDIN
 call :prompt_yes_no "Remove FinForge xlwings config if it points to this project" "Y" REMOVE_XLWINGS_CONF
 call :prompt_yes_no "Delete generated FinForge.xlsm workbook" "N" REMOVE_WORKBOOK
@@ -36,24 +37,24 @@ echo ----------------------------------------
 echo.
 
 if /i "%REMOVE_XLWINGS_ADDIN%"=="Y" (
-    echo [1/6] Removing xlwings add-in...
+    echo [1/7] Removing xlwings add-in...
     call :remove_xlwings_addin
 ) else (
-    echo [1/6] Skipped xlwings add-in removal.
+    echo [1/7] Skipped xlwings add-in removal.
 )
 
 if /i "%REMOVE_XLWINGS_CONF%"=="Y" (
-    echo [2/6] Removing xlwings config for this project...
+    echo [2/7] Removing xlwings config for this project...
     powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Installation\unconfigure_xlwings.ps1" -ProjectDir "%~dp0"
     if errorlevel 1 (
         echo WARNING: xlwings config cleanup reported an issue.
     )
 ) else (
-    echo [2/6] Skipped xlwings config cleanup.
+    echo [2/7] Skipped xlwings config cleanup.
 )
 
 if /i "%REMOVE_VENV%"=="Y" (
-    echo [3/6] Removing virtual environment...
+    echo [3/7] Removing virtual environment...
     if exist "%~dp0.venv" (
         rmdir /s /q "%~dp0.venv"
         if exist "%~dp0.venv" (
@@ -65,11 +66,32 @@ if /i "%REMOVE_VENV%"=="Y" (
         echo .venv not found. Nothing to remove.
     )
 ) else (
-    echo [3/6] Skipped .venv removal.
+    echo [3/7] Skipped .venv removal.
+)
+
+if /i "%REMOVE_NODE_MODULES%"=="Y" (
+    echo [4/7] Removing Node.js packages...
+    if exist "%~dp0ElectronHome\node_modules" (
+        rmdir /s /q "%~dp0ElectronHome\node_modules"
+        if exist "%~dp0ElectronHome\node_modules" (
+            echo WARNING: Could not remove node_modules completely.
+        ) else (
+            echo Removed ElectronHome\node_modules
+        )
+    ) else (
+        echo node_modules not found. Nothing to remove.
+    )
+    REM Also remove package-lock.json if it exists
+    if exist "%~dp0ElectronHome\package-lock.json" (
+        del /f /q "%~dp0ElectronHome\package-lock.json"
+        echo Removed package-lock.json
+    )
+) else (
+    echo [4/7] Skipped Node.js packages removal.
 )
 
 if /i "%REMOVE_WORKBOOK%"=="Y" (
-    echo [4/6] Removing FinForge workbook...
+    echo [5/7] Removing FinForge workbook...
     if exist "%~dp0FinForge.xlsm" (
         del /f /q "%~dp0FinForge.xlsm"
         if exist "%~dp0FinForge.xlsm" (
@@ -81,11 +103,11 @@ if /i "%REMOVE_WORKBOOK%"=="Y" (
         echo FinForge.xlsm not found. Nothing to remove.
     )
 ) else (
-    echo [4/6] Skipped workbook deletion.
+    echo [5/7] Skipped workbook deletion.
 )
 
 if /i "%REMOVE_DIAGNOSTICS%"=="Y" (
-    echo [5/6] Removing launch diagnostics...
+    echo [6/7] Removing launch diagnostics...
     if exist "%~dp0Temporary\launch_diagnostics.log" (
         del /f /q "%~dp0Temporary\launch_diagnostics.log"
         if exist "%~dp0Temporary\launch_diagnostics.log" (
@@ -97,11 +119,11 @@ if /i "%REMOVE_DIAGNOSTICS%"=="Y" (
         echo launch_diagnostics.log not found. Nothing to remove.
     )
 ) else (
-    echo [5/6] Skipped diagnostics cleanup.
+    echo [6/7] Skipped diagnostics cleanup.
 )
 
 if /i "%REMOVE_SHORT_TEMP%"=="Y" (
-    echo [6/6] Removing setup temp folder...
+    echo [7/7] Removing setup temp folder...
     if exist "%SystemDrive%\fftmp" (
         rmdir /s /q "%SystemDrive%\fftmp"
         if exist "%SystemDrive%\fftmp" (
@@ -113,7 +135,7 @@ if /i "%REMOVE_SHORT_TEMP%"=="Y" (
         echo %SystemDrive%\fftmp not found. Nothing to remove.
     )
 ) else (
-    echo [6/6] Skipped setup temp cleanup.
+    echo [7/7] Skipped setup temp cleanup.
 )
 
 echo.

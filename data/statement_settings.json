@@ -1,0 +1,28 @@
+{
+  "mode": "incomeStatement",
+  "display": {
+    "mode": "millions",
+    "divisor": 1000000
+  },
+  "balanceSheet": {
+    "selected": [
+      "Current Assets",
+      "Total Assets"
+    ]
+  },
+  "incomeStatement": {
+    "selected": [
+      "Total Revenue",
+      "Operating Revenue"
+    ]
+  },
+  "cashFlow": {
+    "selected": [
+      "Issuance Of Debt",
+      "Cash Flow From Continuing Operating Activities",
+      "Net Income From Continuing Operations",
+      "Depreciation",
+      "Depreciation Amortization Depletion"
+    ]
+  }
+}

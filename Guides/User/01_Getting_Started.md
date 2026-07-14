@@ -23,24 +23,24 @@ FinForge is a financial analysis tool that:
 1. Double-click `launch_finforge.bat` in the main folder
 2. The FinForge window will open
 
-**Option B - From Command Line**
-```powershell
-cd C:\Users\tonna\Desktop\Stocks
-.\.venv\Scripts\Activate.ps1
-python -c "from Internal.launch.stock_launcher import main; main()"
-```
+### Step 2: Open the Workspace
 
-### Step 2: Add Your First Ticker
+1. In the launcher, click **Open statement import window**
+2. The main workspace window opens with sidebar navigation (Imports, Ratios, Company Profile, Research)
 
-1. In the launcher, type a ticker symbol (e.g., `AAPL`) in the input field
-2. Click **Add** or press Enter
-3. The app will automatically fetch all available data for that ticker
+### Step 3: Add Your First Ticker
 
-### Step 3: Launch Excel Dashboard
+1. Go to the **Imports** tab
+2. Type a ticker symbol (e.g., `AAPL`) in the search bar
+3. Select the ticker from the search results
+4. Click the **+** button to add it to the import list
+5. Data fetching starts automatically in the background
 
-1. Select the tickers you want to analyze
-2. Click **Launch Dashboard**
-3. Excel will open with your selected tickers loaded
+### Step 4: Import Financial Data to Excel
+
+1. In the Imports tab, choose **Balance sheet** or **Income statement** scope
+2. Select the line items you want to print
+3. Click **Import** to send data to Excel
 
 ---
 
@@ -49,6 +49,7 @@ python -c "from Internal.launch.stock_launcher import main; main()"
 - Windows 10 or later
 - Microsoft Excel (with macros enabled)
 - Python 3.10+ (included in .venv)
+- Node.js 18+ (for Electron, auto-installed by setup)
 - Internet connection (for data fetching)
 
 ---
@@ -57,14 +58,11 @@ python -c "from Internal.launch.stock_launcher import main; main()"
 
 If this is your first time using the app:
 
-1. **Enable Excel Macros**
-   - Open Excel, go to File → Options → Trust Center
-   - Click Trust Center Settings → Macro Settings
+1. **Run `setup.bat`** to install all dependencies
+2. **Enable Excel Macros**
+   - Open Excel, go to File > Options > Trust Center
+   - Click Trust Center Settings > Macro Settings
    - Select "Enable all macros"
-
-2. **Install xlwings Add-in** (if prompted)
-   - The app uses xlwings to communicate with Excel
-   - Follow any prompts to install the add-in
 
 ---
 
@@ -74,16 +72,20 @@ If this is your first time using the app:
 FinForge/
 +-- FinForge.xlsm           <- Main Excel workbook
 +-- launch_finforge.bat     <- Quick launcher
++-- setup.bat               <- First-time setup
 +-- data/                   <- All fetched data stored here
 |   +-- fundamentals/       <- Financial statements
 |   +-- holders/            <- Holder information
 |   +-- metadata/           <- Company info
 |   +-- prices/             <- Price history
++-- ElectronHome/           <- Electron desktop UI
 +-- Guides/                 <- Documentation (you are here)
 |   +-- User/               <- User guides
 |   +-- Developer/          <- Technical docs
 +-- Importing/              <- Import scripts
 +-- Internal/               <- Core modules
++-- Ticker_management/      <- Ticker CRUD
++-- data_management/        <- Data persistence
 ```
 
 ---
@@ -93,7 +95,7 @@ FinForge/
 - [Ticker Management](02_Ticker_Management.md) - Add and manage stock tickers
 - [Importing Data](03_Importing_Data.md) - Import financial statements to Excel
 - [Creating Ratios](04_Creating_Ratios.md) - Build custom financial ratios
-- [Assigning Ratios](Ratio_Assignment_User_Guide.md) - Display ratios in Excel
+- [Assigning Ratios](05_Assigning_Ratios.md) - Display ratios in Excel
 
 ---
 

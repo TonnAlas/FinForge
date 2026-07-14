@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FinForge | Statement Import</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          'surface': '#040b18',
+          'surface-dim': '#040b18',
+          'surface-bright': '#1c2638',
+          'surface-container-lowest': '#030914',
+          'surface-container-low': '#08101e',
+          'surface-container': '#0b1422',
+          'surface-container-high': '#0f1828',
+          'surface-container-highest': '#162030',
+          'background': '#040b18',
+          'on-surface': '#e8edf6',
+          'on-surface-variant': '#d8dce8',
+          'on-background': '#e8edf6',
+          'outline': '#8a90a0',
+          'outline-variant': '#505868',
+          'primary': '#adc6ff',
+          'on-primary': '#002e6a',
+          'primary-container': '#4d8eff',
+          'on-primary-container': '#00285d',
+          'secondary': '#4edea3',
+          'on-secondary': '#003824',
+          'secondary-container': '#00a572',
+          'on-secondary-container': '#00311f',
+          'tertiary': '#ffb95f',
+          'on-tertiary': '#472a00',
+          'error': '#ffb4ab',
+          'on-error': '#690005',
+          'error-container': '#93000a',
+          'on-error-container': '#ffdad6'
+        },
+        borderRadius: {
+          DEFAULT: '0rem',
+          lg: '0rem',
+          xl: '0rem',
+          full: '0rem'
+        },
+        spacing: {
+          xs: '2px',
+          sm: '4px',
+          md: '8px',
+          lg: '12px',
+          xl: '16px',
+          sidebar: '200px'
+        },
+        fontFamily: {
+          'headline-lg': ['JetBrains Mono'],
+          'headline-md': ['JetBrains Mono'],
+          'body-md': ['Inter'],
+          'body-sm': ['Inter'],
+          'label-md': ['JetBrains Mono'],
+          'label-sm': ['JetBrains Mono']
+        },
+        fontSize: {
+          'headline-lg': ['20px', { lineHeight: '24px', fontWeight: '600' }],
+          'headline-md': ['16px', { lineHeight: '20px', fontWeight: '600' }],
+          'body-md': ['13px', { lineHeight: '18px', fontWeight: '400' }],
+          'body-sm': ['11px', { lineHeight: '14px', fontWeight: '400' }],
+          'label-md': ['11px', { lineHeight: '12px', letterSpacing: '0.02em', fontWeight: '500' }],
+          'label-sm': ['9px', { lineHeight: '10px', letterSpacing: '0.04em', fontWeight: '500' }]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    background-color: #040b18;
+    color: #e8edf6;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: 13px;
+    --font-scale: 1;
+  }
+  body[data-font-scale="0.85"] { --font-scale: 0.85; }
+  body[data-font-scale="1"]    { --font-scale: 1; }
+  body[data-font-scale="1.15"] { --font-scale: 1.15; }
+  body[data-font-scale="1.3"]  { --font-scale: 1.3; }
+  body[data-font-scale="1.5"]  { --font-scale: 1.5; }
+  body[data-font-scale="1.75"] { --font-scale: 1.75; }
+  body[data-font-scale="2"]    { --font-scale: 2; }
+
+  .scalable {
+    zoom: var(--font-scale);
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    font-size: 16px;
+    vertical-align: middle;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #030914;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #424754;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #8c909f;
+  }
+  input, button, select {
+    border-radius: 0 !important;
+  }
+
+  .font-size-group {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #424754;
+    background: #212b39;
+    line-height: 1;
+  }
+  .font-size-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border: none;
+    background: transparent;
+    color: #d9e3f6;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+  }
+  .font-size-btn:hover {
+    background: #2b3544;
+    color: #adc6ff;
+  }
+  .font-size-btn.minus {
+    border-right: 1px solid #424754;
+  }
+  .font-size-btn.plus {
+    border-left: 1px solid #424754;
+  }
+  .font-size-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 6px;
+    min-width: 28px;
+    text-align: center;
+    color: #d9e3f6;
+    letter-spacing: 0.02em;
+    user-select: none;
+  }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden bg-background select-none">
+<aside class="fixed inset-y-0 left-0 w-[200px] bg-surface-container-lowest border-r border-outline-variant flex flex-col z-50">
+  <div class="h-20 px-md flex items-center gap-sm border-b border-outline-variant">
+    <div class="w-8 h-8 bg-primary flex items-center justify-center">
+      <span class="material-symbols-outlined text-on-primary !font-bold">analytics</span>
+    </div>
+    <span class="text-headline-lg font-bold tracking-tighter uppercase mono">FinForge</span>
+  </div>
+  <div class="px-xs py-xs border-t border-outline-variant">
+    <p class="px-md py-xs text-[9px] text-outline font-bold uppercase">General</p>
+    <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="home">
+      <span class="material-symbols-outlined">home</span>
+      <span class="font-label-md text-label-md">Home</span>
+    </button>
+    <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="search">
+      <span class="material-symbols-outlined">search</span>
+      <span class="font-label-md text-label-md">Search</span>
+    </button>
+    <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="templates">
+      <span class="material-symbols-outlined">bookmarks</span>
+      <span class="font-label-md text-label-md">Templates</span>
+    </button>
+    <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="settings">
+      <span class="material-symbols-outlined">settings</span>
+      <span class="font-label-md text-label-md">Settings</span>
+    </button>
+  </div>
+  <div class="px-xs py-xs border-b border-outline-variant">
+    <p class="px-md py-xs text-[9px] text-outline font-bold uppercase">Data</p>
+    <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="import">
+      <span class="material-symbols-outlined">table_view</span>
+      <span class="font-label-md text-label-md">Statement Lines</span>
+    </button>
+    <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="ratios">
+      <span class="material-symbols-outlined">functions</span>
+      <span class="font-label-md text-label-md">Ratios</span>
+    </button>
+  </div>
+  <div class="mt-auto p-xs border-t border-outline-variant">
+    <div class="px-md py-2 bg-surface-container-high text-[10px] text-on-surface-variant mono">
+      Shared settings: data/statement_settings.json
+    </div>
+  </div>
+</aside>
+
+<main class="flex-1 ml-[200px] h-screen overflow-hidden flex flex-col">
+  <header class="h-12 md:h-16 bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-md sticky top-0 z-40 shrink-0">
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-sm md:gap-md">
+      <div class="font-size-group" title="Adjust font size">
+        <button id="font-size-minus" class="font-size-btn minus">-</button>
+        <span id="font-size-label" class="font-size-label">1.0</span>
+        <button id="font-size-plus" class="font-size-btn plus">+</button>
+      </div>
+      <div id="settings-status" class="flex items-center gap-xs px-xs py-0.5 border border-outline-variant bg-surface-container-high">
+        <span class="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+        <span class="text-[9px] font-bold text-secondary uppercase mono">Saved</span>
+      </div>
+      <button id="refresh-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Reload</button>
+      <button id="save-button" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Save</button>
+    </div>
+  </header>
+
+  <div class="p-xs md:p-sm flex-1 min-h-0 overflow-hidden flex flex-col gap-xs md:gap-sm">
+    <div id="breadcrumb-bar" class="px-sm md:px-md py-1 flex items-center gap-1 text-label-sm font-label-sm mono scalable"></div>
+
+      <section class="page-section hidden h-full min-h-0 scalable" data-page="search">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-xs md:gap-sm h-full min-h-0">
+          <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+            <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+              <div>
+                <p class="text-[9px] text-outline uppercase mono">Search list</p>
+                <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Ticker universe</h2>
+              </div>
+              <span id="import-search-count" class="text-[9px] text-outline mono uppercase">0 results</span>
+            </div>
+            <div class="px-md py-1.5 border-b border-outline-variant flex items-center gap-sm">
+              <input id="import-search-input" class="flex-1 h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search by ticker or company name" type="text"/>
+              <button id="import-search-clear" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Clear</button>
+            </div>
+            <div class="px-md py-1.5 border-b border-outline-variant bg-surface-container text-[9px] text-outline mono uppercase" id="import-search-status">Type a ticker or company name to search</div>
+            <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              <div id="import-search-results" class="divide-y divide-outline-variant/25"></div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+            <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+              <div>
+                <p class="text-[9px] text-outline uppercase mono">Saved list</p>
+                <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Saved tickers</h2>
+              </div>
+              <span id="import-selected-count" class="text-[9px] text-outline mono uppercase">0 tickers</span>
+            </div>
+            <div class="px-md py-1.5 border-b border-outline-variant bg-surface-container text-[9px] text-outline mono uppercase">Saved to data/tickers.json</div>
+            <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              <div id="import-selected-list" class="divide-y divide-outline-variant/25"></div>
+            </div>
+            <div class="px-md py-2 border-t border-outline-variant bg-surface-container flex items-center justify-between gap-sm">
+              <button id="import-fetch-all-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-secondary transition-colors">Fetch all</button>
+              <div class="flex items-center gap-sm">
+                <span class="text-[9px] text-outline mono uppercase">Auto-saved</span>
+                <button id="import-clear-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-error transition-colors">Clear list</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page-section hidden h-full min-h-0" data-page="company">
+        <div id="company-page" class="h-full min-h-0 overflow-y-auto custom-scrollbar p-xs md:p-sm scalable"></div>
+      </section>
+
+    <section class="page-section flex-1 min-h-0 scalable" data-page="import">
+      <div class="grid grid-cols-[140px_1fr_1fr] lg:grid-cols-[160px_minmax(0,1fr)_minmax(0,1fr)] gap-xs md:gap-sm h-full min-h-0">
+      <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+        <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
+          <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Terminal actions</h2>
+        </div>
+        <div class="p-sm md:p-md flex flex-col gap-sm flex-1 min-h-0 justify-start">
+          <button id="import-button" class="h-8 px-2 bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Import to excel</button>
+        </div>
+      </div>
+
+      <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+        <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between">
+          <div>
+            <p class="text-[9px] text-outline uppercase mono">Import scope</p>
+            <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Field catalog</h2>
+          </div>
+          <div class="flex items-center gap-xs">
+            <button class="scope-button px-2 py-[2px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-scope="balanceSheet">Balance sheet</button>
+            <button class="scope-button px-2 py-[2px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-scope="incomeStatement">Income statement</button>
+            <button class="scope-button px-2 py-[2px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-scope="cashFlow">Cash flow</button>
+          </div>
+        </div>
+        <div class="px-md py-1.5 border-b border-outline-variant flex items-center gap-sm">
+          <input id="search-input" class="flex-1 h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Filter field names" type="text"/>
+          <span id="catalog-count" class="text-[9px] text-outline mono uppercase">0 fields</span>
+        </div>
+        <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+          <div id="catalog-list" class="divide-y divide-outline-variant/25"></div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-sm h-full min-h-0">
+        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden flex-1 min-h-0">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
+            <p class="text-[9px] text-outline uppercase mono">Printed subset</p>
+            <h2 id="selected-title" class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Balance sheet selected lines</h2>
+          </div>
+          <div class="px-md py-1.5 border-b border-outline-variant flex items-center gap-sm">
+            <input id="selected-search-input" class="flex-1 h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Filter selected lines" type="text"/>
+            <span id="selected-count" class="text-[9px] text-outline mono uppercase">0 selected</span>
+          </div>
+          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+            <div id="selected-list" class="divide-y divide-outline-variant/25"></div>
+          </div>
+        </div>
+
+        <div class="bg-surface-container-low border border-outline-variant flex-none">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
+            <p class="text-[9px] text-outline uppercase mono">Display scaling</p>
+          </div>
+          <div class="p-sm md:p-md grid grid-cols-2 gap-sm">
+            <label class="space-y-1">
+              <span class="text-[9px] text-outline uppercase mono">Mode</span>
+              <select id="display-mode" class="w-full h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none">
+                <option value="thousands">Thousands</option>
+                <option value="millions">Millions</option>
+                <option value="billions">Billions</option>
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+            <label class="space-y-1">
+              <span class="text-[9px] text-outline uppercase mono">Divisor</span>
+              <input id="display-divisor" class="w-full h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none" type="number" min="1" step="1" value="1000000"/>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section hidden h-full min-h-0 scalable" data-page="ratios">
+      <div id="ratio-list-view" class="h-full grid grid-cols-[140px_1fr_200px] lg:grid-cols-[160px_minmax(0,1fr)_220px] gap-xs md:gap-sm min-h-0">
+        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
+            <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Terminal actions</h2>
+          </div>
+          <div class="p-sm md:p-md flex flex-col gap-sm flex-1 min-h-0 justify-start">
+            <button id="ratio-refresh-button" class="h-8 px-2 bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Refresh ratios sheet</button>
+          </div>
+        </div>
+
+        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+            <div>
+              <p class="text-[9px] text-outline uppercase mono">Ratio list</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Choose an action</h2>
+            </div>
+            <span id="ratio-count" class="text-[9px] text-outline mono uppercase">0 ratios</span>
+          </div>
+          <div class="px-md py-1.5 border-b border-outline-variant flex items-center gap-sm">
+            <input id="ratio-search-input" class="flex-1 h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Filter ratios" type="text"/>
+            <span id="ratio-results-count" class="text-[9px] text-outline mono uppercase">0 shown</span>
+          </div>
+          <div class="flex items-center gap-xs px-md py-2 border-b border-outline-variant bg-surface-container">
+            <button id="ratio-create-button" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Create ratio</button>
+            <button id="ratio-list-back-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors hidden">Back to list</button>
+          </div>
+          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-sm">
+            <div id="ratio-list" class="space-y-sm"></div>
+          </div>
+        </div>
+
+        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
+            <p class="text-[9px] text-outline uppercase mono">Sheet assignments</p>
+            <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Column A</h2>
+          </div>
+          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-sm">
+            <div id="sheet-ratio-list" class="space-y-xs"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ratio-maker-view" class="hidden h-full grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-xs md:gap-sm min-h-0">
+        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+            <div>
+              <p class="text-[9px] text-outline uppercase mono">Ratio builder</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Create ratio</h2>
+            </div>
+            <span id="ratio-count-maker" class="text-[9px] text-outline mono uppercase">0 ratios</span>
+          </div>
+          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-md space-y-sm">
+            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+              <div class="grid grid-cols-1 gap-sm">
+                <label class="space-y-1">
+                  <span class="text-[9px] text-outline uppercase mono">Ratio name</span>
+                  <input id="ratio-name" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Current ratio" type="text"/>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[9px] text-outline uppercase mono">Row in Column A</span>
+                  <input id="ratio-row" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none mono" placeholder="N/A (leave empty)" type="number" min="7"/>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[9px] text-outline uppercase mono">Formula</span>
+                  <div id="ratio-formula-shell" class="relative border border-outline-variant bg-surface-container-lowest focus-within:border-secondary">
+                    <div id="ratio-formula-highlight" class="formula-highlight absolute inset-0 pointer-events-none px-2 py-2 whitespace-pre-wrap break-words overflow-auto font-label-md text-label-md mono">
+                      <span class="text-outline">=</span>
+                    </div>
+                    <textarea id="ratio-formula" class="relative z-10 w-full min-h-[120px] bg-transparent px-2 py-2 font-label-md text-label-md text-transparent caret-on-surface placeholder:text-outline-variant outline-none resize-none mono overflow-hidden" placeholder="BS: Current Assets / BS: Current Liabilities"></textarea>
+                  </div>
+                  <div class="text-[9px] text-outline mono uppercase">Red items are invalid formula parts</div>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[9px] text-outline uppercase mono">Notes</span>
+                  <textarea id="ratio-notes" class="w-full min-h-[88px] bg-surface-container-lowest border border-outline-variant px-2 py-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none resize-none" placeholder="Add interpretation, thresholds, or source notes."></textarea>
+                </label>
+              </div>
+              <div class="grid grid-cols-3 gap-xs">
+                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="BS">BS</button>
+                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="IS">IS</button>
+                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="CF">CF</button>
+                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="P">P</button>
+                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="M">M</button>
+                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="RATIO">RATIO</button>
+                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="H">H</button>
+                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="E">E</button>
+                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="A">A</button>
+              </div>
+              <div class="flex items-center gap-1 flex-wrap">
+                <span class="text-[9px] text-outline-variant mono">BS=Balance Sheet</span>
+                <span class="text-[9px] text-outline-variant/40 mono">|</span>
+                <span class="text-[9px] text-outline-variant mono">IS=Income Statement</span>
+                <span class="text-[9px] text-outline-variant/40 mono">|</span>
+                <span class="text-[9px] text-outline-variant mono">CF=Cash Flow</span>
+                <span class="text-[9px] text-outline-variant/40 mono">|</span>
+                <span class="text-[9px] text-outline-variant mono">P=Price</span>
+                <span class="text-[9px] text-outline-variant/40 mono">|</span>
+                <span class="text-[9px] text-outline-variant mono">M=Market Data</span>
+                <span class="text-[9px] text-outline-variant/40 mono">|</span>
+                <span class="text-[9px] text-outline-variant mono">H=Holders</span>
+                <span class="text-[9px] text-outline-variant/40 mono">|</span>
+                <span class="text-[9px] text-outline-variant mono">E=Estimates</span>
+                <span class="text-[9px] text-outline-variant/40 mono">|</span>
+                <span class="text-[9px] text-outline-variant mono">A=Analyst</span>
+              </div>
+              <div class="grid grid-cols-3 gap-xs">
+                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" + ">+</button>
+                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" - ">-</button>
+                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" / ">/</button>
+                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" * ">*</button>
+                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token="( ">(</button>
+                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" )">)</button>
+              </div>
+              <div id="ratio-field-picker" class="hidden border border-outline-variant bg-surface-container-high p-sm space-y-sm">
+                <div class="flex items-center justify-between gap-sm">
+                  <div>
+                    <div id="ratio-field-picker-title" class="text-[9px] text-outline uppercase mono">Field picker</div>
+                    <div id="ratio-field-picker-subtitle" class="text-[9px] text-on-surface-variant mono">Search and insert a field</div>
+                  </div>
+                  <button id="ratio-field-picker-close" class="px-2 py-[2px] bg-surface-container border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Close</button>
+                </div>
+                <input id="ratio-field-picker-search" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search fields" type="text"/>
+                <div id="ratio-field-picker-list" class="max-h-44 overflow-y-auto custom-scrollbar divide-y divide-outline-variant/25"></div>
+              </div>
+              <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+                <div class="flex items-center justify-between gap-sm">
+                  <div>
+                    <div class="text-[9px] text-outline uppercase mono">Ratio maker</div>
+                    <div class="text-[9px] text-on-surface-variant mono">Preview</div>
+                  </div>
+                  <span class="text-[9px] text-outline mono uppercase">Formula display</span>
+                </div>
+                <div id="ratio-preview" class="text-body-sm text-on-surface-variant mono break-words">No ratio selected.</div>
+              </div>
+              <div class="flex items-center justify-between gap-sm pt-xs">
+                <div id="ratio-editor-state" class="text-[9px] text-outline mono uppercase">Creating new ratio</div>
+                <div class="flex items-center gap-xs">
+                  <button id="ratio-cancel-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors hidden">Cancel edit</button>
+                  <button id="ratio-reset-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Reset</button>
+                  <button id="ratio-save-button" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Save ratio</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+            <div>
+              <p class="text-[9px] text-outline uppercase mono">Selection drawer</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Available options</h2>
+            </div>
+            <span class="text-[9px] text-outline mono uppercase">Pinned open</span>
+          </div>
+          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-sm md:p-md space-y-sm">
+            <div id="ratio-line-panel" class="hidden border border-outline-variant bg-surface-container-high p-sm space-y-sm">
+              <div class="flex items-start justify-between gap-sm">
+                <div>
+                  <div class="text-[9px] text-outline uppercase mono">Statement line</div>
+                  <div id="ratio-line-panel-subtitle" class="text-[9px] text-on-surface-variant mono">Choose the financial statement line first</div>
+                </div>
+                <button id="ratio-line-panel-close" class="px-2 py-[2px] bg-surface-container border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Close</button>
+              </div>
+              <div id="ratio-line-panel-token" class="px-2 py-1 border border-outline-variant bg-surface-container-lowest text-[10px] text-on-surface-variant mono break-words">No line selected</div>
+              <input id="ratio-line-panel-search" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search lines" type="text"/>
+              <div id="ratio-line-panel-list" class="grid grid-cols-2 gap-xs"></div>
+            </div>
+            <div id="ratio-mode-panel" class="hidden border border-outline-variant bg-surface-container-high p-sm space-y-sm">
+              <div class="flex items-start justify-between gap-sm">
+                <div>
+                  <div class="text-[9px] text-outline uppercase mono">Data mode</div>
+                  <div id="ratio-mode-panel-subtitle" class="text-[9px] text-on-surface-variant mono">Choose how the selected line resolves</div>
+                </div>
+                <button id="ratio-mode-panel-close" class="px-2 py-[2px] bg-surface-container border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Close</button>
+              </div>
+              <div id="ratio-mode-panel-token" class="px-2 py-1 border border-outline-variant bg-surface-container-lowest text-[10px] text-on-surface-variant mono break-words">No line selected</div>
+              <div id="ratio-mode-panel-list" class="grid grid-cols-2 gap-xs"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section hidden h-full min-h-0 scalable" data-page="templates">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-xs md:gap-sm h-full min-h-0">
+        <!-- Template list panel -->
+        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+            <div>
+              <p class="text-[9px] text-outline uppercase mono">Manage templates</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Saved templates</h2>
+            </div>
+            <span id="template-list-count" class="text-[9px] text-outline mono uppercase">0 templates</span>
+          </div>
+          <div class="flex items-center gap-xs px-md py-2 border-b border-outline-variant bg-surface-container">
+            <button id="template-create-button" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">New template</button>
+            <button id="template-excel-folder-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Open folder</button>
+          </div>
+          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+            <div id="template-list" class="divide-y divide-outline-variant/25"></div>
+          </div>
+        </div>
+
+        <!-- Template editor panel -->
+        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+            <div>
+              <p class="text-[9px] text-outline uppercase mono" id="template-editor-mode-label">New template</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono" id="template-editor-title">Create template</h2>
+            </div>
+            <span id="template-editor-status" class="text-[9px] text-outline mono uppercase hidden"></span>
+          </div>
+          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-md space-y-sm">
+            <label class="space-y-1">
+              <span class="text-[9px] text-outline uppercase mono">Template name</span>
+              <input id="template-name-input" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="My template" type="text"/>
+            </label>
+            <label class="space-y-1">
+              <span class="text-[9px] text-outline uppercase mono">Notes</span>
+              <textarea id="template-notes-input" class="w-full min-h-[80px] bg-surface-container-lowest border border-outline-variant px-2 py-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none resize-none" placeholder="Describe what this template is for..."></textarea>
+            </label>
+            <div class="border border-outline-variant bg-surface-container p-sm space-y-sm">
+              <div class="text-[9px] text-outline uppercase mono">Template contents</div>
+              <div id="template-contents-summary" class="text-[10px] text-on-surface-variant mono space-y-1">
+                <div>No current settings captured.</div>
+              </div>
+              <button id="template-capture-settings" class="w-full px-2 py-[4px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Capture current settings</button>
+            </div>
+            <div class="border border-outline-variant bg-surface-container p-sm space-y-sm">
+              <div class="flex items-center justify-between gap-sm">
+                <div class="text-[9px] text-outline uppercase mono">Excel template</div>
+                <span id="template-excel-status" class="text-[9px] text-outline mono uppercase">None</span>
+              </div>
+              <button id="template-save-excel" class="w-full px-2 py-[4px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Save current workbook as template</button>
+              <button id="template-open-excel" class="w-full px-2 py-[4px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors hidden">Open Excel template</button>
+            </div>
+            <div class="flex items-center justify-between gap-sm pt-xs">
+              <button id="template-delete-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-error hover:text-error transition-colors hidden">Delete</button>
+              <div class="flex items-center gap-xs ml-auto">
+                <button id="template-load-button" class="flex-1 px-2 py-[2px] bg-secondary text-on-secondary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity hidden">Load template</button>
+                <button id="template-cancel-button" class="flex-1 px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors hidden">Cancel</button>
+                <button id="template-save-button" class="flex-1 px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Save template</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section hidden h-full min-h-0 scalable" data-page="home"></section>
+
+    <section class="page-section hidden h-full min-h-0 scalable" data-page="settings">
+      <div class="grid grid-cols-1 gap-xs md:gap-sm h-full min-h-0 overflow-y-auto custom-scrollbar">
+        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+            <div>
+              <p class="text-[9px] text-outline uppercase mono">Application settings</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Settings</h2>
+            </div>
+            <span id="settings-version" class="text-[9px] text-outline mono uppercase">v0.1.0</span>
+          </div>
+          <div class="flex-1 p-md space-y-md overflow-y-auto custom-scrollbar">
+            <!-- Display Scaling -->
+            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+              <div class="text-[9px] text-outline uppercase mono">Display scaling</div>
+              <div class="grid grid-cols-2 gap-sm">
+                <label class="space-y-1">
+                  <span class="text-[9px] text-outline uppercase mono">Mode</span>
+                  <select id="settings-display-mode" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none">
+                    <option value="thousands">Thousands</option>
+                    <option value="millions" selected>Millions</option>
+                    <option value="billions">Billions</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[9px] text-outline uppercase mono">Divisor</span>
+                  <input id="settings-display-divisor" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none" type="number" min="1" step="1" value="1000000"/>
+                </label>
+              </div>
+            </div>
+
+            <!-- Font Scale -->
+            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+              <div class="text-[9px] text-outline uppercase mono">Font scale</div>
+              <div class="flex items-center gap-sm">
+                <div class="font-size-group" title="Adjust font size">
+                  <button id="settings-font-minus" class="font-size-btn minus">-</button>
+                  <span id="settings-font-label" class="font-size-label">1.0</span>
+                  <button id="settings-font-plus" class="font-size-btn plus">+</button>
+                </div>
+                <span class="text-[9px] text-outline-variant mono">Affects all text in the terminal</span>
+              </div>
+            </div>
+
+            <!-- Number Format -->
+            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+              <div class="text-[9px] text-outline uppercase mono">Number format</div>
+              <div class="text-[10px] text-outline-variant mono">Thousands separator for large numbers</div>
+              <div class="flex items-center gap-xs flex-wrap">
+                <button class="settings-num-sep px-3 py-[5px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-sep=",">,</button>
+                <button class="settings-num-sep px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-sep=".">.</button>
+                <button class="settings-num-sep px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-sep=" ">␣ (space)</button>
+                <button class="settings-num-sep px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-sep="_custom_">Custom</button>
+              </div>
+              <div id="settings-num-sep-custom-wrap" class="hidden">
+                <input id="settings-num-sep-custom" class="w-24 h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none" placeholder="e.g. '"' maxlength="3" type="text"/>
+              </div>
+              <div class="text-[10px] text-on-surface-variant mono">Example: <span id="settings-num-preview" class="text-primary">1,234,567.89</span></div>
+            </div>
+
+            <!-- Date Format -->
+            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+              <div class="text-[9px] text-outline uppercase mono">Date format</div>
+              <div class="flex items-center gap-xs flex-wrap">
+                <button class="settings-date-fmt px-3 py-[5px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-fmt="eu">DD/MM/YYYY</button>
+                <button class="settings-date-fmt px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-fmt="us">MM/DD/YYYY</button>
+              </div>
+              <div class="text-[10px] text-on-surface-variant mono">Example: <span id="settings-date-preview" class="text-primary">13/07/2026</span></div>
+            </div>
+
+            <!-- Time Format -->
+            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+              <div class="text-[9px] text-outline uppercase mono">Time format</div>
+              <div class="flex items-center gap-xs flex-wrap">
+                <button class="settings-time-fmt px-3 py-[5px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-fmt="24h">HH:MM (24h)</button>
+                <button class="settings-time-fmt px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-fmt="12h">HH:MM AM/PM (12h)</button>
+              </div>
+              <div class="text-[10px] text-on-surface-variant mono">Example: <span id="settings-time-preview" class="text-primary">14:30</span></div>
+            </div>
+
+            <!-- Data Locations -->
+            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+              <div class="text-[9px] text-outline uppercase mono">Data locations</div>
+              <div class="space-y-xs">
+                <div class="flex items-center justify-between gap-sm">
+                  <span class="text-[10px] text-on-surface-variant mono">Project root</span>
+                  <button id="settings-open-root" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Open folder</button>
+                </div>
+                <div class="flex items-center justify-between gap-sm">
+                  <span class="text-[10px] text-on-surface-variant mono">Data folder</span>
+                  <button id="settings-open-data" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Open folder</button>
+                </div>
+                <div class="flex items-center justify-between gap-sm">
+                  <span class="text-[10px] text-on-surface-variant mono">Workbook (FinForge.xlsm)</span>
+                  <button id="settings-open-workbook" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Open</button>
+                </div>
+                <div class="flex items-center justify-between gap-sm">
+                  <span class="text-[10px] text-on-surface-variant mono">Shared settings file</span>
+                  <span id="settings-settings-path" class="text-[9px] text-outline mono">data/statement_settings.json</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- System -->
+            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+              <div class="text-[9px] text-outline uppercase mono">System</div>
+              <div class="space-y-xs">
+                <div class="flex items-center justify-between gap-sm">
+                  <span class="text-[10px] text-on-surface-variant mono">Check system health</span>
+                  <button id="settings-health-check" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Run check</button>
+                </div>
+                <div id="settings-health-result" class="text-[9px] text-outline mono hidden"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script id="statement-catalog-data" type="application/json">
+{
+  "balanceSheet": [
+    "Total Assets",
+    "Current Assets",
+    "Cash Cash Equivalents And Short Term Investments",
+    "Cash And Cash Equivalents",
+    "Cash And Short Term Investments",
+    "Short Term Investments",
+    "Receivables",
+    "Accounts Receivable",
+    "Inventory",
+    "Prepaid Assets",
+    "Other Current Assets",
+    "Total Non Current Assets",
+    "Net PPE",
+    "Gross PPE",
+    "Accumulated Depreciation",
+    "Properties",
+    "Land And Improvements",
+    "Machinery Furniture Equipment",
+    "Other Properties",
+    "Leases",
+    "Investments And Advances",
+    "Investmentin Financial Assets",
+    "Available For Sale Securities",
+    "Other Investments",
+    "Non Current Deferred Taxes Assets",
+    "Non Current Deferred Assets",
+    "Goodwill",
+    "Intangible Assets",
+    "Other Non Current Assets",
+    "Total Liabilities Net Minority Interest",
+    "Current Liabilities",
+    "Accounts Payable",
+    "Income Tax Payable",
+    "Total Tax Payable",
+    "Payables",
+    "Current Accrued Expenses",
+    "Payables And Accrued Expenses",
+    "Commercial Paper",
+    "Other Current Borrowings",
+    "Current Debt",
+    "Current Capital Lease Obligation",
+    "Current Debt And Capital Lease Obligation",
+    "Current Deferred Revenue",
+    "Current Deferred Liabilities",
+    "Other Current Liabilities",
+    "Total Non Current Liabilities Net Minority Interest",
+    "Long Term Debt And Capital Lease Obligation",
+    "Long Term Debt",
+    "Long Term Capital Lease Obligation",
+    "Capital Lease Obligations",
+    "Tradeand Other Payables Non Current",
+    "Other Non Current Liabilities",
+    "Total Equity Gross Minority Interest",
+    "Stockholders Equity",
+    "Common Stock Equity",
+    "Total Capitalization",
+    "Retained Earnings",
+    "Capital Stock",
+    "Common Stock",
+    "Other Equity Adjustments",
+    "Gains Losses Not Affecting Retained Earnings",
+    "Net Tangible Assets",
+    "Tangible Book Value",
+    "Invested Capital",
+    "Working Capital",
+    "Total Debt",
+    "Net Debt",
+    "Share Issued",
+    "Ordinary Shares Number",
+    "Treasury Shares Number"
+  ],
+  "incomeStatement": [
+    "Operating Revenue",
+    "Total Revenue",
+    "Cost Of Revenue",
+    "Reconciled Cost Of Revenue",
+    "Gross Profit",
+    "Research And Development",
+    "Selling General And Administration",
+    "Operating Expense",
+    "Total Expenses",
+    "Operating Income",
+    "Total Operating Income As Reported",
+    "EBIT",
+    "EBITDA",
+    "Normalized EBITDA",
+    "Net Non Operating Interest Income Expense",
+    "Interest Income Non Operating",
+    "Interest Expense Non Operating",
+    "Other Non Operating Income Expenses",
+    "Other Income Expense",
+    "Net Interest Income",
+    "Interest Income",
+    "Interest Expense",
+    "Pretax Income",
+    "Tax Provision",
+    "Tax Effect Of Unusual Items",
+    "Tax Rate For Calcs",
+    "Net Income Continuous Operations",
+    "Net Income Including Noncontrolling Interests",
+    "Net Income",
+    "Net Income Common Stockholders",
+    "Diluted NI Availto Com Stockholders",
+    "Net Income From Continuing Operation Net Minority Interest",
+    "Net Income From Continuing And Discontinued Operation",
+    "Normalized Income",
+    "Basic EPS",
+    "Diluted EPS",
+    "Basic Average Shares",
+    "Diluted Average Shares",
+    "Reconciled Depreciation"
+  ],
+  "cashFlow": [
+    "Operating Cash Flow",
+    "Cash Flow From Continuing Operating Activities",
+    "Net Income From Continuing Operations",
+    "Earnings Losses From Equity Investments",
+    "Depreciation And Amortization",
+    "Depreciation",
+    "Depreciation Amortization Depletion",
+    "Operating Gains Losses",
+    "Pension And Employee Benefit Expense",
+    "Net Foreign Currency Exchange Gain Loss",
+    "Deferred Tax",
+    "Deferred Income Tax",
+    "Other Non Cash Items",
+    "Change In Working Capital",
+    "Change In Receivables",
+    "Changes In Account Receivables",
+    "Change In Inventory",
+    "Change In Payables And Accrued Expense",
+    "Change In Accrued Expense",
+    "Change In Payable",
+    "Change In Account Payable",
+    "Change In Tax Payable",
+    "Change In Income Tax Payable",
+    "Change In Other Current Assets",
+    "Change In Other Working Capital",
+    "Investing Cash Flow",
+    "Cash Flow From Continuing Investing Activities",
+    "Capital Expenditure",
+    "Capital Expenditure Reported",
+    "Purchase Of PPE",
+    "Sale Of PPE",
+    "Net PPE Purchase And Sale",
+    "Purchase Of Investment",
+    "Sale Of Investment",
+    "Net Investment Purchase And Sale",
+    "Net Other Investing Changes",
+    "Financing Cash Flow",
+    "Cash Flow From Continuing Financing Activities",
+    "Net Issuance Payments Of Debt",
+    "Net Short Term Debt Issuance",
+    "Net Long Term Debt Issuance",
+    "Long Term Debt Issuance",
+    "Long Term Debt Payments",
+    "Repayment Of Debt",
+    "Issuance Of Debt",
+    "Net Common Stock Issuance",
+    "Common Stock Payments",
+    "Common Stock Dividend Paid",
+    "Cash Dividends Paid",
+    "Net Preferred Stock Issuance",
+    "Preferred Stock Issuance",
+    "Issuance Of Capital Stock",
+    "Repurchase Of Capital Stock",
+    "Net Other Financing Charges",
+    "Effect Of Exchange Rate Changes",
+    "Changes In Cash",
+    "Beginning Cash Position",
+    "End Cash Position",
+    "Free Cash Flow",
+    "Interest Paid Supplemental Data",
+    "Income Tax Paid Supplemental Data"
+  ]
+}
+</script>
+<script src="./renderer.js"></script>
+</body>
+</html>

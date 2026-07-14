@@ -1,0 +1,74 @@
+{
+  "templates": [
+    {
+      "id": "default",
+      "name": "Beginning Template",
+      "notes": "Default template that ships with FinForge. Contains basic settings for getting started with stock analysis.",
+      "isDefault": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "settings": {
+        "mode": "balanceSheet",
+        "display": {
+          "mode": "millions",
+          "divisor": 1000000
+        },
+        "balanceSheet": {
+          "selected": [
+            "Total Assets",
+            "Current Assets",
+            "Cash And Cash Equivalents",
+            "Total Liabilities Net Minority Interest",
+            "Stockholders Equity",
+            "Total Debt",
+            "Current Liabilities"
+          ]
+        },
+        "incomeStatement": {
+          "selected": [
+            "Total Revenue",
+            "Cost Of Revenue",
+            "Gross Profit",
+            "Operating Income",
+            "Net Income",
+            "EBITDA",
+            "Basic EPS",
+            "Diluted EPS"
+          ]
+        },
+        "cashFlow": {
+          "selected": [
+            "Operating Cash Flow",
+            "Free Cash Flow",
+            "Capital Expenditure",
+            "Cash Dividends Paid"
+          ]
+        }
+      },
+      "ratios": {
+        "Current Ratio": {
+          "formula": "BS: Current Assets / BS: Current Liabilities",
+          "notes": "Measures short-term liquidity"
+        },
+        "Debt to Equity": {
+          "formula": "BS: Total Debt / BS: Stockholders Equity",
+          "notes": "Measures financial leverage"
+        },
+        "Gross Margin": {
+          "formula": "(IS: Total Revenue - IS: Cost Of Revenue) / IS: Total Revenue",
+          "notes": "Measures profitability after direct costs"
+        },
+        "Net Profit Margin": {
+          "formula": "IS: Net Income / IS: Total Revenue",
+          "notes": "Measures overall profitability"
+        },
+        "Return on Equity": {
+          "formula": "IS: Net Income / BS: Stockholders Equity",
+          "notes": "Measures return on shareholder investment"
+        }
+      },
+      "tickers": ["AAPL", "MSFT", "GOOG"],
+      "excelTemplate": "default.xlsm"
+    }
+  ]
+}

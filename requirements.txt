@@ -19,6 +19,11 @@ PySide6>=6.5.0
 # HTTP Requests
 requests>=2.31.0
 
+# Research Paper Search
+ddgs>=9.0.0
+whoogle-search>=1.2.0
+cachetools>=5.0.0
+
 # Web Framework (for optional web dashboard)
 # dash>=2.0.0
 # flask>=3.0.0

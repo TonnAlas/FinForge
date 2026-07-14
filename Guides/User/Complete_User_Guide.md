@@ -41,24 +41,23 @@ FinForge is a financial analysis tool that:
 1. Double-click `launch_finforge.bat` in the main folder
 2. The FinForge window will open
 
-**Option B - From Command Line**
-```powershell
-cd <your-finforge-folder>
-.\.venv\Scripts\Activate.ps1
-python -c "from Internal.launch.stock_launcher import main; main()"
-```
+### Step 2: Open the Workspace
 
-### Step 2: Add Your First Ticker
+1. In the launcher, click **Open statement import window**
+2. The main workspace opens with sidebar navigation (Imports, Ratios, Company Profile, Research)
 
-1. In the launcher, type a ticker symbol (e.g., `AAPL`) in the input field
-2. Click **Add** or press Enter
-3. The app will automatically fetch all available data for that ticker
+### Step 3: Add Your First Ticker
 
-### Step 3: Launch Excel Dashboard
+1. Go to the **Imports** tab
+2. Type a ticker symbol (e.g., `AAPL`) in the search bar
+3. Select the ticker from search results and add it to the import list
+4. Data fetching starts automatically in the background
 
-1. Select the tickers you want to analyze
-2. Click **Launch Dashboard**
-3. Excel will open with your selected tickers loaded
+### Step 4: Import Financial Data to Excel
+
+1. In the Imports tab, choose **Balance sheet** or **Income statement** scope
+2. Select the line items you want to print
+3. Click **Import** to send data to Excel
 
 ---
 
@@ -67,6 +66,7 @@ python -c "from Internal.launch.stock_launcher import main; main()"
 - Windows 10 or later
 - Microsoft Excel (with macros enabled)
 - Python 3.10+ (included in .venv)
+- Node.js 18+ (for Electron, auto-installed by setup)
 - Internet connection (for data fetching)
 
 ---
@@ -75,33 +75,34 @@ python -c "from Internal.launch.stock_launcher import main; main()"
 
 If this is your first time using the app:
 
-1. **Enable Excel Macros**
+1. **Run `setup.bat`** to install all dependencies
+2. **Enable Excel Macros**
    - Open Excel, go to File > Options > Trust Center
    - Click Trust Center Settings > Macro Settings
    - Select "Enable all macros"
-
-2. **Install xlwings Add-in** (if prompted)
-   - The app uses xlwings to communicate with Excel
-   - Follow any prompts to install the add-in
 
 ---
 
 ## Folder Structure
 
 ```
-Stocks/
+FinForge/
   FinForge.xlsm             <- Main Excel workbook
   launch_finforge.bat       <- Quick launcher
+  setup.bat                 <- First-time setup
   data/                     <- All fetched data stored here
     fundamentals/           <- Financial statements
     holders/                <- Holder information
     metadata/               <- Company info
     prices/                 <- Price history
+  ElectronHome/             <- Electron desktop UI
   Guides/                   <- Documentation
     User/                   <- User guides
     Developer/              <- Technical docs
   Importing/                <- Import scripts
   Internal/                 <- Core modules
+  Ticker_management/        <- Ticker CRUD
+  data_management/          <- Data persistence
 ```
 
 ---
@@ -620,22 +621,23 @@ Row 1: Financial Ratios [Title]
 Row 2: [Empty]
 Row 3: [Empty]
 Row 4: Ticker | Ratio1 Name | Ratio2 Name | Ratio3 Name | ...
-Row 5: Refresh | Unassign    | Unassign    | Unassign    | ...
-Row 6: [Empty - Reserved]
-Row 7: AAPL   | 1.2500      | 0.8500      | 2.4500      | ...
+Row 5: [Empty - Reserved]
+Row 6: AAPL   | 1.2500      | 0.8500      | 2.4500      | ...
+Row 7: MSFT   | 1.3000      | 0.9200      | 2.5000      | ...
+Row 8: GOOGL  | 1.1800      | 0.7800      | 2.3200      | ...
 Row 8: MSFT   | 1.3000      | 0.9200      | 2.5000      | ...
 Row 9: GOOGL  | 1.1800      | 0.7800      | 2.3200      | ...
 ...
 ```
 
 ### Column Structure:
-- **Column A**: Ticker symbols (enter manually from Row 7 onwards)
+- **Column A**: Ticker symbols (enter manually from Row 6 onwards)
 - **Column B+**: Assigned ratios with calculated values
 
 ### Row Functions:
 - **Row 4**: Ratio names (set by assignment)
-- **Row 5**: Click to unassign ratio from that column
-- **Row 7+**: Your data (tickers + calculated ratios)
+- **Row 5**: Reserved and left empty
+- **Row 6+**: Your data (tickers + calculated ratios)
 
 ---
 
@@ -660,7 +662,7 @@ In Ratio Manager UI:
 3. Enter column letter (B, C, D, etc.)
 4. Click OK
 
-Result: Ratio name appears in Row 4, unassign button in Row 5
+Result: Ratio name appears in Row 4, Row 5 stays empty
 
 **Rules:**
 - Can only assign to columns B and onwards
@@ -677,7 +679,7 @@ In Ratio Manager UI:
 ### Step 4: Enter Tickers
 
 In Excel (Ratios sheet):
-1. Go to Column A, Row 7
+1. Go to Column A, Row 6
 2. Type ticker symbol (e.g., "AAPL")
 3. Continue adding tickers in rows below
 
@@ -685,7 +687,6 @@ In Excel (Ratios sheet):
 
 **Option A - From Excel:**
 - Run VBA macro: `RefreshRatios()`
-- Or click the "Refresh" indicator in A5
 
 **Option B - From Python:**
 ```python
@@ -699,12 +700,10 @@ python -c "from Internal.Ratios.ratio_calculator import calculate_ratios; calcul
 - Writes results to Excel
 - Shows progress dialog
 
-### Step 6: Unassign a Ratio
+### Step 6: Update an Assignment
 
-**Simple Method:**
-1. In Excel, click the cell in Row 5 under the ratio you want to unassign
-2. Confirm the dialog
-3. Done! Column is cleared and ready for new assignment
+1. Reassign the ratio in Row 4 if needed
+2. Refresh the sheet so the new layout recalculates
 
 ---
 
@@ -716,8 +715,8 @@ python -c "from Internal.Ratios.ratio_calculator import calculate_ratios; calcul
 ' Open the Ratio Manager UI
 OpenRatioManager()
 
-' Unassign ratio (automatic when clicking Row 5)
-UnassignRatio()
+ ' Open the Ratio Manager UI
+ OpenRatioManager()
 
 ' Calculate all ratios
 RefreshRatios()
@@ -755,7 +754,7 @@ RefreshRatios()
    ```
 
 5. **Calculate**
-   - Click "Refresh" or run `RefreshRatios()`
+  - Click "Refresh ratios sheet" in FinForge or run `RefreshRatios()`
    - See results:
    ```
    B7: 1.2500    C7: 0.8500
@@ -763,8 +762,8 @@ RefreshRatios()
    B9: 1.1800    C9: 0.7800
    ```
 
-6. **Unassign if Needed**
-   - Click cell B5 or C5 to unassign
+6. **Update if Needed**
+  - Adjust the Row 4 assignments, then refresh again
 
 ---
 
@@ -1542,13 +1541,13 @@ The pending deletions are tracked in `data/pending_deletions.json`:
 **Solution:** Create ratios first using Ratio Maker
 
 ### "No tickers found"
-**Solution:** Enter tickers in Column A starting from Row 7
+**Solution:** Enter tickers in Column A starting from Row 6
 
 ### "Failed to load Parquet data"
 **Solution:** Make sure data files exist. Run data import first if needed.
 
 ### "Column already in use"
-**Solution:** Unassign the existing ratio first (click Row 5)
+**Solution:** Reassign the ratio in Row 4 and refresh the sheet
 
 ### Calculation shows "N/A"
 **Reason:** Financial data not found for that ticker/item

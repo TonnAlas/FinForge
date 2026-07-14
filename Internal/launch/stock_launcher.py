@@ -48,7 +48,7 @@ from PySide6.QtGui import QFont, QIcon
 # Add the parent directory to path to import ticker_manager
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from Ticker_management.ticker_manager import TickerManager
-from data_management.stock_data_manager import StockDataManager
+from data_management.stock_data_manager import StockDataManager, convert_fundamental_wide_to_long
 
 
 class DataFetchWorker(QThread):
@@ -96,11 +96,17 @@ class DataFetchWorker(QThread):
             income = prepare_df(stock.income_stmt)
             if not income.empty:
                 self.data_manager.save_fundamental_data(self.ticker, 'income_statement', income)
+                income_long = convert_fundamental_wide_to_long(income)
+                if not income_long.empty:
+                    self.data_manager.save_fundamental_data(self.ticker, 'income_statement_long', income_long)
             
             # 3. Balance Sheet
             balance = prepare_df(stock.balance_sheet)
             if not balance.empty:
                 self.data_manager.save_fundamental_data(self.ticker, 'balance_sheet', balance)
+                balance_long = convert_fundamental_wide_to_long(balance)
+                if not balance_long.empty:
+                    self.data_manager.save_fundamental_data(self.ticker, 'balance_sheet_long', balance_long)
             
             # 4. Cash Flow
             cashflow = prepare_df(stock.cashflow)
@@ -1041,6 +1047,10 @@ class StockLauncher(TickerManager):
         
         # Save current tickers
         self.save_tickers()
+
+        # Delete data for tickers not selected in the launcher
+        if not self._delete_unselected_ticker_data():
+            return
         
         # Find the Excel workbook
         excel_files = [
@@ -1086,53 +1096,53 @@ class StockLauncher(TickerManager):
             
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Could not open Excel dashboard:\n{str(e)}")
-    
-    def fetch_data_first(self):
-        """Fetch fresh data before launching"""
-        if self.tickers_list.count() == 0:
-            QMessageBox.warning(self, "No Tickers", "Please add some tickers first.")
-            return
-        
-        reply = QMessageBox.question(self, "Fetch Data", 
-                                   f"Fetch fresh data for {self.tickers_list.count()} tickers?\n"
-                                   "This may take a few minutes.",
-                                   QMessageBox.Yes | QMessageBox.No)
-        
-        if reply == QMessageBox.Yes:
-            try:
-                # Save tickers first
-                self.save_tickers()
-                
-                # Show progress message
-                QMessageBox.information(self, "Fetching Data", 
-                                      "Data fetching started! Please wait while we gather the latest information...\n\n"
-                                      "The dashboard will open automatically when complete.")
-                
-                # Import and run fetch_stocks
-                import sys
-                main_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-                sys.path.append(main_dir)
-                
-                # Execute fetch_stocks by running it as a script using pythonw to avoid console window
-                import subprocess
-                fetch_script_path = os.path.join(main_dir, 'fetch_stocks.py')
-                
-                # Use pythonw to avoid showing console window
-                if os.name == 'nt':  # Windows
-                    subprocess.run([sys.executable.replace('python.exe', 'pythonw.exe'), fetch_script_path], cwd=main_dir)
-                else:
-                    subprocess.run([sys.executable, fetch_script_path], cwd=main_dir)
-                
-                # After fetching, launch dashboard
-                QTimer.singleShot(3000, self.launch_dashboard)
-                
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Error fetching data: {str(e)}")
-    
-    def open_advanced_manager(self):
-        """Open the full ticker manager - REMOVED FUNCTIONALITY"""
-        # This method is no longer used but kept for compatibility
-        pass
+
+    def _get_selected_tickers(self):
+        """Return the list of tickers currently selected in the launcher"""
+        selected = []
+        for i in range(self.tickers_list.count()):
+            item = self.tickers_list.item(i)
+            widget = self.tickers_list.itemWidget(item)
+            if widget:
+                selected.append(widget.ticker)
+        return sorted(set(selected))
+
+    def _delete_unselected_ticker_data(self):
+        """Delete stored data for tickers not in the current launcher list"""
+        selected = set(self._get_selected_tickers())
+        all_data = set(self.data_manager.get_all_data_tickers())
+        to_delete = sorted(all_data - selected)
+
+        if not to_delete:
+            return True
+
+        preview_limit = 10
+        preview_list = ", ".join(to_delete[:preview_limit])
+        remaining = len(to_delete) - preview_limit
+        if remaining > 0:
+            preview_list = f"{preview_list}, and {remaining} more"
+
+        message = (
+            "This will permanently delete data for tickers not in the launcher list.\n\n"
+            f"Tickers to delete ({len(to_delete)}): {preview_list}\n\n"
+            "Continue?"
+        )
+
+        reply = QMessageBox.question(
+            self,
+            "Delete Unselected Ticker Data",
+            message,
+            QMessageBox.Yes | QMessageBox.No,
+        )
+
+        if reply != QMessageBox.Yes:
+            return False
+
+        for ticker in to_delete:
+            self.data_manager.delete_ticker_data(ticker)
+            self.data_manager.cancel_ticker_deletion(ticker)
+
+        return True
     
     def create_new_workbook(self):
         """Create a new Excel workbook from template"""

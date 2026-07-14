@@ -1,6 +1,6 @@
 # Enhanced Ratio Maker - Feature Guide
 
-## 🎨 New UI Features (November 2025)
+## New UI Features
 
 ### 1. **Horizontal Operator Layout**
 All operators and buttons are now arranged **left-to-right** instead of top-to-bottom for a more intuitive workflow.
@@ -9,7 +9,7 @@ All operators and buttons are now arranged **left-to-right** instead of top-to-b
 - `+` Addition
 - `-` Subtraction  
 - `*` Multiplication
-- `/` or `÷` Division (toggleable)
+- `/` or `div` Division (toggleable)
 - `(` Opening parenthesis
 - `)` Closing parenthesis
 
@@ -19,19 +19,19 @@ As you type or insert items, the formula is **immediately color-coded**:
 
 | Element | Color | Example |
 |---------|-------|---------|
-| **Operators** | 🟠 Orange (#FF9800) | `+`, `-`, `*`, `/` |
-| **Brackets** | 🟡 Yellow (#FFD700) | `(`, `)` |
-| **Income Statement** | 🟢 Green (#81C784) | `IS: Revenue`, `IS: Net Income` |
-| **Balance Sheet** | 🔵 Light Blue (#81D4FA) | `BS: Total Assets`, `BS: Cash` |
-| **Price Data** | 🟣 Purple (#CE93D8) | `P: Closing Price` |
-| **Functions** | 🟡 Yellow-Orange (#FFC107) | `AVERAGE`, `SUM`, `MAX` |
-| **Numbers** | 🔵 Light Blue (#90CAF9) | `100`, `1.5`, `0.25` |
-| **Errors** | 🔴 Red (#F44336) | Invalid fields, typos |
+| **Operators** | Orange (#FF9800) | `+`, `-`, `*`, `/` |
+| **Brackets** | Yellow (#FFD700) | `(`, `)` |
+| **Income Statement** | Green (#81C784) | `IS: Revenue`, `IS: Net Income` |
+| **Balance Sheet** | Light Blue (#81D4FA) | `BS: Total Assets`, `BS: Cash` |
+| **Price Data** | Purple (#CE93D8) | `P: Closing Price` |
+| **Functions** | Yellow-Orange (#FFC107) | `AVERAGE`, `SUM`, `MAX` |
+| **Numbers** | Light Blue (#90CAF9) | `100`, `1.5`, `0.25` |
+| **Errors** | Red (#F44336) | Invalid fields, typos |
 
 ### 3. **Error Detection & Highlighting**
 
 Invalid tokens are automatically detected and marked with:
-- 🔴 **Red text color**
+- **Red text color**
 - **Wavy red underline**
 
 **Examples of errors:**
@@ -42,51 +42,50 @@ Invalid tokens are automatically detected and marked with:
 ### 4. **Color-Coded Advanced Functions Button**
 
 The **Advanced Functions** button is styled with:
-- 🟡 **Yellow-Orange color** (#FFC107)
-- 📊 **Chart emoji** for visual recognition
+- **Yellow-Orange color** (#FFC107)
 - Matches the function highlighting color in formulas
 
 ### 5. **Color Legend**
 
 A built-in **color legend** appears above the formula preview showing:
 ```
-● Operators  ● Brackets  ● IS: Items  ● BS: Items  ● P: Items  ● Functions  ● Errors
+[Operators] [Brackets] [IS: Items] [BS: Items] [P: Items] [Functions] [Errors]
 ```
 
-Each bullet is colored to match its syntax highlighting.
+Each label is colored to match its syntax highlighting.
 
 ---
 
-## 📋 Complete Feature List
+## Complete Feature List
 
 ### Layout & Design
-- ✅ Horizontal operator layout (left-to-right)
-- ✅ Wider dialog (700px minimum width)
-- ✅ Dark theme with VS Code-inspired colors
-- ✅ Monospace font for formula preview (`Consolas`, `Courier New`)
+- Horizontal operator layout (left-to-right)
+- Wider dialog (700px minimum width)
+- Dark theme with VS Code-inspired colors
+- Monospace font for formula preview (`Consolas`, `Courier New`)
 
 ### Formula Building
-- ✅ Field selector with autocomplete dropdown
-- ✅ Insert Field button
-- ✅ Horizontal operator buttons (+, -, *, /, (, ))
-- ✅ Advanced Functions dialog (MA, SUM, MAX, MIN, etc.)
-- ✅ Real-time syntax highlighting as you type
+- Field selector with autocomplete dropdown
+- Insert Field button
+- Horizontal operator buttons (+, -, *, /, (, ))
+- Advanced Functions dialog (MA, SUM, MAX, MIN, etc.)
+- Real-time syntax highlighting as you type
 
 ### Visual Feedback
-- ✅ Immediate color coding (operators, fields, functions)
-- ✅ Error highlighting with red wavy underline
-- ✅ Color legend for quick reference
-- ✅ Notes indicator (📝 emoji when notes exist)
+- Immediate color coding (operators, fields, functions)
+- Error highlighting with red wavy underline
+- Color legend for quick reference
+- Notes indicator when notes exist
 
 ### Functionality
-- ✅ Notes dialog for ratio documentation
-- ✅ Save/Cancel buttons
-- ✅ Formula validation
-- ✅ Support for complex nested formulas
+- Notes dialog for ratio documentation
+- Save/Cancel buttons
+- Formula validation
+- Support for complex nested formulas
 
 ---
 
-## 🎯 Usage Examples
+## Usage Examples
 
 ### Example 1: Simple Ratio with Highlighting
 **Gross Margin Formula:**
@@ -95,26 +94,26 @@ Each bullet is colored to match its syntax highlighting.
 ```
 
 **How it appears:**
-- `(` and `)` in **🟡 yellow**
-- `IS: Revenue` in **🟢 green**
-- `-` and `/` in **🟠 orange**
-- `IS: Cost of Revenue` in **🟢 green**
+- `(` and `)` in yellow
+- `IS: Revenue` in green
+- `-` and `/` in orange
+- `IS: Cost of Revenue` in green
 
 ### Example 2: Fraction Mode
 **Creating a P/E Ratio:**
 
-1. ✅ Check "Use Fraction Display"
-2. Select `P: Closing Price` → Insert Field
-3. Click `─\n÷` button (fraction division)
-4. Select `IS: Earnings Per Share` → Insert Field
+1. Check "Use Fraction Display"
+2. Select `P: Closing Price` then Insert Field
+3. Click fraction division button
+4. Select `IS: Earnings Per Share` then Insert Field
 
 **Result:**
 ```
 P: Closing Price / IS: Earnings Per Share
 ```
-- `P: Closing Price` in **🟣 purple**
-- `/` in **🟠 orange**
-- `IS: Earnings Per Share` in **🟢 green**
+- `P: Closing Price` in purple
+- `/` in orange
+- `IS: Earnings Per Share` in green
 
 ### Example 3: Advanced Function with Highlighting
 **50-Day Moving Average of Revenue:**
@@ -123,10 +122,10 @@ AVERAGE(IS: Revenue, 50 periods)
 ```
 
 **How it appears:**
-- `AVERAGE` in **🟡 yellow-orange**
-- `(` and `)` in **🟡 yellow**
-- `IS: Revenue` in **🟢 green**
-- `50` in **🔵 light blue**
+- `AVERAGE` in yellow-orange
+- `(` and `)` in yellow
+- `IS: Revenue` in green
+- `50` in light blue
 
 ### Example 4: Error Detection
 **Typo in field name:**
@@ -135,23 +134,23 @@ IS: Reveneu / IS: Cost
 ```
 
 **How it appears:**
-- `IS:` in **🟢 green** (valid prefix)
-- `Reveneu` in **🔴 red with wavy underline** (invalid field)
-- `/` in **🟠 orange**
-- `IS: Cost` in **🔴 red with wavy underline** (incomplete field name)
+- `IS:` in green (valid prefix)
+- `Reveneu` in red with wavy underline (invalid field)
+- `/` in orange
+- `IS: Cost` in red with wavy underline (incomplete field name)
 
 ---
 
-## 🔧 Technical Details
+## Technical Details
 
 ### Syntax Highlighter Implementation
-- Built with `QSyntaxHighlighter` from PySide6
+- Built with `QSyntaxHighlighter` from PySide6 (Python) or CSS classes (Electron)
 - Real-time parsing and highlighting
 - Regex-based pattern matching
 - No performance impact on typing
 
 ### Color Scheme (VS Code-inspired)
-```python
+```
 Operators:         #FF9800  (Material Orange 500)
 Brackets:          #FFD700  (Gold)
 Income Statement:  #81C784  (Material Green 300)
@@ -163,19 +162,18 @@ Errors:            #F44336  (Material Red 500)
 ```
 
 ### Fraction Mode
-- Checkbox state stored in `self.use_fraction`
-- Updates division button text: `/` → `─\n÷`
+- Checkbox state toggles division button display
 - Formula storage remains unchanged (always uses `/`)
 - Visual hint for mathematical clarity
 
 ---
 
-## 📝 Best Practices
+## Best Practices
 
 ### 1. Use Color Feedback
-- **Green/Blue/Purple** = Valid fields ✓
-- **Orange/Yellow** = Valid operators/brackets ✓
-- **Red** = Fix immediately! ✗
+- Green/Blue/Purple = Valid fields
+- Orange/Yellow = Valid operators/brackets
+- Red = Fix immediately
 
 ### 2. Fraction Display for Clarity
 Enable "Use Fraction Display" when creating:
@@ -188,13 +186,13 @@ Keep it off for:
 - Multi-operator complex formulas
 
 ### 3. Leverage Advanced Functions
-Use the **📊 Advanced Functions** button for:
+Use the **Advanced Functions** button for:
 - Moving averages (MA50, MA200)
 - Aggregate calculations (SUM, AVERAGE)
 - Statistical measures (STDEV, VAR)
 
 ### 4. Add Notes
-Click **📝 Notes** to document:
+Add notes to document:
 - What the ratio measures
 - Industry benchmarks
 - Interpretation guidelines

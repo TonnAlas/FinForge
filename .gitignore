@@ -34,26 +34,45 @@ ehthumbs.db
 ~$*.xlsx
 ~$*.xlsm
 ~$*.xls
+~$*.xlam
 
 # Logs
 *.log
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.ipynb_checkpoints/
+__pypackages__/
 
 # Local configuration (if any)
 .env
 .env.local
 config.local.json
 
+# Node.js
+node_modules/
+ElectronHome/node_modules/
+
 # Temporary folder contents (keep the folder, ignore contents)
 Temporary/*
 !Temporary/.gitkeep
 
-# User data (optional - uncomment if you want to exclude user data)
-# data/prices/
-# data/fundamentals/
-# data/holders/
-# data/metadata/
-# data/tickers.json
-# data/pending_deletions.json
+# User data (downloaded stock data - keep out of public repo)
+data/**
+# Seed / template config files (required for app to function)
+!data/.gitkeep
+!data/tickers.json
+!data/templates.json
+!data/statement_catalog.json
+!data/statement_settings.json
+!data/pending_deletions.json
 
 # Backup files
 *.bak

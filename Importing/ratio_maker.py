@@ -989,10 +989,10 @@ class FormulaBuilderDialog(QDialog):
         layout.addWidget(QLabel('Formula Preview:'))
         self.formula_preview = QTextEdit()
         self.formula_preview.setMinimumHeight(120)
-        self.formula_preview.setAcceptRichText(True)  # Enable rich text/HTML
+        self.formula_preview.setAcceptRichText(False)  # Use plain text mode (syntax highlighter works with this)
         self.formula_preview.setPlainText('= ')  # Start with equals sign
         
-        # Apply syntax highlighter (only works in plain text mode)
+        # Apply syntax highlighter
         self.highlighter = FormulaHighlighter(self.formula_preview.document(), self.available_fields)
         
         # Move cursor to end after the equals sign
@@ -1380,6 +1380,7 @@ class RatioMaker(QMainWindow):
             # Add price fields based on actual parquet column names
             price_fields = [
                 'P: Close Price',
+                'P: Previous Close',
                 'P: Open Price',
                 'P: High Price',
                 'P: Low Price',
@@ -1862,14 +1863,19 @@ class RatioMaker(QMainWindow):
                 if price_file.exists():
                     price_df = pd.read_parquet(price_file)
                     if not price_df.empty:
-                        # Get most recent price data
+                        # Get most recent price data (live/intraday, or today's close after hours)
                         latest = price_df.iloc[-1]
-                        ticker_data['P: Open'] = float(latest.get('Open', 0)) if pd.notna(latest.get('Open')) else 0
-                        ticker_data['P: High'] = float(latest.get('High', 0)) if pd.notna(latest.get('High')) else 0
-                        ticker_data['P: Low'] = float(latest.get('Low', 0)) if pd.notna(latest.get('Low')) else 0
-                        ticker_data['P: Close'] = float(latest.get('Close', 0)) if pd.notna(latest.get('Close')) else 0
+                        ticker_data['P: Open Price'] = float(latest.get('Open', 0)) if pd.notna(latest.get('Open')) else 0
+                        ticker_data['P: High Price'] = float(latest.get('High', 0)) if pd.notna(latest.get('High')) else 0
+                        ticker_data['P: Low Price'] = float(latest.get('Low', 0)) if pd.notna(latest.get('Low')) else 0
+                        ticker_data['P: Close Price'] = float(latest.get('Close', 0)) if pd.notna(latest.get('Close')) else 0
                         ticker_data['P: Volume'] = float(latest.get('Volume', 0)) if pd.notna(latest.get('Volume')) else 0
                         ticker_data['P: Dividends'] = float(latest.get('Dividends', 0)) if pd.notna(latest.get('Dividends')) else 0
+                        
+                        # Get previous completed trading day's close price
+                        if len(price_df) >= 2:
+                            previous = price_df.iloc[-2]
+                            ticker_data['P: Previous Close'] = float(previous.get('Close', 0)) if pd.notna(previous.get('Close')) else 0
                 
                 data[ticker] = ticker_data
             
@@ -1956,10 +1962,15 @@ class RatioMaker(QMainWindow):
             traceback.print_exc()
     
     def export_to_excel(self, result_df):
-        """Export calculated ratios to Excel file using xlwings (works with open files)."""
+        """Export calculated ratios to Excel file using xlwings (works with open files).
+
+        Sheet layout (matching ratio_calculator.py / BS/IS sheets):
+          Row 4:     Ticker symbols in columns B-Z
+          Row 7+:    Ratio names in Column A, calculated values in B-Z
+        """
         try:
-            print(f"\n📤 Exporting to Excel...")
-            
+            print(f"\nExporting to Excel...")
+
             # Try to connect to active workbook or open it
             try:
                 wb = xw.Book.caller()
@@ -1972,60 +1983,63 @@ class RatioMaker(QMainWindow):
                 except Exception as e:
                     excel_file = Path(__file__).parent.parent / "FinForge.xlsm"
                     if not excel_file.exists():
-                        print(f"  ⚠️  Excel file not found: {excel_file}")
+                        print(f"  Excel file not found: {excel_file}")
                         return
                     wb = xw.Book(str(excel_file))
-            
+
             # Check if 'Ratios' sheet exists
             if 'Ratios' not in [s.name for s in wb.sheets]:
-                print("  ⚠️  'Ratios' sheet not found in Excel")
+                print("  'Ratios' sheet not found in Excel")
                 return
-            
+
             ws = wb.sheets['Ratios']
-            
-            # Find the header row (row 4)
-            header_row = 4
-            
-            # Build a map of ratio names to column letters
-            ratio_col_map = {}
-            max_col = 26  # Check up to column Z
-            
-            for col_index in range(1, max_col + 1):
-                cell_value = ws.range((header_row, col_index)).value
-                if cell_value and cell_value in result_df.columns:
-                    ratio_col_map[cell_value] = col_index
-            
-            print(f"  ✓ Found {len(ratio_col_map)} assigned ratios in Excel: {list(ratio_col_map.keys())}")
-            
-            if not ratio_col_map:
-                print("  ⚠️  No matching ratios found to update")
-                return
-            
-            # Find ticker rows (starting from row 7)
             data_start_row = 7
+
+            # ── Read tickers from Row 4 (columns B-Z) ──
+            ticker_col_map = {}   # ticker -> column letter
+            row4_data = ws.range("B4:Z4").value
+            if row4_data:
+                for idx, value in enumerate(row4_data):
+                    if value and isinstance(value, str):
+                        ticker = value.strip().upper()
+                        col_letter = chr(66 + idx)  # B=66, C=67, ...
+                        ticker_col_map[ticker] = col_letter
+
+            if not ticker_col_map:
+                print("  No tickers found in Row 4 — nothing to export")
+                return
+
+            # ── Read ratio names from Column A (rows 7+) ──
+            ratio_row_map = {}    # ratio_name -> row number
+            col_a = ws.range(f"A{data_start_row}:A200").value
+            if col_a:
+                for offset, item in enumerate(col_a):
+                    if item and isinstance(item, str):
+                        name = item.strip()
+                        if name in result_df.columns:
+                            ratio_row_map[name] = data_start_row + offset
+
+            if not ratio_row_map:
+                print("  No ratios found in Column A — nothing to export")
+                return
+
+            print(f"  Found {len(ticker_col_map)} ticker(s) and {len(ratio_row_map)} ratio(s) in sheet")
+
+            # ── Write values at the intersection ──
             updates_count = 0
-            
-            # Scan through rows to find tickers (check up to 50 rows)
-            for row_num in range(data_start_row, data_start_row + 50):
-                ticker_value = ws.range((row_num, 1)).value
-                if ticker_value and isinstance(ticker_value, str):
-                    ticker = ticker_value.strip().upper()
-                    
-                    # Check if this ticker is in our results
-                    if ticker in result_df.index:
-                        print(f"  • Updating {ticker}...")
-                        # Update each assigned ratio column
-                        for ratio_name, col_num in ratio_col_map.items():
-                            value = result_df.loc[ticker, ratio_name]
-                            
-                            # Write the value (or None for NaN)
-                            if pd.isna(value):
-                                ws.range((row_num, col_num)).value = None
-                            else:
-                                ws.range((row_num, col_num)).value = float(value)
-                            updates_count += 1
-            
-            print(f"  ✅ Updated {updates_count} ratio values in Excel")
+            for ratio_name, row_num in ratio_row_map.items():
+                for ticker, col_letter in ticker_col_map.items():
+                    if ticker not in result_df.index:
+                        continue
+                    value = result_df.loc[ticker, ratio_name]
+                    cell = f"{col_letter}{row_num}"
+                    if pd.isna(value):
+                        ws.range(cell).value = None
+                    else:
+                        ws.range(cell).value = float(value)
+                    updates_count += 1
+
+            print(f"  Updated {updates_count} ratio values in Excel")
             
         except Exception as e:
             print(f"  ❌ Error exporting to Excel: {e}")

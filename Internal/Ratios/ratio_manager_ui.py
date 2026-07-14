@@ -5,10 +5,11 @@ This module provides a comprehensive UI for managing ratio assignments in Excel.
 All functionality is in Python for reliability and maintainability.
 
 Features:
-- View all created ratios with assignment status
-- Assign ratios to Excel columns
+- View all created ratios with their sheet status
+- Add ratios to Column A (like BS/IS line items)
+- Remove ratios from Column A
+- Set ticker symbol in Row 4 (like BS/IS)
 - View ratio notes
-- Unassign ratios from columns
 - Minimal VBA dependency
 """
 
@@ -30,6 +31,7 @@ from Internal.Ratios.ratio_handeling import get_ratios_from_config
 # Configuration
 DASHBOARD_PATH = Path(__file__).parent.parent.parent / "FinForge.xlsm"
 RATIOS_SHEET = "Ratios"
+RATIO_DATA_START_ROW = 7  # Matching BS/IS layout
 
 
 class NotesDialog(QDialog):
@@ -106,7 +108,8 @@ class RatioManagerUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.ratios = {}
-        self.assignments = {}  # {column: ratio_name}
+        self.sheet_ratios = []   # Ratio names currently in Column A
+        self.sheet_tickers = []  # Tickers from Row 4  [(col_letter, ticker)]
         self.wb = None
         self.ws = None
         self.init_ui()
@@ -178,7 +181,7 @@ class RatioManagerUI(QMainWindow):
         main_layout.addWidget(title)
         
         # Info label
-        info = QLabel("Manage ratio assignments for the Ratios worksheet")
+        info = QLabel("Manage which ratios appear in Column A (like BS/IS line items)")
         info.setAlignment(Qt.AlignCenter)
         info.setStyleSheet("color: #a0a0a0; font-size: 10pt;")
         main_layout.addWidget(info)
@@ -193,26 +196,42 @@ class RatioManagerUI(QMainWindow):
         self.ratio_list.setSelectionMode(QListWidget.SingleSelection)
         main_layout.addWidget(self.ratio_list)
         
-        # Buttons
+        # Buttons - Row 1
         button_layout = QHBoxLayout()
         button_layout.setSpacing(10)
         
-        self.assign_btn = QPushButton("📌 Assign to Column")
-        self.assign_btn.clicked.connect(self.assign_ratio)
-        self.assign_btn.setMinimumHeight(40)
-        button_layout.addWidget(self.assign_btn)
+        self.add_btn = QPushButton("➕ Add to Sheet (Column A)")
+        self.add_btn.clicked.connect(self.add_ratio_to_sheet)
+        self.add_btn.setMinimumHeight(40)
+        button_layout.addWidget(self.add_btn)
+        
+        self.remove_btn = QPushButton("➖ Remove from Sheet")
+        self.remove_btn.clicked.connect(self.remove_ratio_from_sheet)
+        self.remove_btn.setMinimumHeight(40)
+        button_layout.addWidget(self.remove_btn)
+        
+        main_layout.addLayout(button_layout)
+        
+        # Buttons - Row 2
+        button_layout2 = QHBoxLayout()
+        button_layout2.setSpacing(10)
+        
+        self.ticker_btn = QPushButton("📌 Set Ticker (Row 4)")
+        self.ticker_btn.clicked.connect(self.set_ticker)
+        self.ticker_btn.setMinimumHeight(40)
+        button_layout2.addWidget(self.ticker_btn)
         
         self.notes_btn = QPushButton("📝 View Notes")
         self.notes_btn.clicked.connect(self.view_notes)
         self.notes_btn.setMinimumHeight(40)
-        button_layout.addWidget(self.notes_btn)
+        button_layout2.addWidget(self.notes_btn)
         
         self.refresh_btn = QPushButton("🔄 Refresh")
         self.refresh_btn.clicked.connect(self.load_data)
         self.refresh_btn.setMinimumHeight(40)
-        button_layout.addWidget(self.refresh_btn)
+        button_layout2.addWidget(self.refresh_btn)
         
-        main_layout.addLayout(button_layout)
+        main_layout.addLayout(button_layout2)
         
         # Status bar
         self.status_label = QLabel("Ready")
@@ -240,7 +259,7 @@ class RatioManagerUI(QMainWindow):
         main_layout.addWidget(close_btn)
     
     def load_data(self):
-        """Load ratios and current assignments from Excel"""
+        """Load ratios and current sheet state from Excel"""
         try:
             self.status_label.setText("Loading data...")
             
@@ -268,135 +287,212 @@ class RatioManagerUI(QMainWindow):
                 self.ws = self.wb.sheets.add(RATIOS_SHEET)
                 self._setup_sheet_structure()
             
-            # Read current assignments from Row 4
-            self.assignments = {}
-            row4_data = self.ws.range("B4:Z4").value
+            # Read assigned ratios from Column A (row 7+)
+            self.sheet_ratios = []
+            col_a_data = self.ws.range(f"A{RATIO_DATA_START_ROW}:A200").value
+            if col_a_data:
+                for item in col_a_data:
+                    if item and isinstance(item, str) and item.strip() in self.ratios:
+                        self.sheet_ratios.append(item.strip())
             
+            # Read tickers from Row 4 (columns B-Z)
+            self.sheet_tickers = []
+            row4_data = self.ws.range("B4:Z4").value
             if row4_data:
                 for idx, value in enumerate(row4_data):
-                    if value and value in self.ratios:
-                        col_letter = chr(66 + idx)  # B=66, C=67, etc.
-                        self.assignments[col_letter] = value
+                    if value and isinstance(value, str):
+                        ticker = value.strip().upper()
+                        if ticker and ticker not in ("INDEX", "CUSTOM", ""):
+                            col_letter = chr(66 + idx)
+                            self.sheet_tickers.append((col_letter, ticker))
             
             # Update UI list
             self.update_ratio_list()
             
-            self.status_label.setText(f"✓ Loaded {len(self.ratios)} ratios, {len(self.assignments)} assigned")
+            ticker_str = ", ".join(t for _, t in self.sheet_tickers) if self.sheet_tickers else "None"
+            self.status_label.setText(
+                f"✓ Loaded {len(self.ratios)} ratios, "
+                f"{len(self.sheet_ratios)} in Column A, "
+                f"Ticker(s): {ticker_str}"
+            )
             
         except Exception as e:
             self.status_label.setText(f"❌ Error loading data: {str(e)}")
             QMessageBox.critical(self, "Error", f"Failed to load data:\n{str(e)}")
     
     def _setup_sheet_structure(self):
-        """Initialize the Ratios sheet structure"""
+        """Initialize the Ratios sheet structure (matching BS/IS layout)"""
         # Row 1: Title
         self.ws.range("A1").value = "Financial Ratios"
         self.ws.range("A1").font.size = 14
         self.ws.range("A1").font.bold = True
         
-        # Row 4: Headers
+        # Row 4: Ticker label + ticker input
         self.ws.range("A4").value = "Ticker"
         self.ws.range("A4").font.bold = True
         
-        # Row 5: Action indicators
-        self.ws.range("A5").value = "↻ Refresh"
-        self.ws.range("A5").font.bold = True
-        self.ws.range("A5").color = (200, 230, 201)  # Light green
+        # Row 5: Reserved for date (like BS/IS)
+        self.ws.range("B5:Z5").clear_contents()
     
     def update_ratio_list(self):
-        """Update the ratio list with assignment status"""
+        """Update the ratio list showing which ratios are in Column A"""
         self.ratio_list.clear()
         
-        # Get reverse mapping (ratio_name -> column)
-        ratio_to_col = {v: k for k, v in self.assignments.items()}
+        sheet_ratio_set = set(self.sheet_ratios)
         
         for ratio_name in sorted(self.ratios.keys()):
-            if ratio_name in ratio_to_col:
-                col = ratio_to_col[ratio_name]
-                item_text = f"✓ {ratio_name} → Column {col}"
+            if ratio_name in sheet_ratio_set:
+                item_text = f"✓ {ratio_name} (In Column A)"
                 item = QListWidgetItem(item_text)
-                item.setForeground(Qt.green)  # Bright green for dark theme
+                item.setForeground(Qt.green)
             else:
-                item_text = f"✗ {ratio_name} (Not assigned)"
+                item_text = f"✗ {ratio_name} (Not on sheet)"
                 item = QListWidgetItem(item_text)
-                item.setForeground(Qt.gray)  # Gray for dark theme
+                item.setForeground(Qt.gray)
             
-            item.setData(Qt.UserRole, ratio_name)  # Store actual ratio name
+            item.setData(Qt.UserRole, ratio_name)
             self.ratio_list.addItem(item)
     
-    def assign_ratio(self):
-        """Assign selected ratio to a column"""
+    def add_ratio_to_sheet(self):
+        """Add selected ratio to Column A of the Ratios sheet"""
         current_item = self.ratio_list.currentItem()
         if not current_item:
-            QMessageBox.warning(self, "No Selection", "Please select a ratio to assign.")
+            QMessageBox.warning(self, "No Selection", "Please select a ratio to add.")
             return
         
         ratio_name = current_item.data(Qt.UserRole)
         
-        # Check if already assigned
-        ratio_to_col = {v: k for k, v in self.assignments.items()}
-        if ratio_name in ratio_to_col:
+        # Check if already in Column A
+        if ratio_name in self.sheet_ratios:
             QMessageBox.information(
                 self, 
-                "Already Assigned", 
-                f"'{ratio_name}' is already assigned to column {ratio_to_col[ratio_name]}.\n\n"
-                "Unassign it first if you want to move it to a different column."
+                "Already on Sheet", 
+                f"'{ratio_name}' is already in Column A."
             )
             return
         
-        # Ask for column
-        col_letter, ok = QInputDialog.getText(
-            self,
-            "Assign to Column",
-            f"Enter column letter to assign '{ratio_name}':\n(B, C, D, E, etc.)",
-            text="B"
-        )
-        
-        if not ok or not col_letter:
-            return
-        
-        col_letter = col_letter.strip().upper()
-        
-        # Validate column
-        if len(col_letter) != 1 or col_letter < 'B':
-            QMessageBox.warning(self, "Invalid Column", "Column must be B or later (B, C, D, etc.)")
-            return
-        
-        # Check if column is already used
-        if col_letter in self.assignments:
-            QMessageBox.warning(
-                self,
-                "Column In Use",
-                f"Column {col_letter} is already assigned to '{self.assignments[col_letter]}'.\n\n"
-                "Choose a different column or unassign the existing ratio first."
-            )
-            return
-        
-        # Assign to Excel
         try:
-            # Write ratio name to Row 4
-            self.ws.range(f"{col_letter}4").value = ratio_name
-            self.ws.range(f"{col_letter}4").font.bold = True
-            self.ws.range(f"{col_letter}4").color = (217, 234, 211)  # Light green
+            # Find the next empty row in Column A
+            next_row = RATIO_DATA_START_ROW + len(self.sheet_ratios)
             
-            # Write unassign indicator to Row 5
-            self.ws.range(f"{col_letter}5").value = "✕ Unassign"
-            self.ws.range(f"{col_letter}5").color = (255, 205, 210)  # Light red
-            self.ws.range(f"{col_letter}5").font.bold = True
+            # Write ratio name to Column A
+            self.ws.range(f"A{next_row}").value = ratio_name
+            self.ws.range(f"A{next_row}").font.bold = True
             
-            # Save
             self.wb.save()
             
             # Update internal state
-            self.assignments[col_letter] = ratio_name
+            self.sheet_ratios.append(ratio_name)
             self.update_ratio_list()
             
-            self.status_label.setText(f"✓ Assigned '{ratio_name}' to column {col_letter}")
-            QMessageBox.information(self, "Success", f"✓ '{ratio_name}' assigned to column {col_letter}")
+            self.status_label.setText(f"✓ Added '{ratio_name}' to Column A (row {next_row})")
             
         except Exception as e:
-            self.status_label.setText(f"❌ Assignment failed: {str(e)}")
-            QMessageBox.critical(self, "Error", f"Failed to assign ratio:\n{str(e)}")
+            self.status_label.setText(f"❌ Failed to add: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to add ratio:\n{str(e)}")
+    
+    def remove_ratio_from_sheet(self):
+        """Remove selected ratio from Column A of the Ratios sheet"""
+        current_item = self.ratio_list.currentItem()
+        if not current_item:
+            QMessageBox.warning(self, "No Selection", "Please select a ratio to remove.")
+            return
+        
+        ratio_name = current_item.data(Qt.UserRole)
+        
+        # Check if in Column A
+        if ratio_name not in self.sheet_ratios:
+            QMessageBox.information(
+                self, 
+                "Not on Sheet", 
+                f"'{ratio_name}' is not in Column A."
+            )
+            return
+        
+        reply = QMessageBox.question(
+            self, "Confirm Remove",
+            f"Remove '{ratio_name}' from Column A?\n\n"
+            "This will delete the row and shift remaining ratios up.",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if reply != QMessageBox.Yes:
+            return
+        
+        try:
+            # Find the row index of this ratio in Column A
+            idx = self.sheet_ratios.index(ratio_name)
+            row = RATIO_DATA_START_ROW + idx
+            
+            # Clear the row data (all columns)
+            clear_range = self.ws.range(f"A{row}:Z{row}")
+            clear_range.clear_contents()
+            
+            # Shift rows below up by one (if not the last)
+            col_a_data = self.ws.range(f"A{RATIO_DATA_START_ROW}:A200").value
+            if col_a_data and idx < len(col_a_data) - 1:
+                for shift_idx in range(idx, len(self.sheet_ratios) - 1):
+                    src_row = RATIO_DATA_START_ROW + shift_idx + 1
+                    dst_row = RATIO_DATA_START_ROW + shift_idx
+                    # Copy ratio name
+                    src_name = self.ws.range(f"A{src_row}").value
+                    self.ws.range(f"A{dst_row}").value = src_name
+                    if src_name:
+                        self.ws.range(f"A{dst_row}").font.bold = True
+                    # Clear source
+                    self.ws.range(f"A{src_row}").clear_contents()
+            
+            self.wb.save()
+            
+            # Update internal state
+            self.sheet_ratios.remove(ratio_name)
+            self.update_ratio_list()
+            
+            self.status_label.setText(f"✓ Removed '{ratio_name}' from Column A")
+            
+        except Exception as e:
+            self.status_label.setText(f"❌ Failed to remove: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to remove ratio:\n{str(e)}")
+    
+    def set_ticker(self):
+        """Set a ticker symbol in Row 4 (like BS/IS)"""
+        current_tickers = ", ".join(t for _, t in self.sheet_tickers) if self.sheet_tickers else "None"
+        
+        ticker, ok = QInputDialog.getText(
+            self,
+            "Set Ticker",
+            f"Current ticker(s): {current_tickers}\n\n"
+            "Enter ticker symbol to place in B4:\n"
+            "(Leave empty to clear, or enter multiple comma-separated)",
+            text=self.sheet_tickers[0][1] if self.sheet_tickers else ""
+        )
+        
+        if not ok:
+            return
+        
+        try:
+            tickers_list = [t.strip().upper() for t in ticker.split(",") if t.strip()] if ticker.strip() else []
+            
+            # Clear old tickers from Row 4
+            self.ws.range("B4:Z4").clear_contents()
+            
+            # Write new tickers
+            for idx, t in enumerate(tickers_list):
+                col_letter = chr(66 + idx)  # B=66
+                self.ws.range(f"{col_letter}4").value = t
+                self.ws.range(f"{col_letter}4").font.bold = True
+                self.ws.range(f"{col_letter}4").color = (217, 234, 211)  # Light green
+            
+            self.wb.save()
+            
+            # Reload to refresh state
+            self.load_data()
+            
+            self.status_label.setText(f"✓ Set ticker(s): {', '.join(tickers_list) if tickers_list else 'None'}")
+            
+        except Exception as e:
+            self.status_label.setText(f"❌ Failed to set ticker: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to set ticker:\n{str(e)}")
     
     def view_notes(self):
         """View notes for selected ratio"""

@@ -6,7 +6,7 @@ from pathlib import Path
 TEMPLATE_PATH = Path(__file__).parent / "Template.xlsm"
 
 # Expected sheets in the workbook
-REQUIRED_SHEETS = ["balance sheets", "income statements", "Ratios", "Settings"]
+REQUIRED_SHEETS = ["balance sheets", "income statements", "cash flow", "Ratios", "Settings"]
 
 
 def get_main_workbook_path():

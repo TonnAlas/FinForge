@@ -28,10 +28,17 @@ Financial ratios are calculations that use financial statement data to measure:
 ### From Python
 
 ```powershell
-cd C:\Users\tonna\Desktop\Stocks
+cd <project-root>
 .\.venv\Scripts\Activate.ps1
 python Importing/ratio_maker.py
 ```
+
+### From Electron UI
+
+1. Open the FinForge workspace window
+2. Click the **Ratios** tab
+3. Use the formula builder with token buttons and field pickers
+4. Save ratios directly to the shared config
 
 ---
 
@@ -59,6 +66,7 @@ Use the field selector and operators to build your formula.
 | `IS:` | Income Statement | Total Revenue, Net Income, EBITDA |
 | `BS:` | Balance Sheet | Total Assets, Total Debt, Cash |
 | `CF:` | Cash Flow | Operating Cash Flow, Free Cash Flow |
+| `P:` | Price/Market Data | Closing Price, Volume, High, Low |
 | `RATIO:` | Other Ratios | Use your previously created ratios |
 
 **Available Operators:**

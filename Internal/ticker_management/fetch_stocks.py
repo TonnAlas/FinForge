@@ -13,12 +13,12 @@ import os
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from data_management.stock_data_manager import StockDataManager
+from data_management.stock_data_manager import StockDataManager, convert_fundamental_wide_to_long
 
 
 def get_tickers(data_manager):
     """Get tickers from available sources in priority order."""
-    tickers_json = Path(__file__).parent.parent.parent / "Ticker_management" / "tickers.json"
+    tickers_json = Path(__file__).parent.parent.parent / "data" / "tickers.json"
     if tickers_json.exists():
         with open(tickers_json, 'r') as f:
             data = json.load(f)
@@ -46,6 +46,9 @@ def prepare_df(df):
     if isinstance(df.index, pd.DatetimeIndex):
         df.index = df.index.tz_localize(None)
     df.reset_index(inplace=True)
+    # Convert all column names to strings to prevent parquet mixed-type warnings
+    # and avoid pandas melt crashes when columns include Timestamps.
+    df.columns = df.columns.astype(str)
     return df
 
 
@@ -77,6 +80,20 @@ def fetch_ticker_data(ticker_symbol, data_manager, start_date, end_date):
         prepared = prepare_df(df)
         if not prepared.empty:
             data_manager.save_fundamental_data(ticker_symbol, data_type, prepared)
+            if data_type == 'balance_sheet':
+                try:
+                    balance_long = convert_fundamental_wide_to_long(prepared)
+                    if not balance_long.empty:
+                        data_manager.save_fundamental_data(ticker_symbol, 'balance_sheet_long', balance_long)
+                except Exception as e:
+                    print(f"Warning: Could not convert balance sheet to long format: {e}")
+            if data_type == 'income_statement':
+                try:
+                    income_long = convert_fundamental_wide_to_long(prepared)
+                    if not income_long.empty:
+                        data_manager.save_fundamental_data(ticker_symbol, 'income_statement_long', income_long)
+                except Exception as e:
+                    print(f"Warning: Could not convert income statement to long format: {e}")
     
     # === QUARTERLY FUNDAMENTALS ===
     quarterly_fundamentals = [

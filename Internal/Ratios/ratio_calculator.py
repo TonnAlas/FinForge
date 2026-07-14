@@ -18,6 +18,8 @@ from Internal.Ratios.ratio_handeling import get_ratios_from_config
 
 # Configuration
 RATIOS_SHEET = "Ratios"
+RATIO_DATA_START_ROW = 7      # Row where ratio names begin in Column A (like BS/IS)
+TICKER_ROW = 4                # Row where ticker symbols are placed (like BS/IS)
 DATA_DIR = Path(__file__).parent.parent.parent / "data" / "fundamentals"
 
 
@@ -28,7 +30,8 @@ class RatioCalculator:
         self.wb = workbook
         self.ws = None
         self.ratios_config = {}
-        self.assignments = {}  # {column: ratio_name}
+        self.assigned_ratios = []   # Ratio names from Column A (row 7+)
+        self.ticker_columns = []    # [(col_letter, ticker)] from Row 4
         self.tickers = []
         self.balance_sheet_data = None
         self.income_statement_data = None
@@ -90,41 +93,49 @@ class RatioCalculator:
             raise  # Re-raise to show detailed error to user
     
     def initialize(self):
-        """Initialize calculator with Excel data"""
+        """Initialize calculator with Excel data.
+        
+        New layout (matching BS/IS sheets):
+          Row 4:     Ticker symbols in columns B-Z (like BS/IS)
+          Row 7+:    Ratio names in Column A, calculated values in B-Z
+        """
         try:
-            # Get Ratios sheet
             self.ws = self.wb.sheets[RATIOS_SHEET]
-            
-            # Load ratio configurations
             self.ratios_config = get_ratios_from_config()
             if not self.ratios_config:
                 raise ValueError("No ratios found in configuration")
-            
-            # Read assignments from Row 4
+
+            # Read assigned ratios from Column A (starting RATIO_DATA_START_ROW)
+            col_a_data = self.ws.range(f"A{RATIO_DATA_START_ROW}:A200").value
+            self.assigned_ratios = []
+            if col_a_data:
+                for item in col_a_data:
+                    if item and isinstance(item, str) and item.strip() in self.ratios_config:
+                        self.assigned_ratios.append(item.strip())
+
+            if not self.assigned_ratios:
+                raise ValueError("No assigned ratios found in Column A (starting from row 7)")
+
+            # Read tickers from Row 4 (columns B-Z)
             row4_data = self.ws.range("B4:Z4").value
+            self.ticker_columns = []
             if row4_data:
                 for idx, value in enumerate(row4_data):
-                    if value and value in self.ratios_config:
-                        col_letter = chr(66 + idx)  # B=66, C=67, etc.
-                        self.assignments[col_letter] = value
-            
-            if not self.assignments:
-                raise ValueError("No ratios assigned to columns")
-            
-            # Read tickers from Column A (starting Row 7)
-            # Exclude "CUSTOM" entries - those are user-managed rows
-            col_a_data = self.ws.range("A7:A100").value
-            self.tickers = [t for t in col_a_data if t and isinstance(t, str) and t.strip() and t.strip().upper() != "CUSTOM"]
-            
-            if not self.tickers:
-                raise ValueError("No tickers found in column A (starting from row 7)")
-            
-            # Load Parquet data
+                    if value and isinstance(value, str):
+                        ticker = value.strip().upper()
+                        if ticker and ticker not in ("INDEX", "CUSTOM", ""):
+                            col_letter = chr(66 + idx)  # B=66, C=67, etc.
+                            self.ticker_columns.append((col_letter, ticker))
+
+            self.tickers = [t for _, t in self.ticker_columns]
+            if not self.ticker_columns:
+                raise ValueError("No tickers found in row 4")
+
             if not self.load_parquet_data():
                 raise ValueError("Failed to load Parquet data files")
-            
+
             return True
-            
+
         except Exception as e:
             print(f"Initialization error: {e}")
             raise
@@ -332,6 +343,17 @@ class RatioCalculator:
                         
                         return float((current_close - past_close) / past_close * 100)
                     
+                    # Handle 'previous close' explicitly - always uses iloc[-2] (last completed trading day)
+                    if item_lower == 'previous close':
+                        if len(price_df) < 2:
+                            print(f"Not enough price data for Previous Close ({ticker})")
+                            return None
+                        value = price_df['Close'].iloc[-2]
+                        if pd.isna(value):
+                            print(f"No Previous Close value available for {ticker}")
+                            return None
+                        return float(value)
+                    
                     # Map common price field names to parquet columns
                     price_field_map = {
                         'high price': 'High',
@@ -525,171 +547,109 @@ class RatioCalculator:
             traceback.print_exc()
             return "ERROR"
     
-    def _clear_empty_ticker_rows(self):
-        """Clear ratio values from rows where the ticker has been removed"""
+    def _clear_empty_ticker_columns(self):
+        """Clear ratio values from columns where the ticker has been removed from row 4."""
         try:
-            # Read column A from row 7 to 100 to find empty ticker cells
-            col_a_data = self.ws.range("A7:A100").value
-            
-            if not col_a_data:
+            if not self.assigned_ratios:
                 return
-            
-            # Get all assigned column letters
-            assigned_columns = list(self.assignments.keys())
-            if not assigned_columns:
-                return
-            
-            # Check each row
-            for row_idx, ticker_value in enumerate(col_a_data):
-                row = 7 + row_idx
-                
-                # Skip CUSTOM rows - preserve their values
-                if isinstance(ticker_value, str) and ticker_value.strip().upper() == "CUSTOM":
-                    continue
-                
-                # If ticker cell is empty, clear all ratio values in that row
-                if not ticker_value or (isinstance(ticker_value, str) and not ticker_value.strip()):
-                    for col_letter in assigned_columns:
+            row4_data = self.ws.range("B4:Z4").value
+            active_columns = set()
+            if row4_data:
+                for idx, value in enumerate(row4_data):
+                    if value and isinstance(value, str):
+                        ticker = value.strip().upper()
+                        if ticker and ticker not in ("INDEX", "CUSTOM", ""):
+                            active_columns.add(chr(66 + idx))
+            all_columns = [chr(66 + i) for i in range(25)]
+            num_ratio_rows = len(self.assigned_ratios)
+            for col_letter in all_columns:
+                if col_letter not in active_columns:
+                    for row_offset in range(num_ratio_rows):
+                        row = RATIO_DATA_START_ROW + row_offset
                         cell = f"{col_letter}{row}"
                         cell_range = self.ws.range(cell)
-                        # Only clear if cell has a value
                         if cell_range.value is not None:
                             cell_range.value = None
-                            print(f"Cleared {cell} (no ticker in row)")
-                            
         except Exception as e:
-            print(f"Warning: Error clearing empty ticker rows: {e}")
+            print(f"Warning: Error clearing empty ticker columns: {e}")
 
     def calculate_all_ratios(self):
-        """Calculate all assigned ratios for all tickers"""
+        """Calculate all assigned ratios for all tickers.
+        
+        New layout (matching BS/IS sheets):
+          Row 4:     Ticker symbols in columns B-Z
+          Row 7+:    Ratio names in Column A, calculated values in B-Z
+        """
         try:
-            # First, clear values in rows where ticker has been removed
-            self._clear_empty_ticker_rows()
-            
-            total_calculations = len(self.tickers) * len(self.assignments)
+            self._clear_empty_ticker_columns()
+            total_calculations = len(self.ticker_columns) * len(self.assigned_ratios)
             current = 0
-            errors = []  # Track any errors during calculation
-            
-            # Create progress dialog with dark theme
+            errors = []
+
             app = QApplication.instance() or QApplication(sys.argv)
-            progress = QProgressDialog(
-                "Calculating ratios...",
-                "Cancel",
-                0,
-                total_calculations
-            )
+            progress = QProgressDialog("Calculating ratios...", "Cancel", 0, total_calculations)
             progress.setWindowTitle("Ratio Calculator")
             progress.setWindowModality(Qt.WindowModal)
-            
-            # Apply dark theme to progress dialog
             progress.setStyleSheet("""
-                QProgressDialog {
-                    background-color: #2d2d2d;
-                }
-                QProgressDialog QLabel {
-                    color: #e0e0e0;
-                    font-size: 11pt;
-                }
-                QProgressDialog QPushButton {
-                    background-color: #0d7377;
-                    color: #ffffff;
-                    border: none;
-                    border-radius: 5px;
-                    padding: 8px 16px;
-                    font-weight: bold;
-                }
-                QProgressDialog QPushButton:hover {
-                    background-color: #14a085;
-                }
-                QProgressBar {
-                    background-color: #1e1e1e;
-                    border: 1px solid #3e3e3e;
-                    border-radius: 5px;
-                    text-align: center;
-                }
-                QProgressBar::chunk {
-                    background-color: #0d7377;
-                    border-radius: 4px;
-                }
+                QProgressDialog { background-color: #2d2d2d; }
+                QProgressDialog QLabel { color: #e0e0e0; font-size: 11pt; }
+                QProgressDialog QPushButton { background-color: #0d7377; color: #ffffff; border: none; border-radius: 5px; padding: 8px 16px; font-weight: bold; }
+                QProgressDialog QPushButton:hover { background-color: #14a085; }
+                QProgressBar { background-color: #1e1e1e; border: 1px solid #3e3e3e; border-radius: 5px; text-align: center; }
+                QProgressBar::chunk { background-color: #0d7377; border-radius: 4px; }
             """)
-            
             progress.show()
-            
-            # Calculate for each ticker
-            for ticker_idx, ticker in enumerate(self.tickers):
-                row = 7 + ticker_idx  # Start from row 7
-                
-                # Calculate each assigned ratio
-                for col_letter, ratio_name in self.assignments.items():
+
+            for col_letter, ticker in self.ticker_columns:
+                for row_offset, ratio_name in enumerate(self.assigned_ratios):
                     if progress.wasCanceled():
                         return False
-                    
+                    row = RATIO_DATA_START_ROW + row_offset
                     try:
-                        # Calculate ratio
                         value = self.calculate_ratio(ratio_name, ticker)
-                        
-                        # Write to Excel
                         cell = f"{col_letter}{row}"
                         cell_range = self.ws.range(cell)
-                        
                         if isinstance(value, (int, float)):
-                            # Numeric value - set value and format
                             cell_range.value = value
                             try:
                                 cell_range.number_format = '0.0000'
-                            except Exception as fmt_err:
-                                print(f"⚠️ Format warning for {cell}: {fmt_err}")
-                                pass  # If format fails, continue with default
-                        else:
-                            # String value (N/A, ERROR, DIV/0) - just set value
-                            cell_range.value = str(value)
-                            try:
-                                cell_range.number_format = 'General'  # Reset to general format
                             except:
                                 pass
-                    
+                        else:
+                            cell_range.value = str(value)
+                            try:
+                                cell_range.number_format = 'General'
+                            except:
+                                pass
                     except Exception as cell_err:
-                        # Track error but continue with other calculations
                         error_msg = f"Error writing {ratio_name} for {ticker} to {col_letter}{row}: {cell_err}"
-                        print(f"❌ {error_msg}")
+                        print(f"Error: {error_msg}")
                         errors.append(error_msg)
-                        
-                        # Write error indicator to cell
                         try:
                             self.ws.range(f"{col_letter}{row}").value = "ERROR"
                         except:
                             pass
-                    
                     current += 1
                     progress.setValue(current)
-                    progress.setLabelText(
-                        f"Calculating {ratio_name} for {ticker}...\n"
-                        f"({current}/{total_calculations})"
-                    )
-                    
+                    progress.setLabelText(f"Calculating {ratio_name} for {ticker}... ({current}/{total_calculations})")
                     app.processEvents()
-            
+
             progress.close()
-            
-            # Save workbook
+
             try:
                 self.wb.save()
-            except Exception as save_err:
-                print(f"⚠️ Warning: Could not save workbook: {save_err}")
-                # Don't fail if save fails - user can save manually
-            
-            # Report any errors that occurred
+            except:
+                pass
+
             if errors:
-                print(f"\n⚠️ Completed with {len(errors)} errors:")
-                for err in errors[:5]:  # Show first 5 errors
+                print(f"\nCompleted with {len(errors)} errors:")
+                for err in errors[:5]:
                     print(f"  - {err}")
                 if len(errors) > 5:
                     print(f"  ... and {len(errors) - 5} more errors")
-            
             return True
-            
         except Exception as e:
-            print(f"❌ Critical error in calculate_all_ratios: {e}")
+            print(f"Critical error in calculate_all_ratios: {e}")
             import traceback
             traceback.print_exc()
             raise
@@ -754,6 +714,161 @@ def calculate_ratios():
 def refresh_ratios():
     """Excel-callable function to refresh/calculate all ratios"""
     calculate_ratios()
+
+
+# ---------------------------------------------------------------------------
+# Column A Management — called from ElectronHome terminal
+# ---------------------------------------------------------------------------
+
+WORKBOOK_PATH = Path(__file__).parent.parent.parent / "FinForge.xlsm"
+
+
+def _open_workbook_readonly():
+    """Open the workbook for read/write operations, handling hidden Excel."""
+    try:
+        wb = xw.Book(str(WORKBOOK_PATH))
+    except Exception:
+        app = xw.App(visible=False, add_book=False)
+        wb = app.books.open(str(WORKBOOK_PATH))
+    return wb
+
+
+def sync_ratio_sheet_from_config(workbook):
+    """Sync ratio names into Column A.
+
+    Ratios with a 'row' field set are placed at that exact row position
+    (sorted by row number); ratios without a row are auto-assigned to
+    the remaining rows in order.
+    """
+    ratios = get_ratios_from_config()
+    ws = workbook.sheets[RATIOS_SHEET]
+    ws.range(f"A{RATIO_DATA_START_ROW}:Z200").clear_contents()
+
+    # Separate ratios with/without explicit row numbers
+    named = []
+    for name, data in ratios.items():
+        raw_row = data.get('row', '') if isinstance(data, dict) else ''
+        try:
+            row_num = int(raw_row)
+        except (ValueError, TypeError):
+            row_num = None
+        named.append((name, row_num))
+
+    explicit = [(n, r) for n, r in named if r is not None]
+    auto     = [n for n, r in named if r is None]
+    explicit.sort(key=lambda x: x[1])
+    ordered = [n for n, _ in explicit] + auto
+
+    row = RATIO_DATA_START_ROW
+    for name in ordered:
+        ws.range(f"A{row}").value = name
+        ws.range(f"A{row}").font.bold = True
+        row += 1
+    return ws
+
+
+def refresh_ratios_from_terminal():
+    """Refresh the Ratios sheet directly from the terminal workflow."""
+    app = None
+    try:
+        try:
+            workbook = xw.Book(str(WORKBOOK_PATH))
+        except Exception:
+            app = xw.App(visible=False, add_book=False)
+            workbook = app.books.open(str(WORKBOOK_PATH))
+
+        sync_ratio_sheet_from_config(workbook)
+
+        calculator = RatioCalculator(workbook)
+        calculator.initialize()
+        calculator.calculate_all_ratios()
+        workbook.save()
+        return True
+
+    except Exception as e:
+        print(f"❌ Error refreshing ratios from terminal: {e}")
+        raise
+
+    finally:
+        if app is not None:
+            app.quit()
+
+
+def get_sheet_ratio_names():
+    """Return the list of ratio names currently in Column A of the Ratios sheet."""
+    try:
+        wb = _open_workbook_readonly()
+        ws = wb.sheets[RATIOS_SHEET]
+        col_a = ws.range(f"A{RATIO_DATA_START_ROW}:A200").value
+        names = []
+        if col_a:
+            for item in col_a:
+                if item and isinstance(item, str):
+                    names.append(item.strip())
+        wb.close()
+        return names
+    except Exception as e:
+        print(f"Error reading sheet ratios: {e}")
+        return []
+
+
+def sync_assigned_ratios(ratio_names_json: str):
+    """Set Column A of the Ratios sheet to exactly the given list of ratio names.
+    
+    Ratios with a 'row' field in the config are placed at that row position;
+    ratios without one are auto-assigned to the remaining rows in order.
+    Called from ElectronHome terminal via IPC. Accepts a JSON array string.
+    """
+    import json
+    try:
+        ratio_names = json.loads(ratio_names_json)
+        if not isinstance(ratio_names, list):
+            raise ValueError("Expected a JSON array of ratio names")
+    except Exception as e:
+        print(f"❌ Invalid ratio_names_json: {e}")
+        return False
+
+    all_ratios = get_ratios_from_config()
+    named_list = []
+    for name in ratio_names:
+        entry = all_ratios.get(name, {})
+        raw_row = entry.get('row', '') if isinstance(entry, dict) else ''
+        try:
+            row_num = int(raw_row)
+        except (ValueError, TypeError):
+            row_num = None
+        named_list.append((name, row_num))
+
+    explicit = [(n, r) for n, r in named_list if r is not None]
+    auto = [n for n, r in named_list if r is None]
+    explicit.sort(key=lambda x: x[1])
+    ordered_names = [n for n, _ in explicit] + auto
+
+    app = None
+    try:
+        try:
+            wb = xw.Book(str(WORKBOOK_PATH))
+        except Exception:
+            app = xw.App(visible=False, add_book=False)
+            wb = app.books.open(str(WORKBOOK_PATH))
+
+        ws = wb.sheets[RATIOS_SHEET]
+        clear_end = max(RATIO_DATA_START_ROW + 200, RATIO_DATA_START_ROW + len(ordered_names) + 10)
+        ws.range(f"A{RATIO_DATA_START_ROW}:Z{clear_end}").clear_contents()
+        row = RATIO_DATA_START_ROW
+        for name in ordered_names:
+            ws.range(f"A{row}").value = name
+            ws.range(f"A{row}").font.bold = True
+            row += 1
+        wb.save()
+        print(f"✓ Synced {len(ordered_names)} ratios to Column A")
+        return True
+    except Exception as e:
+        print(f"❌ Error syncing assigned ratios: {e}")
+        return False
+    finally:
+        if app is not None:
+            app.quit()
 
 
 if __name__ == "__main__":

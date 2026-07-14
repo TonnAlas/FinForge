@@ -51,7 +51,7 @@ When you remove a ticker:
 3. If you re-add the ticker within 3 days, the data is preserved
 4. After 3 days, data is permanently deleted on next app launch
 
-See [Ticker Data Cleanup Guide](Ticker_Data_Cleanup_Guide.md) for details.
+See [Data Cleanup Guide](10_Data_Cleanup.md) for details.
 
 ---
 

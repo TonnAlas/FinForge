@@ -6,6 +6,52 @@ import json
 # Default number of days before deleted ticker data is permanently removed
 DELETION_DELAY_DAYS = 3
 
+def convert_fundamental_wide_to_long(df_wide: pd.DataFrame) -> pd.DataFrame:
+    """Convert a wide fundamentals DataFrame to long format.
+
+    Expected wide format:
+    - A line item column named "index"
+    - One column per statement date
+    - Optional "ticker" and "last_updated" columns
+    """
+    if df_wide is None or df_wide.empty:
+        return pd.DataFrame()
+    if "index" not in df_wide.columns:
+        return pd.DataFrame()
+
+    df = df_wide.copy()
+    df = df.rename(columns={"index": "line_item"})
+
+    # Preserve the original line item order
+    order_map = {}
+    for idx, item in enumerate(df["line_item"].tolist()):
+        if item not in order_map:
+            order_map[item] = idx
+
+    # Convert all column names to strings to avoid pandas melt crash
+    # when columns are mixed types (e.g., Timestamp + string from reset_index).
+    # yfinance returns DataFrames with Timestamp column headers.
+    df.columns = df.columns.astype(str)
+
+    value_cols = [
+        col for col in df.columns
+        if col not in ["line_item", "ticker", "last_updated"]
+    ]
+
+    long_df = df.melt(
+        id_vars=["line_item"],
+        value_vars=value_cols,
+        var_name="statement_date",
+        value_name="value",
+    )
+
+    long_df["line_item_order"] = long_df["line_item"].map(order_map)
+    long_df = long_df.dropna(subset=["value"])
+    long_df["statement_date"] = long_df["statement_date"].astype(str)
+    long_df["line_item"] = long_df["line_item"].astype(str)
+
+    return long_df
+
 class StockDataManager:
     def __init__(self, base_path: str | Path = "data"):
         self.base_path = Path(base_path)
@@ -286,6 +332,50 @@ class StockDataManager:
             tickers.update(df['ticker'].unique())
             
         return sorted(list(tickers))
+
+    def get_all_data_tickers(self) -> list:
+        """Get list of all tickers that have any stored data"""
+        tickers = set()
+
+        # Prices
+        for file in self.dirs['prices'].glob('*.parquet'):
+            tickers.add(file.stem.upper())
+
+        # Metadata
+        for file in self.dirs['metadata'].glob('*.json'):
+            tickers.add(file.stem.upper())
+
+        # Fundamentals (new structure)
+        for data_type_dir in self.dirs['fundamentals'].iterdir():
+            if data_type_dir.is_dir():
+                for file in data_type_dir.glob('*.parquet'):
+                    tickers.add(file.stem.upper())
+
+        # Fundamentals (old structure)
+        for parquet_file in self.dirs['fundamentals'].glob('*.parquet'):
+            try:
+                df = pd.read_parquet(parquet_file)
+                if 'ticker' in df.columns:
+                    tickers.update(df['ticker'].dropna().astype(str).str.upper().unique())
+            except Exception as e:
+                print(f"Warning: Could not read tickers from {parquet_file.name}: {e}")
+
+        # Holders (new structure)
+        for holder_type_dir in self.dirs['holders'].iterdir():
+            if holder_type_dir.is_dir():
+                for file in holder_type_dir.glob('*.parquet'):
+                    tickers.add(file.stem.upper())
+
+        # Holders (old structure)
+        for parquet_file in self.dirs['holders'].glob('*.parquet'):
+            try:
+                df = pd.read_parquet(parquet_file)
+                if 'ticker' in df.columns:
+                    tickers.update(df['ticker'].dropna().astype(str).str.upper().unique())
+            except Exception as e:
+                print(f"Warning: Could not read tickers from {parquet_file.name}: {e}")
+
+        return sorted(tickers)
     
     def save_tickers_list(self, tickers: list):
         """Save the master list of tickers"""

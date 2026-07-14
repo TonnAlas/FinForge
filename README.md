@@ -1,6 +1,6 @@
 # FinForge
 
-A comprehensive financial analysis tool that fetches stock data from Yahoo Finance, stores it efficiently, and provides a powerful Excel-based dashboard for custom ratio analysis.
+A comprehensive financial analysis tool that fetches stock data from Yahoo Finance, stores it efficiently, and provides an Electron-based desktop UI alongside a powerful Excel dashboard for custom ratio analysis.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
@@ -12,10 +12,17 @@ A comprehensive financial analysis tool that fetches stock data from Yahoo Finan
 
 - **Real-time Data Fetching** - Get stock data directly from Yahoo Finance
 - **Efficient Storage** - Data stored in Parquet format for fast access
-- **Excel Dashboard** - Beautiful, interactive dashboard in Excel
+- **Electron Desktop UI** - Modern launcher and workspace with sidebar navigation
+- **Excel Dashboard** - Interactive dashboard in Excel via xlwings
 - **Custom Ratios** - Create your own financial ratios with a visual formula builder
 - **Multi-Ticker Support** - Analyze multiple stocks simultaneously
 - **Automatic Calculations** - Ratios calculated and updated automatically
+- **Statement Import UI** - Choose which line items to print to Excel
+- **Research Paper Search** - Search for equity research via DuckDuckGo or Whoogle
+- **Company Profiles** - View detailed company metadata
+- **Cash Flow Import** - Import cash flow statements alongside BS and IS
+- **Template System** - Save and load Excel workbook templates
+- **FinForge Add-in** - Excel ribbon add-in for launching the workspace from Excel
 
 ---
 
@@ -24,6 +31,7 @@ A comprehensive financial analysis tool that fetches stock data from Yahoo Finan
 - Windows 10 or later
 - Python 3.10 or later
 - Microsoft Excel (with macros enabled)
+- Node.js 18+ (for Electron, auto-installed by setup)
 - Internet connection (for data fetching)
 
 ---
@@ -35,7 +43,7 @@ A comprehensive financial analysis tool that fetches stock data from Yahoo Finan
 1. **Download** this repository (Code > Download ZIP) and extract it
 2. **Move** the extracted folder to a short path (recommended: `C:\FinForge`)
 3. **Run** `setup.bat` by double-clicking it
-4. **Wait** for the setup to complete (installs all dependencies)
+4. **Wait** for the setup to complete (installs Python dependencies and Electron)
 5. **Done!** Launch the app with `launch_finforge.bat`
 
 ### Uninstall
@@ -61,11 +69,15 @@ python -m venv .venv
 # Activate it
 .\.venv\Scripts\Activate.ps1
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
 
 # Install xlwings Excel add-in
 xlwings addin install
+
+# Install Electron for the desktop UI
+cd ElectronHome
+npm install
 ```
 
 ---
@@ -75,25 +87,34 @@ xlwings addin install
 ### Starting the Application
 
 1. Double-click `launch_finforge.bat`
-2. The FinForge window will open
+2. The FinForge launcher window opens with action buttons (Open Workbook, Open Folders, Setup, Uninstall)
+3. Click **Open statement import window** to open the main workspace
 
 ### Adding Stocks
 
-1. Type a ticker symbol (e.g., `AAPL`, `MSFT`, `GOOGL`)
-2. Click **Add** or press Enter
-3. Data will be fetched automatically
+1. In the workspace window, go to the **Imports** tab
+2. Search for tickers using the search bar (e.g., `AAPL`, `MSFT`, `GOOGL`)
+3. Select tickers and add them to the import list
+4. Data will be fetched automatically
 
-### Opening the Dashboard
+### Importing Financial Data to Excel
 
-1. Select the stocks you want to analyze
-2. Click **Launch Dashboard**
-3. Excel will open with your stocks loaded
+1. Select the tickers and line items you want in the **Imports** tab
+2. Choose balance sheet or income statement scope
+3. Click **Import** to send data to Excel
+4. The Python importers populate the workbook automatically
 
 ### Creating Custom Ratios
 
-1. In Excel, click the **Ratio Manager** button
-2. Use the visual formula builder to create ratios
-3. Assign ratios to columns in your dashboard
+1. Go to the **Ratios** tab in the workspace
+2. Use the formula builder with token buttons (BS:, IS:, CF:, P:, RATIO:)
+3. Save ratios to the shared config
+4. Assign ratios to Excel columns
+
+### Opening the Excel Dashboard
+
+1. Click **Open Workbook** in the launcher or workspace
+2. Excel opens `FinForge.xlsm` with your data
 
 ---
 
@@ -101,20 +122,34 @@ xlwings addin install
 
 ```
 FinForge/
-+-- FinForge.xlsm          # Main Excel workbook
-+-- launch_finforge.bat    # Quick launcher
-+-- setup.bat              # First-time setup
-+-- uninstall.bat          # Uninstall wizard
-+-- requirements.txt       # Python dependencies
-+-- data/                  # Stock data storage
-|   +-- fundamentals/      # Financial statements
-|   +-- holders/           # Holder information
-|   +-- metadata/          # Company info
-|   +-- prices/            # Price history
-+-- Guides/                # Documentation
-|   +-- User/              # User guides
-+-- Internal/              # Core modules
-+-- Importing/             # Import scripts
++-- FinForge.xlsm              # Main Excel workbook
++-- FinForge_addin.xlam        # Excel add-in with ribbon
++-- launch_finforge.bat        # Quick launcher
++-- setup.bat                  # First-time setup
++-- uninstall.bat              # Uninstall wizard
++-- requirements.txt           # Python dependencies
++-- data/                      # Stock data storage
+|   +-- fundamentals/          # Financial statements (wide + long formats)
+|   +-- holders/               # Holder information
+|   +-- metadata/              # Company info (JSON)
+|   +-- prices/                # Price history (Parquet)
+|   +-- statement_settings.json # Import UI settings
+|   +-- statement_catalog.json  # Available line items
+|   +-- templates.json          # Workbook templates
++-- ElectronHome/              # Electron desktop UI
+|   +-- main.js                # Main process
+|   +-- preload.js             # IPC bridge
+|   +-- src/                   # Renderer (HTML, CSS, JS)
++-- Guides/                    # Documentation
+|   +-- User/                  # User guides
+|   +-- Developer/             # Technical docs
++-- Internal/                  # Core modules
+|   +-- launch/                # Launcher scripts
+|   +-- Ratios/                # Ratio system
++-- Importing/                 # Import scripts
++-- Ticker_management/         # Ticker CRUD
++-- data_management/           # Data persistence
++-- FinForge_addin/            # Add-in VBA/Python source
 ```
 
 ---
@@ -123,10 +158,16 @@ FinForge/
 
 See the [Guides](Guides/README.md) folder for detailed documentation:
 
-- [Getting Started](Guides/User/01_Getting_Started.md) - First-time setup
+- [Getting Started](Guides/User/01_Getting_Started.md) - First-time setup and launch
 - [Ticker Management](Guides/User/02_Ticker_Management.md) - Managing stocks
+- [Importing Data](Guides/User/03_Importing_Data.md) - Import statements to Excel
 - [Creating Ratios](Guides/User/04_Creating_Ratios.md) - Building custom ratios
+- [Assigning Ratios](Guides/User/05_Assigning_Ratios.md) - Assign ratios to columns
 - [Available Data](Guides/User/08_Available_Data_Reference.md) - All available data fields
+- [Complete User Guide](Guides/User/Complete_User_Guide.md) - Full walkthrough
+- [Add-in Guide](Guides/FinForge_AddIn_Guide.md) - Excel ribbon add-in architecture
+- [Electron Preload Contract](Guides/ElectronHome_Preload_Contract.md) - IPC bridge API
+- [Statement Import UI](Guides/ElectronHome_Statement_Import_UI.md) - Import screen docs
 
 ---
 
@@ -159,6 +200,10 @@ For full functionality, you need to:
 - Run `setup.bat` again to reinstall dependencies
 - Or manually: `pip install -r requirements.txt`
 
+### "Electron not found"
+- Run `cd ElectronHome && npm install` to install Electron
+- Or run `setup.bat` which does this automatically
+
 ### "Could not install packages due to an OSError" (long path)
 - Move the project to a shorter folder path like `C:\FinForge`
 - Make sure the project is fully extracted before running `setup.bat` (do not run from inside a ZIP)
@@ -175,7 +220,7 @@ For full functionality, you need to:
 
 ### Data not loading
 - Check your internet connection
-- Try refreshing the data in the launcher
+- Refresh data in the workspace Import tab
 
 ---
 

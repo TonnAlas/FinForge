@@ -56,6 +56,9 @@ const ratioModePanelToken = document.getElementById('ratio-mode-panel-token');
 const ratioModePanelList = document.getElementById('ratio-mode-panel-list');
 const ratioModePanelClose = document.getElementById('ratio-mode-panel-close');
 const ratioModePanelSubtitle = document.getElementById('ratio-mode-panel-subtitle');
+const ratioModeSubOptions = document.getElementById('ratio-mode-sub-options');
+const ratioModeSubOptionsContent = document.getElementById('ratio-mode-sub-options-content');
+const ratioModeSubOptionsTitle = document.getElementById('ratio-mode-sub-options-title');
 const ratioFieldPicker = document.getElementById('ratio-field-picker');
 const ratioFieldPickerTitle = document.getElementById('ratio-field-picker-title');
 const ratioFieldPickerSubtitle = document.getElementById('ratio-field-picker-subtitle');
@@ -144,6 +147,7 @@ const state = {
   researchLoading: false,
   researchError: '',
   researchActiveTopic: '',
+  researchStatus: '',
   settings: {
     mode: 'balanceSheet',
     display: { mode: 'millions', divisor: 1000000 },
@@ -400,7 +404,7 @@ function renderImportSearchResults() {
             ${lastFetchedHtml}
           </div>
           <div class="flex items-center gap-1 shrink-0">
-            ${needsRetry ? `<button class="px-2 py-[2px] border border-outline-variant bg-surface-container-high font-label-md text-label-md hover:border-primary transition-colors text-[10px]" data-import-fetch="${escapeHtml(ticker)}">Fetch data</button>` : ''}
+            ${needsRetry ? `<button class="px-2 py-[2px] border border-outline-variant bg-surface-container-high font-label-md text-label-md hover:border-primary transition-colors text-[10px]" data-import-fetch="${escapeHtml(ticker)}">Fetch data</button>` : `<button class="px-2 py-[2px] border border-outline-variant bg-surface-container-high font-label-md text-label-md hover:border-secondary transition-colors text-[10px]" data-import-refetch="${escapeHtml(ticker)}">Refetch</button>`}
             <button class="px-2 py-[2px] border border-outline-variant bg-surface-container-high font-label-md text-label-md hover:border-error transition-colors" data-import-remove="${escapeHtml(ticker)}">Remove</button>
           </div>
         </div>
@@ -541,6 +545,21 @@ function fetchAllTickerData() {
   }
   renderImportListPage();
   for (const ticker of pending) {
+    fetchTickerData(ticker);
+  }
+}
+
+function refetchAllTickerData() {
+  if (!state.importList.length) return;
+
+  setStatus(`Refetching data for ${state.importList.length} ticker(s)...`, 'warning');
+
+  // Mark all as 'fetching' regardless of current status
+  for (const ticker of state.importList) {
+    state.tickerDataStatus[ticker] = 'fetching';
+  }
+  renderImportListPage();
+  for (const ticker of state.importList) {
     fetchTickerData(ticker);
   }
 }
@@ -1140,7 +1159,18 @@ function renderCompanyPage() {
 
     var resultsHtml = '';
     if (state.researchLoading) {
-      resultsHtml = '<div class="text-[11px] text-outline mono px-md py-md">Searching for research papers...</div>';
+      var statusMsg = state.researchStatus ? escapeHtml(state.researchStatus) : 'Searching for research papers...';
+      var isWarning = state.researchStatus && state.researchStatus.indexOf('WARNING:') === 0;
+      if (isWarning) {
+        statusMsg = escapeHtml(state.researchStatus.substring('WARNING:'.length));
+      }
+      var colorClass = isWarning ? 'text-tertiary' : 'text-outline';
+      resultsHtml = '<div class="px-md py-md space-y-sm">' +
+        '<div class="w-full h-[3px] bg-outline-variant rounded overflow-hidden">' +
+        '<div class="h-full bg-primary rounded progress-bar-animate" style="width:60%"></div>' +
+        '</div>' +
+        '<div class="text-[11px] mono ' + colorClass + '">' + statusMsg + '</div>' +
+        '</div>';
     } else if (state.researchError) {
       resultsHtml = '<div class="text-[11px] text-error mono px-md py-md">' + escapeHtml(state.researchError) + '</div>';
     } else if (state.researchResults.length > 0) {
@@ -1371,6 +1401,7 @@ function renderCompanyPage() {
       state.researchLoading = false;
       state.researchError = '';
       state.researchActiveTopic = '';
+      state.researchStatus = '';
     }
     const contentEl = document.getElementById('company-view-content');
     if (contentEl) {
@@ -1527,6 +1558,28 @@ async function performResearchSearch(query) {
       throw new Error('Research search action is unavailable');
     }
 
+    // Listen for progress updates from the main process
+    var removeProgressListener = null;
+    if (window.finforge && typeof window.finforge.onResearchProgress === 'function') {
+      removeProgressListener = window.finforge.onResearchProgress(function (data) {
+        if (data && data.status) {
+          state.researchStatus = data.status;
+          var list = document.getElementById('research-results-list');
+          if (list) {
+            var isWarning = data.status.indexOf('WARNING:') === 0;
+            var statusText = isWarning ? data.status.substring('WARNING:'.length) : data.status;
+            var colorClass = isWarning ? 'text-tertiary' : 'text-outline';
+            list.innerHTML = '<div class="px-md py-md space-y-sm">' +
+              '<div class="w-full h-[3px] bg-outline-variant rounded overflow-hidden">' +
+              '<div class="h-full bg-primary rounded progress-bar-animate" style="width:60%"></div>' +
+              '</div>' +
+              '<div class="text-[11px] mono ' + colorClass + '">' + escapeHtml(statusText) + '</div>' +
+              '</div>';
+          }
+        }
+      });
+    }
+
     var result = await window.finforge.searchResearchPapers(query, 'google');
 
     if (!result || result.ok !== true) {
@@ -1540,6 +1593,11 @@ async function performResearchSearch(query) {
     state.researchError = error && error.message ? error.message : 'Search failed';
   } finally {
     state.researchLoading = false;
+    state.researchStatus = '';
+    // Clean up progress listener
+    if (removeProgressListener) {
+      removeProgressListener();
+    }
     updateResearchResultsUI();
   }
 }
@@ -1552,7 +1610,18 @@ function updateResearchResultsUI() {
   }
 
   if (state.researchLoading) {
-    resultsList.innerHTML = '<div class="text-[11px] text-outline mono px-md py-md">Searching for research papers...</div>';
+    var statusMsg = state.researchStatus ? escapeHtml(state.researchStatus) : 'Searching for research papers...';
+    var isWarning = state.researchStatus && state.researchStatus.indexOf('WARNING:') === 0;
+    if (isWarning) {
+      statusMsg = escapeHtml(state.researchStatus.substring('WARNING:'.length));
+    }
+    var colorClass = isWarning ? 'text-tertiary' : 'text-outline';
+    resultsList.innerHTML = '<div class="px-md py-md space-y-sm">' +
+      '<div class="w-full h-[3px] bg-outline-variant rounded overflow-hidden">' +
+      '<div class="h-full bg-primary rounded progress-bar-animate" style="width:60%"></div>' +
+      '</div>' +
+      '<div class="text-[11px] mono ' + colorClass + '">' + statusMsg + '</div>' +
+      '</div>';
     return;
   }
 
@@ -1562,7 +1631,7 @@ function updateResearchResultsUI() {
   }
 
   if (state.researchResults.length === 0) {
-    resultsList.innerHTML = '<div class="text-[11px] text-outline mono px-md py-md">No results found. Try a different topic.</div>';
+    resultsList.innerHTML = '<div class="text-[11px] text-outline mono px-md py-md">No research papers found for this topic. Try a different topic or ticker.</div>';
     return;
   }
 
@@ -1818,7 +1887,6 @@ const metadataFields = [
   'Short Ratio', 'Revenue TTM', 'Gross Profit TTM', 'Operating Margin',
   'Profit Margin', 'ROA', 'ROE', 'Revenue Per Share', 'Book Value Per Share',
   'Free Cash Flow', 'Current Ratio', 'Debt to Equity',
-  'Target Mean Price', 'Target High Price', 'Target Low Price',
   'Number of Analysts',
 ];
 
@@ -1989,6 +2057,7 @@ function closeRatioModePanel() {
   state.ratioModePanel.tokenValue = '';
   state.ratioModePanel.modeParams = {};
   ratioModePanel.classList.add('hidden');
+  ratioModeSubOptions.classList.add('hidden');
 }
 
 function getDataModeOptions(kind) {
@@ -2001,10 +2070,23 @@ function getDataModeOptions(kind) {
     ];
   }
 
-  if (kind === 'BS' || kind === 'IS' || kind === 'CF') {
+  // Balance Sheet: point-in-time snapshots — TTM (summing quarters) is meaningless
+  if (kind === 'BS') {
     return [
       { value: 'latest', label: 'Latest', description: 'Use the newest available value' },
-      { value: 'ttm', label: 'TTM', description: 'Trailing 4 quarters' },
+      { value: 'quarter', label: 'Quarter', description: 'Single quarterly value' },
+      { value: 'annual', label: 'Annual', description: 'Single annual value' },
+      { value: 'previous', label: 'Previous', description: 'Previous matching period' },
+      { value: 'yoy', label: 'YoY Change', description: 'Year-over-year percent change' },
+      { value: 'custom', label: 'Custom', description: 'Manual period rule', hasSubOptions: true },
+    ];
+  }
+
+  // Income Statement & Cash Flow: flow statements — TTM is meaningful
+  if (kind === 'IS' || kind === 'CF') {
+    return [
+      { value: 'latest', label: 'Latest', description: 'Use the newest available value' },
+      { value: 'ttm', label: 'TTM', description: 'Trailing 4 quarters summed' },
       { value: 'quarter', label: 'Quarter', description: 'Single quarterly value' },
       { value: 'annual', label: 'Annual', description: 'Single annual value' },
       { value: 'previous', label: 'Previous', description: 'Previous matching period' },
@@ -2019,10 +2101,10 @@ function getDataModeOptions(kind) {
     ];
   }
 
+  // Analyst & Estimates: point-in-time consensus snapshots — period is already encoded in field names
   if (kind === 'E' || kind === 'A') {
     return [
-      { value: 'latest', label: 'Latest', description: 'Most recent data' },
-      { value: 'quarter', label: 'Quarter', description: 'Specific quarter' },
+      { value: 'latest', label: 'Latest', description: 'Current consensus / most recent data' },
     ];
   }
 
@@ -2148,6 +2230,7 @@ function renderRatioModePanel() {
   ratioModePanelSubtitle.textContent = searchToken ? 'Choose how the selected line resolves.' : 'Choose the financial statement line first';
 
   let html = '';
+  let selectedParametricMode = null;
   for (const modeOption of options) {
     const isSelected = state.ratioModePanel.selectedMode === modeOption.value;
     html += `
@@ -2158,13 +2241,46 @@ function renderRatioModePanel() {
         </div>
       </button>`;
 
-    // Show sub-options when a parameterized mode is selected
     if (isSelected && modeOption.hasSubOptions) {
-      html += renderModeSubOptions(kind, modeOption.value, state.ratioModePanel.modeParams || {});
+      selectedParametricMode = modeOption.value;
     }
   }
 
   ratioModePanelList.innerHTML = html;
+
+  // Render sub-options in the separate container if a parametric mode is selected
+  if (selectedParametricMode) {
+    ratioModeSubOptionsContent.innerHTML = renderModeSubOptions(kind, selectedParametricMode, state.ratioModePanel.modeParams || {});
+    ratioModeSubOptionsTitle.textContent = getSubOptionsTitle(selectedParametricMode);
+    ratioModeSubOptions.classList.remove('hidden');
+
+    // Bind sub-option input changes in the separate container
+    const subInputs = ratioModeSubOptionsContent.querySelectorAll('[data-mode-param]');
+    subInputs.forEach(function(input) {
+      input.addEventListener('change', function() {
+        const paramName = this.dataset.modeParam;
+        const paramValue = this.value;
+        if (!state.ratioModePanel.modeParams) {
+          state.ratioModePanel.modeParams = {};
+        }
+        state.ratioModePanel.modeParams[paramName] = paramValue;
+        syncRatioSelectionTokenWithMode();
+        renderRatioModePanel();
+      });
+      input.addEventListener('input', function() {
+        const paramName = this.dataset.modeParam;
+        const paramValue = this.value;
+        if (!state.ratioModePanel.modeParams) {
+          state.ratioModePanel.modeParams = {};
+        }
+        state.ratioModePanel.modeParams[paramName] = paramValue;
+        syncRatioSelectionTokenWithMode();
+      });
+    });
+  } else {
+    ratioModeSubOptions.classList.add('hidden');
+    ratioModeSubOptionsContent.innerHTML = '';
+  }
 
   // Bind mode selection clicks
   ratioModePanelList.querySelectorAll('[data-mode-value]').forEach((button) => {
@@ -2194,31 +2310,13 @@ function renderRatioModePanel() {
       renderRatioLinePanel();
     });
   });
+}
 
-  // Bind sub-option input changes (event delegation)
-  const subInputs = ratioModePanelList.querySelectorAll('[data-mode-param]');
-  subInputs.forEach(function(input) {
-    input.addEventListener('change', function() {
-      const paramName = this.dataset.modeParam;
-      const paramValue = this.value;
-      if (!state.ratioModePanel.modeParams) {
-        state.ratioModePanel.modeParams = {};
-      }
-      state.ratioModePanel.modeParams[paramName] = paramValue;
-      syncRatioSelectionTokenWithMode();
-      renderRatioModePanel();
-    });
-    input.addEventListener('input', function() {
-      const paramName = this.dataset.modeParam;
-      const paramValue = this.value;
-      if (!state.ratioModePanel.modeParams) {
-        state.ratioModePanel.modeParams = {};
-      }
-      state.ratioModePanel.modeParams[paramName] = paramValue;
-      // For offset/trailing/custom, update preview on input
-      syncRatioSelectionTokenWithMode();
-    });
-  });
+function getSubOptionsTitle(mode) {
+  if (mode === 'offset') return 'Configure offset parameters';
+  if (mode === 'trailing') return 'Configure trailing parameters';
+  if (mode === 'custom') return 'Configure custom period rule';
+  return 'Configure mode parameters';
 }
 
 function renderModeSubOptions(kind, mode, params) {
@@ -2227,7 +2325,6 @@ function renderModeSubOptions(kind, mode, params) {
     const unit = params.unit || 'D';
     return `
       <div class="pl-3 pr-1 py-2 space-y-1.5 border-l-2 border-secondary/30 ml-1">
-        <div class="text-[9px] text-outline uppercase mono">Offset parameters</div>
         <div class="flex items-center gap-2">
           <label class="flex items-center gap-1 text-[10px] text-on-surface-variant">
             <span>Value</span>
@@ -2251,7 +2348,6 @@ function renderModeSubOptions(kind, mode, params) {
     const aggregation = (params.aggregation || 'AVERAGE').toUpperCase();
     return `
       <div class="pl-3 pr-1 py-2 space-y-1.5 border-l-2 border-secondary/30 ml-1">
-        <div class="text-[9px] text-outline uppercase mono">Trailing parameters</div>
         <div class="flex items-center gap-2">
           <label class="flex items-center gap-1 text-[10px] text-on-surface-variant">
             <span>Periods</span>
@@ -2271,31 +2367,40 @@ function renderModeSubOptions(kind, mode, params) {
   }
 
   if (mode === 'custom') {
-    const periods = params.periods || 4;
+    const isBalanceSheet = String(kind || '').toUpperCase() === 'BS';
+    // Balance Sheet: stock variables (snapshots) — Sum is meaningless, default to 1Q Single
+    // Income Statement & Cash Flow: flow variables — Sum is meaningful, default to 4Q Sum
+    const periods = isBalanceSheet ? (params.periods || 1) : (params.periods || 4);
     const unit = params.unit || 'Q';
-    const aggregation = (params.aggregation || 'AVG').toUpperCase();
+    const aggregation = isBalanceSheet
+      ? ((params.aggregation || 'SINGLE').toUpperCase())
+      : ((params.aggregation || 'SUM').toUpperCase());
+    const unitOptions = `
+              <option value="Q" ${unit === 'Q' ? 'selected' : ''}>Quarters</option>
+              <option value="Y" ${unit === 'Y' ? 'selected' : ''}>Years</option>`;
+    const aggOptions = isBalanceSheet
+      ? `
+              <option value="SINGLE" ${aggregation === 'SINGLE' ? 'selected' : ''}>Single</option>
+              <option value="AVG" ${aggregation === 'AVG' || aggregation === 'AVERAGE' ? 'selected' : ''}>Average</option>`
+      : `
+              <option value="SINGLE" ${aggregation === 'SINGLE' ? 'selected' : ''}>Single</option>
+              <option value="AVG" ${aggregation === 'AVG' || aggregation === 'AVERAGE' ? 'selected' : ''}>Average</option>
+              <option value="SUM" ${aggregation === 'SUM' ? 'selected' : ''}>Sum</option>`;
     return `
       <div class="pl-3 pr-1 py-2 space-y-1.5 border-l-2 border-secondary/30 ml-1">
-        <div class="text-[9px] text-outline uppercase mono">Custom period rule</div>
         <div class="flex items-center gap-2">
           <label class="flex items-center gap-1 text-[10px] text-on-surface-variant">
             <span>Periods</span>
-            <input data-mode-param="periods" type="number" min="1" max="99" value="${escapeHtml(String(periods))}" class="w-16 h-7 bg-surface-container-lowest border border-outline-variant px-1 font-label-md text-label-md text-on-surface focus:border-primary outline-none"/>
+            <input data-mode-param="periods" type="number" min="1" max="20" value="${escapeHtml(String(periods))}" class="w-16 h-7 bg-surface-container-lowest border border-outline-variant px-1 font-label-md text-label-md text-on-surface focus:border-primary outline-none"/>
           </label>
           <label class="flex items-center gap-1 text-[10px] text-on-surface-variant">
             <span>Unit</span>
-            <select data-mode-param="unit" class="h-7 bg-surface-container-lowest border border-outline-variant px-1 font-label-md text-label-md text-on-surface focus:border-primary outline-none">
-              <option value="Q" ${unit === 'Q' ? 'selected' : ''}>Quarters</option>
-              <option value="Y" ${unit === 'Y' ? 'selected' : ''}>Years</option>
-              <option value="M" ${unit === 'M' ? 'selected' : ''}>Months</option>
+            <select data-mode-param="unit" class="h-7 bg-surface-container-lowest border border-outline-variant px-1 font-label-md text-label-md text-on-surface focus:border-primary outline-none">${unitOptions}
             </select>
           </label>
           <label class="flex items-center gap-1 text-[10px] text-on-surface-variant">
             <span>Agg.</span>
-            <select data-mode-param="aggregation" class="h-7 bg-surface-container-lowest border border-outline-variant px-1 font-label-md text-label-md text-on-surface focus:border-primary outline-none">
-              <option value="SINGLE" ${aggregation === 'SINGLE' ? 'selected' : ''}>Single</option>
-              <option value="AVG" ${aggregation === 'AVG' || aggregation === 'AVERAGE' ? 'selected' : ''}>Average</option>
-              <option value="SUM" ${aggregation === 'SUM' ? 'selected' : ''}>Sum</option>
+            <select data-mode-param="aggregation" class="h-7 bg-surface-container-lowest border border-outline-variant px-1 font-label-md text-label-md text-on-surface focus:border-primary outline-none">${aggOptions}
             </select>
           </label>
         </div>
@@ -3277,6 +3382,15 @@ if (importSelectedList) {
       return;
     }
 
+    const refetchButton = event.target.closest('button[data-import-refetch]');
+    if (refetchButton) {
+      const ticker = refetchButton.dataset.importRefetch || '';
+      if (ticker) {
+        void retryFetchTickerData(ticker);
+      }
+      return;
+    }
+
     const removeButton = event.target.closest('button[data-import-remove]');
     if (removeButton) {
       if (!removeImportTicker(removeButton.dataset.importRemove || '')) {
@@ -3333,6 +3447,17 @@ if (importFetchAllButton) {
       return;
     }
     fetchAllTickerData();
+  });
+}
+
+const importRefetchAllButton = document.getElementById('import-refetch-all-button');
+if (importRefetchAllButton) {
+  importRefetchAllButton.addEventListener('click', () => {
+    if (!state.importList.length) {
+      setStatus('No tickers to refetch', 'warning');
+      return;
+    }
+    refetchAllTickerData();
   });
 }
 
@@ -3793,6 +3918,8 @@ var templateEditorStatusEl = document.getElementById('template-editor-status');
 var templateExcelStatusEl = document.getElementById('template-excel-status');
 var templateSaveExcelBtn = document.getElementById('template-save-excel');
 var templateOpenExcelBtn = document.getElementById('template-open-excel');
+var templateReplaceWorkbookBtn = document.getElementById('template-replace-workbook');
+var templateRemoveExcelBtn = document.getElementById('template-remove-excel');
 var templateExcelFolderBtn = document.getElementById('template-excel-folder-button');
 
 function generateTemplateId() {
@@ -3817,6 +3944,8 @@ function resetTemplateEditor() {
   if (templateLoadButton) templateLoadButton.classList.add('hidden');
   if (templateExcelStatusEl) templateExcelStatusEl.textContent = 'None';
   if (templateOpenExcelBtn) templateOpenExcelBtn.classList.add('hidden');
+  if (templateReplaceWorkbookBtn) templateReplaceWorkbookBtn.classList.add('hidden');
+  if (templateRemoveExcelBtn) templateRemoveExcelBtn.classList.add('hidden');
 
   renderTemplateContentsSummary();
 }
@@ -3880,6 +4009,12 @@ function selectTemplate(templateId) {
   if (templateOpenExcelBtn) {
     templateOpenExcelBtn.classList.toggle('hidden', !template.excelTemplate);
     templateOpenExcelBtn.disabled = isViewOnly && !template.excelTemplate;
+  }
+  if (templateReplaceWorkbookBtn) {
+    templateReplaceWorkbookBtn.classList.toggle('hidden', !template.excelTemplate);
+  }
+  if (templateRemoveExcelBtn) {
+    templateRemoveExcelBtn.classList.toggle('hidden', !template.excelTemplate || isDefault);
   }
   if (templateSaveExcelBtn) {
     templateSaveExcelBtn.disabled = isViewOnly;
@@ -4127,6 +4262,8 @@ async function saveExcelTemplate() {
       templateState.excelTemplateFile = result.excelFile || (templateState.selectedTemplateId + '.xlsm');
       if (templateExcelStatusEl) templateExcelStatusEl.textContent = templateState.excelTemplateFile;
       if (templateOpenExcelBtn) templateOpenExcelBtn.classList.remove('hidden');
+      if (templateReplaceWorkbookBtn) templateReplaceWorkbookBtn.classList.remove('hidden');
+      if (templateRemoveExcelBtn) templateRemoveExcelBtn.classList.remove('hidden');
       renderTemplateList();
       setStatus('Excel template saved', 'success');
     } else {
@@ -4150,6 +4287,71 @@ async function openExcelTemplate() {
     }
   } catch (error) {
     setStatus('Failed to open: ' + (error.message || error), 'error');
+  }
+}
+
+async function replaceWorkbookWithTemplate() {
+  var templateId = templateState.selectedTemplateId;
+  if (!templateId) return;
+
+  var template = null;
+  for (var i = 0; i < templateState.templates.length; i++) {
+    if (templateState.templates[i].id === templateId) {
+      template = templateState.templates[i];
+      break;
+    }
+  }
+  if (!template || !template.excelTemplate) {
+    setStatus('No Excel template file linked to this template', 'warning');
+    return;
+  }
+
+  if (!window.confirm('This will replace FinForge.xlsm with a copy of "' + template.excelTemplate + '" and overwrite all current settings (statement lines, tickers, ratios).\n\nAre you sure?')) return;
+
+  if (!window.finforge || typeof window.finforge.replaceWorkbookWithTemplate !== 'function') {
+    setStatus('Replace workbook unavailable', 'error');
+    return;
+  }
+
+  try {
+    var result = await window.finforge.replaceWorkbookWithTemplate(templateId);
+    if (result && result.ok) {
+      setStatus('Workbook replaced with template! You may need to reopen the workbook.', 'success');
+    } else {
+      setStatus('Replace failed: ' + (result && result.error ? result.error : 'Unknown error'), 'error');
+    }
+  } catch (error) {
+    setStatus('Replace failed: ' + (error.message || error), 'error');
+  }
+}
+
+async function removeExcelTemplate() {
+  var templateId = templateState.selectedTemplateId;
+  if (!templateId) return;
+
+  if (!window.confirm('Remove the linked Excel template file from this template? The template metadata will be preserved.')) return;
+
+  if (!window.finforge || typeof window.finforge.deleteExcelTemplate !== 'function') {
+    setStatus('Remove Excel template unavailable', 'error');
+    return;
+  }
+
+  try {
+    var result = await window.finforge.deleteExcelTemplate(templateId);
+    if (result && result.ok) {
+      templateState.templates = Array.isArray(result.templates) ? result.templates : [];
+      templateState.excelTemplateFile = null;
+      if (templateExcelStatusEl) templateExcelStatusEl.textContent = 'None';
+      if (templateOpenExcelBtn) templateOpenExcelBtn.classList.add('hidden');
+      if (templateReplaceWorkbookBtn) templateReplaceWorkbookBtn.classList.add('hidden');
+      if (templateRemoveExcelBtn) templateRemoveExcelBtn.classList.add('hidden');
+      renderTemplateList();
+      setStatus('Excel template file removed', 'success');
+    } else {
+      setStatus('Remove failed: ' + (result && result.error ? result.error : 'Unknown error'), 'error');
+    }
+  } catch (error) {
+    setStatus('Remove failed: ' + (error.message || error), 'error');
   }
 }
 
@@ -4219,6 +4421,14 @@ if (templateSaveExcelBtn) {
 
 if (templateOpenExcelBtn) {
   templateOpenExcelBtn.addEventListener('click', openExcelTemplate);
+}
+
+if (templateReplaceWorkbookBtn) {
+  templateReplaceWorkbookBtn.addEventListener('click', replaceWorkbookWithTemplate);
+}
+
+if (templateRemoveExcelBtn) {
+  templateRemoveExcelBtn.addEventListener('click', removeExcelTemplate);
 }
 
 if (templateExcelFolderBtn) {

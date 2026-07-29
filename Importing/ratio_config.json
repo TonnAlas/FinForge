@@ -1,7 +1,22 @@
 {
-  "Previous close": {
-    "formula": "P: Previous Close",
-    "notes": "",
-    "row": "7"
+  "Current Ratio": {
+    "formula": "BS: Current Assets / BS: Current Liabilities",
+    "notes": "Measures short-term liquidity"
+  },
+  "Debt to Equity": {
+    "formula": "BS: Total Debt / BS: Stockholders Equity",
+    "notes": "Measures financial leverage"
+  },
+  "Gross Margin": {
+    "formula": "(IS: Total Revenue - IS: Cost Of Revenue) / IS: Total Revenue",
+    "notes": "Measures profitability after direct costs"
+  },
+  "Net Profit Margin": {
+    "formula": "IS: Net Income / IS: Total Revenue",
+    "notes": "Measures overall profitability"
+  },
+  "Return on Equity": {
+    "formula": "IS: Net Income / BS: Stockholders Equity",
+    "notes": "Measures return on shareholder investment"
   }
 }

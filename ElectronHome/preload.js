@@ -82,6 +82,9 @@ contextBridge.exposeInMainWorld('finforge', {
   replaceWorkbookWithTemplate(templateId) {
     return ipcRenderer.invoke('finforge:replaceWorkbookWithTemplate', templateId);
   },
+  deleteExcelTemplate(templateId) {
+    return ipcRenderer.invoke('finforge:deleteExcelTemplate', templateId);
+  },
   saveExcelTemplate(templateId) {
     return ipcRenderer.invoke('finforge:saveExcelTemplate', templateId);
   },
@@ -98,6 +101,12 @@ contextBridge.exposeInMainWorld('finforge', {
   // ── Research Paper Search ──
   searchResearchPapers(query, source) {
     return ipcRenderer.invoke('finforge:searchResearchPapers', query, source);
+  },
+  onResearchProgress(callback) {
+    const handler = (_event, data) => { callback(data); };
+    ipcRenderer.on('finforge:researchProgress', handler);
+    // Return a cleanup function
+    return () => ipcRenderer.removeListener('finforge:researchProgress', handler);
   },
 
   // ── Ticker Data Fetching & Status ──

@@ -2,8 +2,11 @@
 Research Paper Search Module
 
 Provides programmatic search for PDF research documents with multiple backends:
-  1. DuckDuckGo (default, no server needed) -- adds "pdf" keyword + filters by .pdf extension
+  1. DuckDuckGo (default, no server needed) -- adds "pdf" keyword to query
   2. Google via Whoogle (optional, server needed) -- uses real Google filetype:pdf
+
+Results include both PDF and non-PDF research pages, sorted with PDFs first.
+DuckDuckGo is tried first (no server needed), with Google/Whoogle as fallback.
 
 Usage:
     from Internal.Research.research_paper_search import (
@@ -36,14 +39,15 @@ def search_papers(query: str, max_results: int = 10) -> list[dict]:
     Search for PDF research documents using DuckDuckGo.
 
     DuckDuckGo does not support "filetype:pdf", so this adds "pdf" to the
-    query and filters results by .pdf URL extension.
+    query. All relevant results are included (PDF URLs and research web pages),
+    sorted with PDFs first.
 
     Args:
         query: Search query (e.g. "Equity Research AAPL")
         max_results: Max results to return (1-12)
 
     Returns:
-        List of dicts with title, url, snippet, source keys.
+        List of dicts with title, url, snippet, source, is_pdf keys.
     """
     try:
         from ddgs import DDGS
@@ -76,18 +80,25 @@ def search_papers(query: str, max_results: int = 10) -> list[dict]:
             ) from exc
         raise Exception(f"DuckDuckGo search failed: {exc}") from exc
 
-    pdf_results = []
+    results = []
+    seen_urls = set()
     for item in raw_results:
         url = (item.get("href") or "").strip()
-        if url.lower().endswith(".pdf"):
-            pdf_results.append({
-                "title": item.get("title", "").strip(),
-                "url": url,
-                "snippet": item.get("body", "").strip(),
-                "source": "duckduckgo",
-            })
+        if not url or url in seen_urls:
+            continue
+        seen_urls.add(url)
+        # Prefer PDFs but include all relevant results
+        results.append({
+            "title": item.get("title", "").strip(),
+            "url": url,
+            "snippet": item.get("body", "").strip(),
+            "source": "duckduckgo",
+            "is_pdf": url.lower().endswith(".pdf"),
+        })
 
-    return pdf_results[:capped_results]
+    # Sort: PDFs first, then the rest
+    results.sort(key=lambda r: (0 if r["is_pdf"] else 1, r["title"].lower()))
+    return results[:capped_results]
 
 
 # ── Google (Whoogle) Backend ───────────────────────────────────────────────────
@@ -133,7 +144,7 @@ def is_whoogle_running() -> bool:
         import requests
         resp = requests.get(
             f"http://{WHOOGLE_HOST}:{WHOOGLE_PORT}/",
-            timeout=2
+            timeout=1
         )
         return resp.status_code == 200
     except Exception:
@@ -145,13 +156,15 @@ def start_whoogle(wait_seconds: int = 8) -> bool:
     Start the Whoogle search server as a background process.
 
     Returns True if the server started and responded within wait_seconds.
+    Uses wall-clock elapsed time so the timeout is accurate regardless
+    of how long each health check takes.
     """
     _patch_whoogle_symlinks()
 
     try:
         proc = subprocess.Popen(
             [
-                sys.executable, "-m", "app.routes",
+                sys.executable, "-m", "app",
                 "--port", str(WHOOGLE_PORT),
                 "--host", WHOOGLE_HOST,
             ],
@@ -162,11 +175,15 @@ def start_whoogle(wait_seconds: int = 8) -> bool:
     except Exception:
         return False
 
-    # Wait for the server to become responsive
-    for _ in range(wait_seconds * 2):
-        time.sleep(0.5)
+    # Wait for the server to become responsive (using wall-clock time)
+    deadline = time.time() + wait_seconds
+    while time.time() < deadline:
         if is_whoogle_running():
             return True
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            break
+        time.sleep(min(0.5, remaining))
 
     # Server did not start in time
     try:
@@ -181,13 +198,14 @@ def search_papers_google(query: str, max_results: int = 10) -> list[dict]:
     Search for PDF research documents using Google via Whoogle.
 
     Supports "filetype:pdf" and all Google search operators natively.
+    All relevant results are included, sorted with PDFs first.
 
     Args:
         query: Search query (e.g. "Equity Research AAPL filetype:pdf")
         max_results: Max results to return (1-20)
 
     Returns:
-        List of dicts with title, url, snippet, source keys.
+        List of dicts with title, url, snippet, source, is_pdf keys.
 
     Raises:
         Exception: If Whoogle cannot be started or the search fails.
@@ -208,7 +226,7 @@ def search_papers_google(query: str, max_results: int = 10) -> list[dict]:
         resp = requests.get(
             WHOOGLE_URL,
             params={"q": query, "format": "json"},
-            timeout=15,
+            timeout=10,
         )
         resp.raise_for_status()
         data = resp.json()
@@ -216,19 +234,28 @@ def search_papers_google(query: str, max_results: int = 10) -> list[dict]:
         raise Exception(f"Google search failed: {exc}") from exc
 
     raw_results = data.get("results") or []
-    formatted = []
-    for item in raw_results[:capped_results]:
+
+    # Fetch extra results; the query already includes filetype:pdf so most
+    # Google results will be PDFs, but we also include non-PDF research pages.
+    fetch_count = min(max(capped_results * 3, 20), 60)
+    google_results = []
+    seen_urls = set()
+    for item in raw_results[:fetch_count]:
         url = (item.get("href") or "").strip()
-        if not url:
+        if not url or url in seen_urls:
             continue
-        formatted.append({
+        seen_urls.add(url)
+        google_results.append({
             "title": (item.get("title") or "").strip(),
             "url": url,
             "snippet": (item.get("content") or item.get("text") or "").strip(),
             "source": "google",
+            "is_pdf": url.lower().endswith(".pdf"),
         })
 
-    return formatted
+    # Sort: PDFs first, then the rest
+    google_results.sort(key=lambda r: (0 if r["is_pdf"] else 1, r["title"].lower()))
+    return google_results[:capped_results]
 
 
 # ── Ticker Convenience ─────────────────────────────────────────────────────────

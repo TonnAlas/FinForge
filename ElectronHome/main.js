@@ -1063,6 +1063,38 @@ ipcMain.handle('finforge:saveExcelTemplate', async function (_event, templateId)
   }
 });
 
+ipcMain.handle('finforge:deleteExcelTemplate', async function (_event, templateId) {
+  try {
+    var templates = loadTemplates();
+    var template = null;
+    for (var i = 0; i < templates.length; i++) {
+      if (templates[i].id === templateId) {
+        template = templates[i];
+        break;
+      }
+    }
+
+    if (!template) {
+      return { ok: false, error: 'Template not found: ' + templateId };
+    }
+
+    // Delete the associated Excel template file if it exists
+    var excelPath = path.join(templatesExcelDir, templateId + '.xlsm');
+    if (fs.existsSync(excelPath)) {
+      try { fs.unlinkSync(excelPath); } catch (_) {}
+    }
+
+    // Remove the excelTemplate reference from the template record
+    template.excelTemplate = null;
+    template.updatedAt = new Date().toISOString();
+    saveTemplates(templates);
+
+    return { ok: true, templates: templates, template: template };
+  } catch (error) {
+    return { ok: false, error: error && error.message ? error.message : String(error) };
+  }
+});
+
 ipcMain.handle('finforge:replaceWorkbookWithTemplate', async function (_event, templateId) {
   try {
     var templates = loadTemplates();
@@ -1749,15 +1781,53 @@ ipcMain.handle('finforge:openImportWindow', (_event, options) => {
 
 function buildResearchSearchCommand(query, source) {
   var escapedQuery = (query || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  var sourceStr = source === 'google' ? 'google' : 'duckduckgo';
+  var escapedGoogleQuery = ((query || '') + ' filetype:pdf').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   return (
-    'import sys; sys.path.insert(0, ' + JSON.stringify(rootDir) + '); ' +
-    'from Internal.Research.research_paper_search import search_papers, search_papers_google; ' +
-    'import json; ' +
-    "if '" + sourceStr + "' == 'google':\n" +
-    "  r = search_papers_google('" + escapedQuery + "', max_results=20)\n" +
-    'else:\n' +
-    "  r = search_papers('" + escapedQuery + "', max_results=12)\n" +
+    'import sys\n' +
+    'sys.path.insert(0, ' + JSON.stringify(rootDir) + ')\n' +
+    'from Internal.Research.research_paper_search import search_papers, search_papers_google, is_whoogle_running, start_whoogle\n' +
+    'import json\n' +
+    '\n' +
+    'ddg_failed = False\n' +
+    "print('__STATUS__:Searching for research papers...', file=sys.stderr, flush=True)\n" +
+    "try:\n" +
+    "  r = search_papers('" + escapedQuery + "', max_results=15)\n" +
+    "except Exception as ddg_err:\n" +
+    "  ddg_failed = True\n" +
+    "  print('__STATUS__:WARNING:DuckDuckGo unavailable (' + str(ddg_err) + '), trying Google...', file=sys.stderr, flush=True)\n" +
+    "  r = []\n" +
+    "\n" +
+    '# Step 2: If DuckDuckGo returned few results or failed, try Google/Whoogle as fallback\n' +
+    "if ddg_failed or len(r) < 3:\n" +
+    "  if not is_whoogle_running():\n" +
+    "    print('__STATUS__:Starting Whoogle search server for better results...', file=sys.stderr, flush=True)\n" +
+    "    started = start_whoogle()\n" +
+    "    if not started:\n" +
+    "      print('__STATUS__:WARNING:Google search not available. Results may be limited.', file=sys.stderr, flush=True)\n" +
+    "    else:\n" +
+    "      print('__STATUS__:Google server ready, fetching additional papers...', file=sys.stderr, flush=True)\n" +
+    "      try:\n" +
+    "        google_results = search_papers_google('" + escapedGoogleQuery + "', max_results=20)\n" +
+    "        existing_urls = set(item['url'] for item in r)\n" +
+    "        for item in google_results:\n" +
+    "          if item['url'] not in existing_urls:\n" +
+    "            r.append(item)\n" +
+    "            existing_urls.add(item['url'])\n" +
+    "      except Exception as gg_err:\n" +
+    "        print('__STATUS__:WARNING:Google search failed, using DuckDuckGo results.', file=sys.stderr, flush=True)\n" +
+    "  else:\n" +
+    "    print('__STATUS__:Fetching additional papers from Google...', file=sys.stderr, flush=True)\n" +
+    "    try:\n" +
+    "      google_results = search_papers_google('" + escapedGoogleQuery + "', max_results=20)\n" +
+    "      existing_urls = set(item['url'] for item in r)\n" +
+    "      for item in google_results:\n" +
+    "        if item['url'] not in existing_urls:\n" +
+    "          r.append(item)\n" +
+    "          existing_urls.add(item['url'])\n" +
+    "    except Exception as gg_err:\n" +
+    "      print('__STATUS__:WARNING:Google search failed, using DuckDuckGo results.', file=sys.stderr, flush=True)\n" +
+    "\n" +
+    "print('__STATUS__:Found ' + str(len(r)) + ' research papers.', file=sys.stderr, flush=True)\n" +
     'print(json.dumps(r, ensure_ascii=True))'
   );
 }
@@ -1777,14 +1847,28 @@ ipcMain.handle('finforge:searchResearchPapers', async (_event, query, source) =>
 
       var searchTimeout = setTimeout(function () {
         if (child) { child.kill(); }
-        reject(new Error('Research search timed out after 20 seconds.'));
-      }, 20000);
+        reject(new Error('Research search timed out after 40 seconds.'));
+      }, 40000);
 
       var stdout = '';
       var stderr = '';
 
       child.stdout.on('data', function (d) { stdout += d.toString(); });
-      child.stderr.on('data', function (d) { stderr += d.toString(); });
+      child.stderr.on('data', function (d) {
+        var text = d.toString();
+        stderr += text;
+        // Forward progress status lines to the renderer (including WARNING and ERROR)
+        var lines = text.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+          if (line.indexOf('__STATUS__:') === 0) {
+            var status = line.substring('__STATUS__:'.length);
+            try {
+              _event.sender.send('finforge:researchProgress', { status: status });
+            } catch (_) {}
+          }
+        }
+      });
 
       child.on('error', function (error) {
         clearTimeout(searchTimeout);
@@ -1800,7 +1884,11 @@ ipcMain.handle('finforge:searchResearchPapers', async (_event, query, source) =>
             reject(new Error('Failed to parse search results: ' + (parseError.message || parseError)));
           }
         } else {
-          reject(new Error((stderr || stdout || 'Research search exited with code ' + code).trim()));
+          // Filter out __STATUS__ lines from stderr for a cleaner error message
+          var cleanStderr = stderr.split('\n').filter(function (l) {
+            return l.indexOf('__STATUS__:') !== 0;
+          }).join('\n').trim();
+          reject(new Error((cleanStderr || stdout || 'Research search exited with code ' + code).trim()));
         }
       });
     });

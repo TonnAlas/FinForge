@@ -87,20 +87,20 @@ npm install
 ### Starting the Application
 
 1. Double-click `launch_finforge.bat`
-2. The FinForge launcher window opens with action buttons (Open Workbook, Open Folders, Setup, Uninstall)
-3. Click **Open statement import window** to open the main workspace
+2. The FinForge launcher window opens with action buttons (Launch workbook, Open terminal, Open data folder, Open project folder, Run setup, Uninstall)
+3. Click **Open terminal** to open the main workspace
 
 ### Adding Stocks
 
-1. In the workspace window, go to the **Imports** tab
+1. In the workspace window, go to the **Search** tab in the sidebar
 2. Search for tickers using the search bar (e.g., `AAPL`, `MSFT`, `GOOGL`)
 3. Select tickers and add them to the import list
 4. Data will be fetched automatically
 
 ### Importing Financial Data to Excel
 
-1. Select the tickers and line items you want in the **Imports** tab
-2. Choose balance sheet or income statement scope
+1. Select the tickers and line items you want in the **Statement Lines** tab
+2. Choose balance sheet, income statement, or cash flow scope
 3. Click **Import** to send data to Excel
 4. The Python importers populate the workbook automatically
 
@@ -123,19 +123,25 @@ npm install
 ```
 FinForge/
 +-- FinForge.xlsm              # Main Excel workbook
-+-- FinForge_addin.xlam        # Excel add-in with ribbon
 +-- launch_finforge.bat        # Quick launcher
 +-- setup.bat                  # First-time setup
 +-- uninstall.bat              # Uninstall wizard
 +-- requirements.txt           # Python dependencies
++-- FINANCIAL_DISCLAIMER.md    # Legal notice
++-- LICENSE                    # MIT license
++-- README.md                  # This file
 +-- data/                      # Stock data storage
 |   +-- fundamentals/          # Financial statements (wide + long formats)
 |   +-- holders/               # Holder information
 |   +-- metadata/              # Company info (JSON)
 |   +-- prices/                # Price history (Parquet)
+|   +-- pending_deletions.json # Pending ticker deletions
+|   +-- ratios.parquet         # Calculated ratios
 |   +-- statement_settings.json # Import UI settings
 |   +-- statement_catalog.json  # Available line items
 |   +-- templates.json          # Workbook templates
+|   +-- templates_excel/        # Saved Excel workbook templates
+|   +-- tickers.json            # Ticker import list
 +-- ElectronHome/              # Electron desktop UI
 |   +-- main.js                # Main process
 |   +-- preload.js             # IPC bridge
@@ -146,10 +152,14 @@ FinForge/
 +-- Internal/                  # Core modules
 |   +-- launch/                # Launcher scripts
 |   +-- Ratios/                # Ratio system
+|   +-- Research/              # Research paper search
 +-- Importing/                 # Import scripts
 +-- Ticker_management/         # Ticker CRUD
 +-- data_management/           # Data persistence
 +-- FinForge_addin/            # Add-in VBA/Python source
+|   +-- FinForge_addin.xlam    # Excel add-in with ribbon
++-- Installation/              # xlwings config scripts
++-- Temporary/                 # Diagnostics & migration tools
 ```
 
 ---

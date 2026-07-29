@@ -1,28 +1,38 @@
 {
-  "mode": "incomeStatement",
+  "mode": "balanceSheet",
   "display": {
     "mode": "millions",
     "divisor": 1000000
   },
   "balanceSheet": {
     "selected": [
+      "Total Assets",
       "Current Assets",
-      "Total Assets"
+      "Cash And Cash Equivalents",
+      "Total Liabilities Net Minority Interest",
+      "Stockholders Equity",
+      "Total Debt",
+      "Current Liabilities"
     ]
   },
   "incomeStatement": {
     "selected": [
       "Total Revenue",
-      "Operating Revenue"
+      "Cost Of Revenue",
+      "Gross Profit",
+      "Operating Income",
+      "Net Income",
+      "EBITDA",
+      "Basic EPS",
+      "Diluted EPS"
     ]
   },
   "cashFlow": {
     "selected": [
-      "Issuance Of Debt",
-      "Cash Flow From Continuing Operating Activities",
-      "Net Income From Continuing Operations",
-      "Depreciation",
-      "Depreciation Amortization Depletion"
+      "Operating Cash Flow",
+      "Free Cash Flow",
+      "Capital Expenditure",
+      "Cash Dividends Paid"
     ]
   }
 }

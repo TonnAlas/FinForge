@@ -430,10 +430,10 @@ function updateSetupStatusUI(state) {
 (function initLauncherTemplateSystem() {
   var templateSelect = document.getElementById('launcher-template-select');
   var templateLoadBtn = document.getElementById('launcher-template-load');
-  var templateReplaceBtn = document.getElementById('launcher-template-replace');
   var templateNotes = document.getElementById('launcher-template-notes');
   var templateCount = document.getElementById('launcher-template-count');
   var templateStatus = document.getElementById('launcher-template-status');
+  var launcherReplaceWorkbookBtn = document.getElementById('launcher-template-replace-workbook');
 
   if (!templateSelect || !templateLoadBtn) {
     return;
@@ -521,14 +521,14 @@ function updateSetupStatusUI(state) {
     }).catch(function () {});
   }
 
-  // Template select change → show notes
+  // Template select change -> show notes and replace button
   if (templateSelect) {
     templateSelect.addEventListener('change', function () {
       var selectedId = templateSelect.value;
       if (selectedId) {
         showNotes(selectedId);
         templateLoadBtn.disabled = false;
-        // Enable Replace only if template has an Excel file linked
+        // Show replace button only if template has an Excel file
         var template = null;
         for (var i = 0; i < allTemplates.length; i++) {
           if (allTemplates[i].id === selectedId) {
@@ -536,14 +536,16 @@ function updateSetupStatusUI(state) {
             break;
           }
         }
-        if (templateReplaceBtn) {
-          templateReplaceBtn.disabled = !(template && template.excelTemplate);
+        if (template && template.excelTemplate) {
+          launcherReplaceWorkbookBtn.classList.remove('hidden');
+        } else {
+          launcherReplaceWorkbookBtn.classList.add('hidden');
         }
       } else {
         templateNotes.classList.add('hidden');
         if (templateStatus) templateStatus.classList.add('hidden');
         templateLoadBtn.disabled = true;
-        if (templateReplaceBtn) templateReplaceBtn.disabled = true;
+        launcherReplaceWorkbookBtn.classList.add('hidden');
       }
     });
   }
@@ -595,46 +597,60 @@ function updateSetupStatusUI(state) {
     });
   }
 
-  // Replace workbook button
-  if (templateReplaceBtn) {
-    templateReplaceBtn.addEventListener('click', function () {
+  // Replace workbook with template button
+  if (launcherReplaceWorkbookBtn) {
+    launcherReplaceWorkbookBtn.addEventListener('click', function () {
       var selectedId = templateSelect.value;
       if (!selectedId) return;
 
-      if (!window.finforge || typeof window.finforge.replaceWorkbookWithTemplate !== 'function') {
-        return;
+      var template = null;
+      for (var i = 0; i < allTemplates.length; i++) {
+        if (allTemplates[i].id === selectedId) {
+          template = allTemplates[i];
+          break;
+        }
       }
+      if (!template || !template.excelTemplate) return;
 
-      templateReplaceBtn.textContent = 'Replacing...';
-      templateReplaceBtn.disabled = true;
+      if (!window.confirm('Replace FinForge.xlsm with a copy of "' + template.excelTemplate + '" from template "' + template.name + '"?\n\nThis will overwrite the current workbook and all settings (statement lines, tickers, ratios).')) return;
+
+      if (!window.finforge || typeof window.finforge.replaceWorkbookWithTemplate !== 'function') return;
+
+      launcherReplaceWorkbookBtn.textContent = 'Replacing...';
+      launcherReplaceWorkbookBtn.disabled = true;
 
       window.finforge.replaceWorkbookWithTemplate(selectedId).then(function (result) {
         if (result && result.ok) {
-          templateReplaceBtn.textContent = 'Done!';
-          templateReplaceBtn.style.background = '#1b5e20';
-          templateReplaceBtn.style.color = '#c8e6c9';
-          // Reload the launcher to reflect all new settings
+          launcherReplaceWorkbookBtn.textContent = 'Replaced!';
+          launcherReplaceWorkbookBtn.style.background = '#004d40';
+          launcherReplaceWorkbookBtn.style.color = '#a7f3d0';
+          launcherReplaceWorkbookBtn.style.borderColor = '#4edea3';
           setTimeout(function () {
-            location.reload();
-          }, 1200);
+            launcherReplaceWorkbookBtn.textContent = 'Replace workbook with template';
+            launcherReplaceWorkbookBtn.disabled = false;
+            launcherReplaceWorkbookBtn.style.background = '';
+            launcherReplaceWorkbookBtn.style.color = '';
+            launcherReplaceWorkbookBtn.style.borderColor = '';
+          }, 3000);
         } else {
-          templateReplaceBtn.textContent = 'Error';
-          templateReplaceBtn.style.background = '#93000a';
-          templateReplaceBtn.style.color = '#ffb4ab';
+          launcherReplaceWorkbookBtn.textContent = 'Failed';
+          launcherReplaceWorkbookBtn.style.background = '#93000a';
+          launcherReplaceWorkbookBtn.style.color = '#ffb4ab';
           setTimeout(function () {
-            templateReplaceBtn.textContent = 'Replace';
-            templateReplaceBtn.disabled = false;
-            templateReplaceBtn.style.background = '';
-            templateReplaceBtn.style.color = '';
+            launcherReplaceWorkbookBtn.textContent = 'Replace workbook with template';
+            launcherReplaceWorkbookBtn.disabled = false;
+            launcherReplaceWorkbookBtn.style.background = '';
+            launcherReplaceWorkbookBtn.style.color = '';
           }, 2000);
         }
       }).catch(function () {
-        templateReplaceBtn.textContent = 'Error';
+        launcherReplaceWorkbookBtn.textContent = 'Error';
         setTimeout(function () {
-          templateReplaceBtn.textContent = 'Replace';
-          templateReplaceBtn.disabled = false;
+          launcherReplaceWorkbookBtn.textContent = 'Replace workbook with template';
+          launcherReplaceWorkbookBtn.disabled = false;
         }, 2000);
       });
     });
   }
+
 })();

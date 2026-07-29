@@ -98,6 +98,9 @@ class RatioCalculator:
         New layout (matching BS/IS sheets):
           Row 4:     Ticker symbols in columns B-Z (like BS/IS)
           Row 7+:    Ratio names in Column A, calculated values in B-Z
+          
+        INDEX columns are populated with the ratio names from Column A.
+        CUSTOM columns are left untouched for user-entered data.
         """
         try:
             self.ws = self.wb.sheets[RATIOS_SHEET]
@@ -116,16 +119,22 @@ class RatioCalculator:
             if not self.assigned_ratios:
                 raise ValueError("No assigned ratios found in Column A (starting from row 7)")
 
-            # Read tickers from Row 4 (columns B-Z)
+            # Read row 4 headers and classify columns
             row4_data = self.ws.range("B4:Z4").value
             self.ticker_columns = []
+            self.index_columns = []
+            self.custom_columns = []
             if row4_data:
                 for idx, value in enumerate(row4_data):
                     if value and isinstance(value, str):
-                        ticker = value.strip().upper()
-                        if ticker and ticker not in ("INDEX", "CUSTOM", ""):
-                            col_letter = chr(66 + idx)  # B=66, C=67, etc.
-                            self.ticker_columns.append((col_letter, ticker))
+                        header = value.strip().upper()
+                        col_letter = chr(66 + idx)  # B=66, C=67, etc.
+                        if header == "INDEX":
+                            self.index_columns.append(col_letter)
+                        elif header == "CUSTOM":
+                            self.custom_columns.append(col_letter)
+                        elif header:
+                            self.ticker_columns.append((col_letter, header))
 
             self.tickers = [t for _, t in self.ticker_columns]
             if not self.ticker_columns:
@@ -548,7 +557,11 @@ class RatioCalculator:
             return "ERROR"
     
     def _clear_empty_ticker_columns(self):
-        """Clear ratio values from columns where the ticker has been removed from row 4."""
+        """Clear ratio values from columns where the ticker has been removed from row 4.
+        
+        Preserves CUSTOM columns (user-entered data) and INDEX columns
+        (they are re-populated by calculate_all_ratios).
+        """
         try:
             if not self.assigned_ratios:
                 return
@@ -557,8 +570,11 @@ class RatioCalculator:
             if row4_data:
                 for idx, value in enumerate(row4_data):
                     if value and isinstance(value, str):
-                        ticker = value.strip().upper()
-                        if ticker and ticker not in ("INDEX", "CUSTOM", ""):
+                        header = value.strip().upper()
+                        if header and header not in ("INDEX", "CUSTOM", ""):
+                            active_columns.add(chr(66 + idx))
+                        elif header == "CUSTOM":
+                            # Protect CUSTOM columns from being cleared
                             active_columns.add(chr(66 + idx))
             all_columns = [chr(66 + i) for i in range(25)]
             num_ratio_rows = len(self.assigned_ratios)
@@ -573,15 +589,54 @@ class RatioCalculator:
         except Exception as e:
             print(f"Warning: Error clearing empty ticker columns: {e}")
 
+    def _clear_column_data(self, col_letter):
+        """Clear data values from a single column (preserve formatting)."""
+        num_rows = len(self.assigned_ratios)
+        for row_offset in range(num_rows):
+            row = RATIO_DATA_START_ROW + row_offset
+            cell_range = self.ws.range(f"{col_letter}{row}")
+            if cell_range.value is not None:
+                cell_range.value = None
+
+    def _write_index_items(self, col_letter):
+        """Write ratio names from Column A into an INDEX column.
+        
+        This mirrors the _write_index_items pattern from the financial statement
+        importers (balance sheet, income statement, cash flow).
+        """
+        print(f"  Writing INDEX items to column {col_letter}")
+        
+        row_index = RATIO_DATA_START_ROW
+        for ratio_name in self.assigned_ratios:
+            cell = f"{col_letter}{row_index}"
+            cell_range = self.ws.range(cell)
+            cell_range.value = ratio_name
+            try:
+                cell_range.font.bold = True
+            except Exception:
+                pass
+            row_index += 1
+        
+        print(f"    Written {len(self.assigned_ratios)} INDEX items to column {col_letter}")
+
     def calculate_all_ratios(self):
         """Calculate all assigned ratios for all tickers.
         
         New layout (matching BS/IS sheets):
-          Row 4:     Ticker symbols in columns B-Z
+          Row 4:     Ticker symbols, INDEX, or CUSTOM in columns B-Z
           Row 7+:    Ratio names in Column A, calculated values in B-Z
+          
+        INDEX columns are populated with ratio names (mirroring BS/IS behavior).
+        CUSTOM columns are left entirely untouched for user-entered data.
         """
         try:
             self._clear_empty_ticker_columns()
+            
+            # Handle INDEX columns: clear old data, then write ratio names
+            for col_letter in self.index_columns:
+                self._clear_column_data(col_letter)
+                self._write_index_items(col_letter)
+            
             total_calculations = len(self.ticker_columns) * len(self.assigned_ratios)
             current = 0
             errors = []
@@ -698,7 +753,7 @@ def calculate_ratios():
             QMessageBox.information(
                 None,
                 "Success",
-                f"✓ Calculated {len(calculator.assignments)} ratios for {len(calculator.tickers)} tickers"
+                f"✓ Calculated {len(calculator.assigned_ratios)} ratios for {len(calculator.tickers)} tickers"
             )
         
     except Exception as e:
@@ -739,10 +794,27 @@ def sync_ratio_sheet_from_config(workbook):
     Ratios with a 'row' field set are placed at that exact row position
     (sorted by row number); ratios without a row are auto-assigned to
     the remaining rows in order.
+
+    Preserves CUSTOM columns (user-entered data) and INDEX columns
+    (they are re-populated by the calculator during calculate_all_ratios).
     """
     ratios = get_ratios_from_config()
     ws = workbook.sheets[RATIOS_SHEET]
-    ws.range(f"A{RATIO_DATA_START_ROW}:Z200").clear_contents()
+
+    # Clear data columns but preserve CUSTOM columns (user data)
+    row4_data = ws.range("B4:Z4").value
+    for idx in range(24):  # B-Z
+        col_letter = chr(66 + idx)
+        # Skip CUSTOM columns - never touch user data
+        if row4_data and idx < len(row4_data):
+            val = row4_data[idx]
+            if val and isinstance(val, str) and val.strip().upper() == "CUSTOM":
+                continue
+        # Clear this column's data area
+        ws.range(f"{col_letter}{RATIO_DATA_START_ROW}:{col_letter}200").clear_contents()
+
+    # Also clear Column A (will be rewritten below)
+    ws.range(f"A{RATIO_DATA_START_ROW}:A200").clear_contents()
 
     # Separate ratios with/without explicit row numbers
     named = []
@@ -854,7 +926,22 @@ def sync_assigned_ratios(ratio_names_json: str):
 
         ws = wb.sheets[RATIOS_SHEET]
         clear_end = max(RATIO_DATA_START_ROW + 200, RATIO_DATA_START_ROW + len(ordered_names) + 10)
-        ws.range(f"A{RATIO_DATA_START_ROW}:Z{clear_end}").clear_contents()
+        
+        # Clear data columns but preserve CUSTOM columns (user data)
+        row4_data = ws.range("B4:Z4").value
+        for idx in range(24):  # B-Z
+            col_letter = chr(66 + idx)
+            # Skip CUSTOM columns - never touch user data
+            if row4_data and idx < len(row4_data):
+                val = row4_data[idx]
+                if val and isinstance(val, str) and val.strip().upper() == "CUSTOM":
+                    continue
+            # Clear this column's data area
+            ws.range(f"{col_letter}{RATIO_DATA_START_ROW}:{col_letter}{clear_end}").clear_contents()
+        
+        # Also clear Column A (will be rewritten below)
+        ws.range(f"A{RATIO_DATA_START_ROW}:A{clear_end}").clear_contents()
+        
         row = RATIO_DATA_START_ROW
         for name in ordered_names:
             ws.range(f"A{row}").value = name

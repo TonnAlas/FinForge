@@ -74,20 +74,22 @@ echo [2/9] Checking Node.js installation...
 set "NODE_FOUND=0"
 set "NPM_FOUND=0"
 
-node --version >nul 2>&1
+REM Use "where" to locate node.exe without executing it — avoids
+REM silent termination triggered by for /f on some Node.js versions.
+where node >nul 2>&1
 if not errorlevel 1 (
     set "NODE_FOUND=1"
-    for /f "delims=" %%a in ('node --version 2^>^&1') do set "NODE_VERSION=%%a"
-    echo Node.js found: !NODE_VERSION!
+    REM Capture version via temp file to avoid inline for /f issues
+    call :getNodeVersion
 ) else (
     echo Node.js not found.
 )
 
-npm --version >nul 2>&1
+REM Use "where" to locate npm without executing it.
+where npm >nul 2>&1
 if not errorlevel 1 (
     set "NPM_FOUND=1"
-    for /f "delims=" %%a in ('npm --version 2^>^&1') do set "NPM_VERSION=%%a"
-    echo npm found: !NPM_VERSION!
+    echo npm found.
 ) else (
     echo npm not found.
 )
@@ -96,12 +98,12 @@ if "!NODE_FOUND!"=="0" (
     echo.
     echo WARNING: Node.js is not installed!
     echo.
-    echo Node.js is required for the FinForge Launcher (Electron UI).
+    echo Node.js is required for the FinForge Launcher ^(Electron UI^).
     echo Without it, you can still use FinForge.xlsm in Excel directly.
     echo.
     echo To install Node.js:
     echo   1. Download from: https://nodejs.org/
-    echo   2. Choose the LTS version (recommended)
+    echo   2. Choose the LTS version ^(recommended^)
     echo   3. Run the installer - npm is included automatically
     echo   4. After installation, run setup.bat again
     echo.
@@ -180,7 +182,7 @@ set "TMP=%ORIGINAL_TMP%"
 if errorlevel 1 (
     echo.
     echo ERROR: Failed to install some packages!
-    echo If you see a path length error, enable Windows Long Paths or move the project to a shorter path (example: C:\FinForge).
+    echo If you see a path length error, enable Windows Long Paths or move the project to a shorter path ^(example: C:\FinForge^).
     pause
     exit /b 1
 )
@@ -202,7 +204,7 @@ if "!NODE_FOUND!"=="1" if "!NPM_FOUND!"=="1" (
     ) else (
         echo.
         echo WARNING: npm install failed in ElectronHome.
-        echo The FinForge Launcher (Electron UI) may not work.
+        echo The FinForge Launcher ^(Electron UI^) may not work.
         echo You can still use FinForge.xlsm in Excel directly.
         echo To fix this later, run: cd ElectronHome ^&^& npm install
         echo.
@@ -357,14 +359,14 @@ if errorlevel 1 (
 echo.
 
 echo Configuring xlwings for this project...
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Installation\configure_xlwings.ps1" -ProjectDir "%~dp0"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Installation\configure_xlwings.ps1" -ProjectDir "%~dp0."
 if %errorlevel% equ 0 (
     echo xlwings configuration completed successfully.
 ) else (
     echo.
     echo WARNING: xlwings configuration failed.
     echo Please run the following command manually:
-    echo   powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Installation\configure_xlwings.ps1" -ProjectDir "%~dp0"
+    echo   powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Installation\configure_xlwings.ps1" -ProjectDir "%~dp0."
 )
 echo.
 
@@ -420,6 +422,25 @@ if "!NODE_FOUND!"=="0" (
 echo For help and guides, see the "Guides" folder.
 echo.
 pause
+exit /b 0
+
+REM ------------------------------------------------------------------
+REM Subroutine: capture node version via temp file (avoids for /f
+REM inline execution that can silently terminate the script on some
+REM Node.js versions like v24.15.0).
+REM ------------------------------------------------------------------
+:getNodeVersion
+set "NODE_TMP=%TEMP%\finforge_node_%RANDOM%.tmp"
+cmd /c node --version >"%NODE_TMP%" 2>&1
+if not errorlevel 1 (
+    if exist "%NODE_TMP%" (
+        for /f "usebackq delims=" %%v in ("%NODE_TMP%") do set "NODE_VERSION=%%v"
+        del "%NODE_TMP%" >nul 2>&1
+    )
+) else (
+    if exist "%NODE_TMP%" del "%NODE_TMP%" >nul 2>&1
+)
+echo Node.js found: !NODE_VERSION!
 exit /b 0
 
 :strlen

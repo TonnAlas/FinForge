@@ -41,7 +41,7 @@ from collections import defaultdict
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from data_management.stock_data_manager import StockDataManager
+from data_management.stock_data_manager import StockDataManager, convert_fundamental_wide_to_long
 
 # Font color definitions (RGB tuples for xlwings) - using text colors instead of background
 RED_RGB = (255, 0, 0)      # Red text for missing data
@@ -101,9 +101,96 @@ class IncomeStatementImporter:
         self.statement_settings_file = data_path / "statement_settings.json"
         self.sheet_name = "income statements"
         self.data_type = "income_statement_long"
+        self.quarterly_data_type = "quarterly_income_statement"
         self.START_ROW = 4  # Where tickers are listed
         self.DATA_START_ROW = 7  # Where financial line items begin
     
+    def _resolve_data_type(self):
+        """Return the parquet data-type folder for the configured frequency."""
+        settings = self._load_terminal_settings()
+        frequency = settings.get("frequency", "annual") if isinstance(settings, dict) else "annual"
+        if frequency == "quarterly":
+            return self.quarterly_data_type
+        return self.data_type
+
+    def _load_ticker_df(self, ticker):
+        """Load statement data for a ticker, melting wide format to long when needed."""
+        df = self.data_manager.get_fundamental_data(ticker, self._resolve_data_type())
+        if df.empty:
+            return df
+        if 'line_item' not in df.columns and 'index' in df.columns:
+            df = convert_fundamental_wide_to_long(df)
+        return df
+
+    def _get_picked_periods(self):
+        """Return {ticker: [date, ...]} for the current frequency from settings."""
+        settings = self._load_terminal_settings()
+        periods = settings.get("periods", {}) if isinstance(settings, dict) else {}
+        if not isinstance(periods, dict):
+            return {}
+        freq_periods = periods.get(settings.get("frequency", "annual"), {})
+        if not isinstance(freq_periods, dict):
+            return {}
+        result = {}
+        for key, value in freq_periods.items():
+            ticker = str(key).strip().upper()
+            if not ticker:
+                continue
+            result[ticker] = [str(item).strip() for item in value] if isinstance(value, list) else []
+        return result
+
+    def _normalize_statement_date(self, value):
+        """Return a clean YYYY-MM-DD string for a statement date value."""
+        text = str(value).strip()
+        parsed = pd.to_datetime(text, errors='coerce')
+        if pd.isna(parsed):
+            return text
+        return parsed.strftime('%Y-%m-%d')
+
+    def _resolve_statement_date(self, ticker, occurrence, date_values, picked_periods):
+        """Pick the statement date for a ticker occurrence.
+
+        An explicitly picked period (newest first) wins. When a ticker has no
+        explicit picks, only the newest available period is used. Extra occurrences
+        beyond the picks fall back to the Nth-most-recent date.
+        """
+        picked = picked_periods.get(ticker, []) if isinstance(picked_periods, dict) else []
+        if picked:
+            if occurrence <= len(picked):
+                candidate = self._normalize_statement_date(picked[occurrence - 1])
+                for date_value in date_values:
+                    if self._normalize_statement_date(date_value) == candidate:
+                        return date_value
+            if occurrence > len(date_values):
+                return None
+            return date_values[occurrence - 1]
+        if not date_values:
+            return None
+        return date_values[0]
+
+    def _apply_period_dropdown(self, ws, col_index, date_values):
+        """Add an Excel list-validation dropdown to the date cell for available periods."""
+        labels = [self._normalize_statement_date(value) for value in date_values]
+        labels = [label for label in labels if label][:24]
+        if not labels:
+            return
+        formula = ",".join(labels)
+        try:
+            validation = ws.range((self.START_ROW + 1, col_index)).api.Validation
+            validation.Delete()
+            validation.Add(Type=3, AlertStyle=1, Operator=1, Formula1=formula)
+        except Exception as exc:
+            print(f"  Warning: could not add period dropdown to column {col_index}: {exc}")
+
+    def _resolve_statement_date_with_selection(self, selected, ticker, occurrence, date_values, picked_periods):
+        """Resolve the date: an existing dropdown selection wins, then settings, then newest."""
+        if selected:
+            candidate = self._normalize_statement_date(selected)
+            for date_value in date_values:
+                if self._normalize_statement_date(date_value) == candidate:
+                    return date_value
+        return self._resolve_statement_date(ticker, occurrence, date_values, picked_periods)
+
     def import_data(self, workbook_path=None):
         """
         Import income statement data from Parquet storage to Excel sheet
@@ -146,8 +233,18 @@ class IncomeStatementImporter:
                 print("Warning: Could not determine valid items for INDEX")
                 valid_items = []
             
+            # Capture existing date selections (row 5) before clearing, so dropdown picks survive
+            existing_dates = {}
+            for col_index in range(2, max_col + 1):
+                value = ws.range((self.START_ROW + 1, col_index)).value
+                if value not in (None, ""):
+                    existing_dates[col_index] = str(value).strip()
+            
             # Clear all data columns before importing (preserve column A)
             self._clear_sheet_data(ws, len(valid_items) if valid_items else 200)
+            
+            # Resolve explicitly picked periods once (ticker -> [date, ...] newest first)
+            picked_periods = self._get_picked_periods()
             
             # Process all columns (including INDEX columns)
             ticker_counter = defaultdict(int)
@@ -178,7 +275,7 @@ class IncomeStatementImporter:
                 print(f"  Occurrence #{occurrence} for ticker '{ticker}'")
                 
                 # Get data from Parquet storage
-                df = self.data_manager.get_fundamental_data(ticker, self.data_type)
+                df = self._load_ticker_df(ticker)
                 
                 if df.empty:
                     print(f"  No income statement data found for {ticker}")
@@ -201,17 +298,22 @@ class IncomeStatementImporter:
                 date_values = self._sort_statement_dates(date_values)
                 print(f"  Found {len(date_values)} statement dates: {date_values}")
                 
-                if occurrence > len(date_values):
+                # Add a dropdown to the date cell so the period can be picked in Excel
+                self._apply_period_dropdown(ws, col_index, date_values)
+                
+                statement_date = self._resolve_statement_date_with_selection(
+                    existing_dates.get(col_index), ticker, occurrence, date_values, picked_periods
+                )
+                if statement_date is None:
                     msg = f"Only {len(date_values)} periods available"
                     print(f"  {msg}")
                     self._mark_column_unavailable(ws, col_index, msg)
                     continue
                 
-                statement_date = date_values[occurrence - 1]
                 print(f"  Using statement date: '{statement_date}'")
                 
-                # Write statement date to Excel
-                ws.range((self.START_ROW + 1, col_index)).value = statement_date
+                # Write statement date to Excel (normalized to YYYY-MM-DD)
+                ws.range((self.START_ROW + 1, col_index)).value = self._normalize_statement_date(statement_date)
                 
                 stmt_df = df[(df["statement_date"] == statement_date) & (df["value"].notna())]
                 stmt_data = stmt_df.groupby("line_item")["value"].first().to_dict()
@@ -243,7 +345,7 @@ class IncomeStatementImporter:
         default_items = self._get_default_items_from_sheet(ws)
         if not default_items:
             # Fallback to AAPL if no ticker data is available
-            df = self.data_manager.get_fundamental_data('AAPL', self.data_type)
+            df = self._load_ticker_df('AAPL')
             default_items = self._build_default_items_from_long_df(df)
         
         print(f"  Found {len(default_items)} default items from sheet or fallback data")
@@ -273,6 +375,8 @@ class IncomeStatementImporter:
         """Load the terminal window financial statement settings file"""
         default_settings = {
             "mode": "balanceSheet",
+            "frequency": "annual",
+            "periods": {},
             "display": {"mode": "millions", "divisor": 1000000},
             "balanceSheet": {"selected": []},
             "incomeStatement": {"selected": []},
@@ -294,6 +398,14 @@ class IncomeStatementImporter:
 
         if isinstance(loaded, dict):
             settings["mode"] = loaded.get("mode", settings["mode"])
+
+            loaded_frequency = loaded.get("frequency")
+            if loaded_frequency in ("annual", "quarterly"):
+                settings["frequency"] = loaded_frequency
+
+            loaded_periods = loaded.get("periods")
+            if isinstance(loaded_periods, dict):
+                settings["periods"] = loaded_periods
 
             display_settings = loaded.get("display")
             if isinstance(display_settings, dict):
@@ -342,7 +454,7 @@ class IncomeStatementImporter:
             if ticker in ["INDEX", "CUSTOM"]:
                 continue
             
-            df = self.data_manager.get_fundamental_data(ticker, self.data_type)
+            df = self._load_ticker_df(ticker)
             if df.empty or 'line_item' not in df.columns:
                 continue
             

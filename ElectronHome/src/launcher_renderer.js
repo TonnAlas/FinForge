@@ -501,7 +501,7 @@ function updateSetupStatusUI(state) {
       if (template.ratios && typeof template.ratios === 'object') {
         var ratioKeys = Object.keys(template.ratios);
         if (ratioKeys.length > 0) {
-          parts.push(ratioKeys.length + ' ratios');
+          parts.push(ratioKeys.length + ' metrics');
         }
       }
       templateStatus.textContent = parts.join(' | ');
@@ -612,7 +612,7 @@ function updateSetupStatusUI(state) {
       }
       if (!template || !template.excelTemplate) return;
 
-      if (!window.confirm('Replace FinForge.xlsm with a copy of "' + template.excelTemplate + '" from template "' + template.name + '"?\n\nThis will overwrite the current workbook and all settings (statement lines, tickers, ratios).')) return;
+      if (!window.confirm('Replace FinForge.xlsm with a copy of "' + template.excelTemplate + '" from template "' + template.name + '"?\n\nThis will overwrite the current workbook and all settings (statement lines, tickers, metrics).')) return;
 
       if (!window.finforge || typeof window.finforge.replaceWorkbookWithTemplate !== 'function') return;
 

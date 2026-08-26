@@ -17,26 +17,32 @@ FinForge is a financial analysis tool that:
 
 ## Quick Start
 
-### Step 1: Launch the Application
+### Step 1: Run First-Time Setup
 
-**Option A - Using the Batch File (Recommended)**
+1. Double-click `setup.bat` in the main folder
+2. Wait for the setup to install the Python virtual environment and dependencies
+3. Enable Excel Macros so the workbook can run its automation:
+   - Open Excel, go to **File > Options > Trust Center > Trust Center Settings**
+   - Click **Macro Settings** and select **Enable all macros**
+   - Check **Trust access to the VBA project object model**, then click OK and restart Excel
+
+### Step 2: Launch the Application
+
 1. Double-click `launch_finforge.bat` in the main folder
-2. The FinForge window will open
+2. The FinForge launcher window will open
 
-### Step 2: Open the Workspace
+### Step 3: Open the Workspace
 
-1. In the launcher, click **Open statement import window**
-2. The main workspace window opens with sidebar navigation (Imports, Ratios, Company Profile, Research)
+1. In the launcher, click **Open terminal** (the main workspace window)
+2. The workspace window opens with sidebar navigation (Imports, Ratios, Company Profile, Research)
 
-### Step 3: Add Your First Ticker
+### Step 4: Add Your First Ticker
 
-1. Go to the **Imports** tab
-2. Type a ticker symbol (e.g., `AAPL`) in the search bar
-3. Select the ticker from the search results
-4. Click the **+** button to add it to the import list
-5. Data fetching starts automatically in the background
+1. Go to the **Search** tab and find a ticker symbol (e.g., `AAPL`)
+2. Select the ticker and add it to the import list
+3. Data fetching starts automatically in the background
 
-### Step 4: Import Financial Data to Excel
+### Step 5: Import Financial Data to Excel
 
 1. In the Imports tab, choose **Balance sheet** or **Income statement** scope
 2. Select the line items you want to print
@@ -51,18 +57,6 @@ FinForge is a financial analysis tool that:
 - Python 3.10+ (included in .venv)
 - Node.js 18+ (for Electron, auto-installed by setup)
 - Internet connection (for data fetching)
-
----
-
-## First-Time Setup
-
-If this is your first time using the app:
-
-1. **Run `setup.bat`** to install all dependencies
-2. **Enable Excel Macros**
-   - Open Excel, go to File > Options > Trust Center
-   - Click Trust Center Settings > Macro Settings
-   - Select "Enable all macros"
 
 ---
 

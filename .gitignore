@@ -64,6 +64,9 @@ ElectronHome/node_modules/
 Temporary/*
 !Temporary/.gitkeep
 
+# Internal AI-agent audit reports (never ship)
+.github/Agents reports/
+
 # User data (downloaded stock data - keep out of public repo)
 data/**
 # Seed / template config files (required for app to function)
@@ -73,6 +76,7 @@ data/**
 !data/statement_catalog.json
 !data/statement_settings.json
 !data/pending_deletions.json
+!data/company_ir_links.json
 
 # Backup files
 *.bak

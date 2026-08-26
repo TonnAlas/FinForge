@@ -1,22 +1,50 @@
 {
   "Current Ratio": {
     "formula": "BS: Current Assets / BS: Current Liabilities",
-    "notes": "Measures short-term liquidity"
+    "notes": "Measures short-term liquidity",
+    "row": "",
+    "folder": ""
   },
   "Debt to Equity": {
     "formula": "BS: Total Debt / BS: Stockholders Equity",
-    "notes": "Measures financial leverage"
+    "notes": "Measures financial leverage",
+    "row": "",
+    "folder": ""
   },
   "Gross Margin": {
     "formula": "(IS: Total Revenue - IS: Cost Of Revenue) / IS: Total Revenue",
-    "notes": "Measures profitability after direct costs"
+    "notes": "Measures profitability after direct costs",
+    "row": "",
+    "folder": ""
   },
   "Net Profit Margin": {
     "formula": "IS: Net Income / IS: Total Revenue",
-    "notes": "Measures overall profitability"
+    "notes": "Measures overall profitability",
+    "row": "",
+    "folder": ""
   },
   "Return on Equity": {
     "formula": "IS: Net Income / BS: Stockholders Equity",
-    "notes": "Measures return on shareholder investment"
+    "notes": "Measures return on shareholder investment",
+    "row": "",
+    "folder": ""
+  },
+  "Current price": {
+    "formula": "P: Close Price",
+    "notes": "",
+    "row": "",
+    "folder": "test"
+  },
+  "Volume": {
+    "formula": "P: Volume",
+    "notes": "",
+    "row": "",
+    "folder": "test"
+  },
+  "P/B": {
+    "formula": "M: PB Ratio",
+    "notes": "Price to Book",
+    "row": "",
+    "folder": ""
   }
 }

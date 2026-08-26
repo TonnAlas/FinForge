@@ -30,7 +30,8 @@ from Internal.Ratios.ratio_handeling import get_ratios_from_config
 
 # Configuration
 DASHBOARD_PATH = Path(__file__).parent.parent.parent / "FinForge.xlsm"
-RATIOS_SHEET = "Ratios"
+METRICS_SHEET = "Metrics"           # canonical sheet name (renamed from "Ratios")
+LEGACY_RATIOS_SHEET = "Ratios"      # pre-rename sheet name, kept for backward compatibility
 RATIO_DATA_START_ROW = 7  # Matching BS/IS layout
 
 
@@ -280,11 +281,14 @@ class RatioManagerUI(QMainWindow):
                 else:
                     raise FileNotFoundError("Excel dashboard not found")
             
-            # Get or create Ratios sheet
-            try:
-                self.ws = self.wb.sheets[RATIOS_SHEET]
-            except:
-                self.ws = self.wb.sheets.add(RATIOS_SHEET)
+            # Get or create Metrics sheet (falling back to legacy "Ratios" sheet name)
+            sheet_names = [s.name for s in self.wb.sheets]
+            if METRICS_SHEET in sheet_names:
+                self.ws = self.wb.sheets[METRICS_SHEET]
+            elif LEGACY_RATIOS_SHEET in sheet_names:
+                self.ws = self.wb.sheets[LEGACY_RATIOS_SHEET]
+            else:
+                self.ws = self.wb.sheets.add(METRICS_SHEET)
                 self._setup_sheet_structure()
             
             # Read assigned ratios from Column A (row 7+)
@@ -321,9 +325,9 @@ class RatioManagerUI(QMainWindow):
             QMessageBox.critical(self, "Error", f"Failed to load data:\n{str(e)}")
     
     def _setup_sheet_structure(self):
-        """Initialize the Ratios sheet structure (matching BS/IS layout)"""
+        """Initialize the Metrics sheet structure (matching BS/IS layout)"""
         # Row 1: Title
-        self.ws.range("A1").value = "Financial Ratios"
+        self.ws.range("A1").value = "Financial Metrics"
         self.ws.range("A1").font.size = 14
         self.ws.range("A1").font.bold = True
         
@@ -354,7 +358,7 @@ class RatioManagerUI(QMainWindow):
             self.ratio_list.addItem(item)
     
     def add_ratio_to_sheet(self):
-        """Add selected ratio to Column A of the Ratios sheet"""
+        """Add selected metric to Column A of the Metrics sheet"""
         current_item = self.ratio_list.currentItem()
         if not current_item:
             QMessageBox.warning(self, "No Selection", "Please select a ratio to add.")
@@ -392,7 +396,7 @@ class RatioManagerUI(QMainWindow):
             QMessageBox.critical(self, "Error", f"Failed to add ratio:\n{str(e)}")
     
     def remove_ratio_from_sheet(self):
-        """Remove selected ratio from Column A of the Ratios sheet"""
+        """Remove selected metric from Column A of the Metrics sheet"""
         current_item = self.ratio_list.currentItem()
         if not current_item:
             QMessageBox.warning(self, "No Selection", "Please select a ratio to remove.")

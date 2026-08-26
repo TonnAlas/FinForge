@@ -1,0 +1,20 @@
+{
+  "AAPL": {
+    "irUrl": "https://investor.apple.com/",
+    "annualReportUrl": "https://investor.apple.com/financials/default.aspx",
+    "presentationsUrl": "",
+    "esgUrl": "https://www.apple.com/environment/"
+  },
+  "MSFT": {
+    "irUrl": "https://www.microsoft.com/en-us/Investor",
+    "annualReportUrl": "https://www.microsoft.com/en-us/Investor/annual-reports.aspx",
+    "presentationsUrl": "https://www.microsoft.com/en-us/Investor/events-and-presentations.aspx",
+    "esgUrl": "https://www.microsoft.com/en-us/corporate-responsibility"
+  },
+  "GOOG": {
+    "irUrl": "https://abc.xyz/investor/",
+    "annualReportUrl": "",
+    "presentationsUrl": "",
+    "esgUrl": "https://sustainability.google/"
+  }
+}

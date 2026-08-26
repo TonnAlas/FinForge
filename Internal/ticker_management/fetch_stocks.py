@@ -61,6 +61,79 @@ def prepare_list_data(data, name='item'):
     return pd.DataFrame({name: data})
 
 
+# Yahoo ticker suffix -> region default, used to tag exchange metadata for the
+# Reports tab and future country-specific regulatory adapters.
+SUFFIX_REGION_MAP = {
+    '.L': 'United Kingdom',
+    '.IL': 'United Kingdom',
+    '.DE': 'Germany',
+    '.F': 'Germany',
+    '.PA': 'France',
+    '.AS': 'Netherlands',
+    '.BR': 'Belgium',
+    '.MI': 'Italy',
+    '.MC': 'Spain',
+    '.T': 'Japan',
+    '.HK': 'Hong Kong',
+    '.SS': 'China',
+    '.SZ': 'China',
+    '.AX': 'Australia',
+    '.TO': 'Canada',
+    '.V': 'Canada',
+    '.NS': 'India',
+    '.BO': 'India',
+    '.SI': 'Singapore',
+    '.KS': 'South Korea',
+    '.KQ': 'South Korea',
+    '.TW': 'Taiwan',
+    '.SW': 'Switzerland',
+    '.OL': 'Norway',
+    '.ST': 'Sweden',
+    '.CO': 'Denmark',
+    '.HE': 'Finland',
+}
+
+
+def _suffix_region(ticker):
+    """Return the region for a ticker based on its exchange suffix."""
+    upper = str(ticker or '').strip().upper()
+    for suffix, region in SUFFIX_REGION_MAP.items():
+        if upper.endswith(suffix):
+            return region
+    return 'United States'
+
+
+def update_ticker_exchange_metadata(ticker, exchange, full_exchange_name):
+    """Merge exchange metadata into data/tickers.json without clobbering the ticker list."""
+    tickers_json = Path(__file__).parent.parent.parent / "data" / "tickers.json"
+    data = {}
+    if tickers_json.exists():
+        try:
+            with open(tickers_json, 'r') as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            data = {}
+    if not isinstance(data, dict):
+        data = {}
+
+    exchanges = data.get('exchanges')
+    if not isinstance(exchanges, dict):
+        exchanges = {}
+
+    exchanges[str(ticker).strip().upper()] = {
+        'exchange': str(exchange or '').strip(),
+        'fullExchangeName': str(full_exchange_name or '').strip(),
+        'region': _suffix_region(ticker),
+    }
+    data['exchanges'] = exchanges
+
+    try:
+        with open(tickers_json, 'w') as f:
+            json.dump(data, f, indent=2)
+    except OSError:
+        pass
+
+
 def fetch_ticker_data(ticker_symbol, data_manager, start_date, end_date):
     """Fetch and save all available data for a single ticker."""
     stock = yf.Ticker(ticker_symbol)
@@ -202,6 +275,10 @@ def fetch_ticker_data(ticker_symbol, data_manager, start_date, end_date):
         info = stock.info
         if info and isinstance(info, dict):
             data_manager.save_metadata(ticker_symbol, info)
+            exchange = info.get('exchange')
+            full_exchange = info.get('fullExchangeName')
+            if exchange or full_exchange:
+                update_ticker_exchange_metadata(ticker_symbol, exchange, full_exchange)
     except Exception:
         pass
 
@@ -245,7 +322,3 @@ if __name__ == "__main__":
     dashboard_path = Path(__file__).parent.parent.parent / "FinForge.xlsm"
     if dashboard_path.exists():
         os.startfile(dashboard_path)
-
-
-if __name__ == "__main__":
-    main()

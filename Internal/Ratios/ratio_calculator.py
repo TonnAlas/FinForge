@@ -15,12 +15,35 @@ from PySide6.QtCore import Qt
 # Add parent to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 from Internal.Ratios.ratio_handeling import get_ratios_from_config
+from Internal.Ratios.formula_resolver import eval_ast, parse_formula_ast, resolve_latest
 
 # Configuration
-RATIOS_SHEET = "Ratios"
-RATIO_DATA_START_ROW = 7      # Row where ratio names begin in Column A (like BS/IS)
+METRICS_SHEET = "Metrics"          # canonical sheet name (renamed from "Ratios")
+LEGACY_RATIOS_SHEET = "Ratios"     # pre-rename sheet name, kept for backward compatibility
+RATIO_DATA_START_ROW = 7      # Row where metric names begin in Column A (like BS/IS)
 TICKER_ROW = 4                # Row where ticker symbols are placed (like BS/IS)
 DATA_DIR = Path(__file__).parent.parent.parent / "data" / "fundamentals"
+
+
+def _column_letter(col_index: int) -> str:
+    """Convert a 1-based column index to its Excel letter (1 -> A, 27 -> AA)."""
+    letters = ""
+    while col_index > 0:
+        col_index, remainder = divmod(col_index - 1, 26)
+        letters = chr(65 + remainder) + letters
+    return letters
+
+
+def _resolve_metrics_sheet(workbook):
+    """Return the Metrics sheet, falling back to the legacy 'Ratios' sheet if present."""
+    sheet_names = [s.name for s in workbook.sheets]
+    if METRICS_SHEET in sheet_names:
+        return workbook.sheets[METRICS_SHEET]
+    if LEGACY_RATIOS_SHEET in sheet_names:
+        return workbook.sheets[LEGACY_RATIOS_SHEET]
+    raise ValueError(
+        f"Sheet '{METRICS_SHEET}' (or legacy '{LEGACY_RATIOS_SHEET}') not found in workbook"
+    )
 
 
 class RatioCalculator:
@@ -97,13 +120,13 @@ class RatioCalculator:
         
         New layout (matching BS/IS sheets):
           Row 4:     Ticker symbols in columns B-Z (like BS/IS)
-          Row 7+:    Ratio names in Column A, calculated values in B-Z
+          Row 7+:    Metric names in Column A, calculated values in B-Z
           
-        INDEX columns are populated with the ratio names from Column A.
+        INDEX columns are populated with the metric names from Column A.
         CUSTOM columns are left untouched for user-entered data.
         """
         try:
-            self.ws = self.wb.sheets[RATIOS_SHEET]
+            self.ws = _resolve_metrics_sheet(self.wb)
             self.ratios_config = get_ratios_from_config()
             if not self.ratios_config:
                 raise ValueError("No ratios found in configuration")
@@ -119,8 +142,10 @@ class RatioCalculator:
             if not self.assigned_ratios:
                 raise ValueError("No assigned ratios found in Column A (starting from row 7)")
 
-            # Read row 4 headers and classify columns
-            row4_data = self.ws.range("B4:Z4").value
+            # Read row 4 headers and classify columns (through the used range,
+            # not just B:Z, so tickers past column Z are not silently ignored)
+            last_col = min(self.ws.range("B4").end("right").column, 100)
+            row4_data = self.ws.range(f"B4:{_column_letter(last_col)}4").value
             self.ticker_columns = []
             self.index_columns = []
             self.custom_columns = []
@@ -128,7 +153,7 @@ class RatioCalculator:
                 for idx, value in enumerate(row4_data):
                     if value and isinstance(value, str):
                         header = value.strip().upper()
-                        col_letter = chr(66 + idx)  # B=66, C=67, etc.
+                        col_letter = _column_letter(idx + 2)  # B=2, C=3, ...
                         if header == "INDEX":
                             self.index_columns.append(col_letter)
                         elif header == "CUSTOM":
@@ -149,409 +174,71 @@ class RatioCalculator:
             print(f"Initialization error: {e}")
             raise
     
-    def parse_ratio_formula(self, formula):
-        """
-        Parse ratio formula to extract components
-        Supports: Division (/), Subtraction (-), Addition (+), Multiplication (*)
-        Format: "BS: Item Name / IS: Item Name"
-        Also supports single-field formulas: "BS: Item Name" (no operation)
-        Also supports numeric literals: "BS: Net Debt / 2"
-        
-        Returns: (operation, (left_sheet, left_item), (right_sheet, right_item))
-                 For single-field formulas: ('SINGLE', (sheet_type, item_name), None)
-                 For numeric literals: sheet_type will be 'NUMBER' and item will be the numeric value
-        """
-        try:
-            def parse_component(text):
-                """Extract sheet type and item name, or detect numeric literal"""
-                text = text.strip()
-                # Remove leading '=' if present
-                if text.startswith('='):
-                    text = text[1:].strip()
-                
-                # Check if it's a numeric literal
-                try:
-                    numeric_value = float(text)
-                    return 'NUMBER', str(numeric_value)
-                except ValueError:
-                    pass
-                
-                if ':' in text:
-                    sheet_type, item = text.split(':', 1)
-                    return sheet_type.strip().upper(), item.strip()
-                return None, text.strip()
-            
-            # Normalize formula: remove newlines and extra spaces, remove leading '='
-            formula = ' '.join(formula.split())  # Collapse whitespace/newlines
-            if formula.startswith('='):
-                formula = formula[1:].strip()
-            
-            # Remove bracket content temporarily to avoid false operator detection
-            # E.g., "P: Close Price [-22D]" should not detect '-' as subtraction
-            bracket_content = {}
-            bracket_idx = 0
-            
-            def replace_brackets(match):
-                nonlocal bracket_idx
-                placeholder = f"__BRACKET_{bracket_idx}__"
-                bracket_content[placeholder] = match.group(0)
-                bracket_idx += 1
-                return placeholder
-            
-            import re
-            formula_no_brackets = re.sub(r'\[[^\]]*\]', replace_brackets, formula)
-            
-            # Detect operation type (now without bracket confusion)
-            operation = None
-            parts = None
-            for op in ['/', '-', '+', '*']:
-                if op in formula_no_brackets:
-                    operation = op
-                    parts = formula_no_brackets.split(op)
-                    if len(parts) == 2:
-                        break
-            
-            # Restore brackets in parts
-            def restore_brackets(text):
-                for placeholder, original in bracket_content.items():
-                    text = text.replace(placeholder, original)
-                return text
-            
-            # Single-field formula (no operation) - just return the value
-            if not operation:
-                left_sheet, left_item = parse_component(formula)
-                return 'SINGLE', (left_sheet, left_item), None
-            
-            if len(parts) != 2:
-                print(f"Invalid formula format: {formula}")
-                return None, None, None
-            
-            # Restore brackets in parts before parsing
-            left_part = restore_brackets(parts[0].strip())
-            right_part = restore_brackets(parts[1].strip())
-            
-            left_sheet, left_item = parse_component(left_part)
-            right_sheet, right_item = parse_component(right_part)
-            
-            return operation, (left_sheet, left_item), (right_sheet, right_item)
-            
-        except Exception as e:
-            print(f"❌ Error parsing formula '{formula}': {e}")
-            return None, None, None
-    
     def get_financial_value(self, ticker, sheet_type, item_name, recursion_depth=0):
+        """Resolve one reference's latest value for the Metrics sheet.
+
+        Numeric literals and METRIC:/RATIO: recursion are handled here; every
+        leaf sheet type (BS/IS/CF/P/M/H/E/A) is resolved through the shared
+        ``formula_resolver`` so the Metrics sheet agrees with the charts.
+        Unknown sheet types resolve to None (never to another statement).
         """
-        Get financial value from Parquet data or calculate from another ratio
-        
-        Args:
-            ticker: Stock ticker symbol
-            sheet_type: 'BS' for balance sheet, 'IS' for income statement, 'RATIO' for existing ratio, 'NUMBER' for numeric literal, 'P' for price data
-            item_name: Financial item name, ratio name, numeric value as string, or price field name
-            recursion_depth: Tracks recursion to prevent infinite loops
-        
-        Returns: Numeric value or None
-        """
-        try:
-            # Prevent infinite recursion (max 10 levels deep)
-            if recursion_depth > 10:
-                print(f"⚠️ Max recursion depth exceeded for {item_name}")
-                return None
-            
-            # Handle NUMBER type - just return the numeric value
-            if sheet_type == 'NUMBER':
-                try:
-                    return float(item_name)
-                except ValueError:
-                    print(f"⚠️ Invalid number: {item_name}")
-                    return None
-            
-            # Handle RATIO: references - calculate the referenced ratio
-            if sheet_type == 'RATIO':
-                ratio_name = item_name.strip()
-                ratio_data = self.ratios_config.get(ratio_name)
-                if not ratio_data:
-                    print(f"⚠️ Referenced ratio '{ratio_name}' not found")
-                    return None
-                
-                # Recursively calculate the referenced ratio
-                result = self._calculate_ratio_internal(ratio_name, ticker, recursion_depth + 1)
-                if isinstance(result, (int, float)):
-                    return float(result)
-                return None
-            
-            # Handle PRICE data (P: High Price, P: Open Price [-15D], etc.)
-            if sheet_type == 'P':
-                print(f"DEBUG: Getting PRICE data for {ticker}, field: {item_name}")
-                # Load price data for this ticker
-                prices_dir = Path(__file__).parent.parent.parent / "data" / "prices"
-                price_file = prices_dir / f"{ticker.upper()}.parquet"
-                
-                if not price_file.exists():
-                    print(f"Price data not found for ticker: {ticker}")
-                    return None
-                
-                try:
-                    import re
-                    price_df = pd.read_parquet(price_file)
-                    
-                    if price_df.empty:
-                        print(f"No price data available for {ticker}")
-                        return None
-                    
-                    # Ensure Date column is datetime and sorted
-                    if 'Date' in price_df.columns:
-                        price_df['Date'] = pd.to_datetime(price_df['Date'])
-                        price_df = price_df.sort_values('Date').reset_index(drop=True)
-                    
-                    # Parse item_name for date offset syntax: "Close Price [-15D]"
-                    item_clean = item_name.strip().replace("P:", "").strip()
-                    days_offset = 0
-                    
-                    # Check for [-XD] pattern (days ago)
-                    offset_match = re.search(r'\[[-]?(\d+)D\]', item_clean, re.IGNORECASE)
-                    if offset_match:
-                        days_offset = int(offset_match.group(1))
-                        # Remove the offset from field name
-                        item_clean = re.sub(r'\s*\[[-]?\d+D\]', '', item_clean, flags=re.IGNORECASE).strip()
-                    
-                    item_lower = item_clean.lower()
-                    
-                    # Handle calculated fields: Change and Change Percent
-                    # These compare current Close to Close at days_offset
-                    if item_lower in ['change', 'price change']:
-                        # Calculate price change: Current Close - Close at offset
-                        current_idx = len(price_df) - 1
-                        past_idx = current_idx - days_offset if days_offset > 0 else current_idx - 1
-                        
-                        if past_idx < 0:
-                            print(f"Not enough data for Change calculation ({ticker})")
-                            return None
-                        
-                        current_close = price_df['Close'].iloc[current_idx]
-                        past_close = price_df['Close'].iloc[past_idx]
-                        
-                        if pd.isna(current_close) or pd.isna(past_close):
-                            return None
-                        
-                        return float(current_close - past_close)
-                    
-                    if item_lower in ['change percent', 'change %', 'percent change', 'price change percent']:
-                        # Calculate price change percent: (Current - Past) / Past * 100
-                        current_idx = len(price_df) - 1
-                        past_idx = current_idx - days_offset if days_offset > 0 else current_idx - 1
-                        
-                        if past_idx < 0:
-                            print(f"Not enough data for Change Percent calculation ({ticker})")
-                            return None
-                        
-                        current_close = price_df['Close'].iloc[current_idx]
-                        past_close = price_df['Close'].iloc[past_idx]
-                        
-                        if pd.isna(current_close) or pd.isna(past_close) or past_close == 0:
-                            return None
-                        
-                        return float((current_close - past_close) / past_close * 100)
-                    
-                    # Handle 'previous close' explicitly - always uses iloc[-2] (last completed trading day)
-                    if item_lower == 'previous close':
-                        if len(price_df) < 2:
-                            print(f"Not enough price data for Previous Close ({ticker})")
-                            return None
-                        value = price_df['Close'].iloc[-2]
-                        if pd.isna(value):
-                            print(f"No Previous Close value available for {ticker}")
-                            return None
-                        return float(value)
-                    
-                    # Map common price field names to parquet columns
-                    price_field_map = {
-                        'high price': 'High',
-                        'high': 'High',
-                        'low price': 'Low',
-                        'low': 'Low',
-                        'open price': 'Open',
-                        'open': 'Open',
-                        'close price': 'Close',
-                        'close': 'Close',
-                        'closing price': 'Close',
-                        'adjusted close': 'Adj Close',
-                        'adj close': 'Adj Close',
-                        'volume': 'Volume',
-                        'dividends': 'Dividends',
-                        'stock splits': 'Stock Splits'
-                    }
-                    
-                    # Find the matching column
-                    parquet_column = price_field_map.get(item_lower)
-                    
-                    if not parquet_column or parquet_column not in price_df.columns:
-                        # Try direct column name match
-                        matching_cols = [col for col in price_df.columns if col.lower() == item_lower]
-                        if matching_cols:
-                            parquet_column = matching_cols[0]
-                        else:
-                            print(f"Price field '{item_clean}' not found for {ticker}")
-                            print(f"   Available columns: {price_df.columns.tolist()}")
-                            return None
-                    
-                    # Calculate the row index based on days offset
-                    # days_offset=0 means latest, days_offset=15 means 15 trading days ago
-                    row_index = len(price_df) - 1 - days_offset
-                    
-                    if row_index < 0:
-                        print(f"Not enough historical data for {days_offset} days offset ({ticker})")
-                        return None
-                    
-                    value = price_df[parquet_column].iloc[row_index]
-                    
-                    if pd.isna(value):
-                        print(f"No value available for {item_clean} in {ticker} at offset {days_offset}")
-                        return None
-                    
-                    return float(value)
-                    
-                except Exception as e:
-                    print(f"Error loading price data for {ticker}: {e}")
-                    return None
-            
-            # Select appropriate dataset for BS and IS
-            if sheet_type == 'BS':
-                df = self.balance_sheet_data
-            elif sheet_type == 'IS':
-                df = self.income_statement_data
-            else:
-                df = self.balance_sheet_data  # Default to BS
-            
-            # Filter by ticker
-            ticker_data = df[df['ticker'].str.upper() == ticker.upper()]
-            
-            if ticker_data.empty:
-                print(f"⚠️ No data found for ticker: {ticker}")
-                return None
-            
-            # Find the item by matching the 'index' column (case-insensitive)
-            item_lower = item_name.lower()
-            
-            # Try exact match first in 'index' column
-            matching_rows = ticker_data[ticker_data['index'].str.lower() == item_lower]
-            
-            if matching_rows.empty:
-                # Try partial match in 'index' column
-                matching_rows = ticker_data[ticker_data['index'].str.lower().str.contains(item_lower, na=False)]
-            
-            if matching_rows.empty:
-                print(f"⚠️ Item '{item_name}' not found for {ticker}")
-                print(f"   Available items: {ticker_data['index'].tolist()[:5]}...")
-                return None
-            
-            # Get the most recent value (first date column that's not NaN)
-            date_columns = [col for col in matching_rows.columns if col not in ['index', 'ticker', 'last_updated']]
-            
-            for col in date_columns:
-                value = matching_rows[col].iloc[0]
-                if pd.notna(value):
-                    try:
-                        return float(value)
-                    except (ValueError, TypeError):
-                        continue
-            
-            print(f"⚠️ No valid data found for '{item_name}' ({ticker})")
+        if recursion_depth > 10:
             return None
-            
-        except Exception as e:
-            print(f"❌ Error getting value for {ticker}, {item_name}: {e}")
-            import traceback
-            traceback.print_exc()
+
+        sheet_upper = (sheet_type or "").upper()
+
+        if sheet_upper == "NUMBER":
+            try:
+                return float(item_name)
+            except (TypeError, ValueError):
+                return None
+
+        if sheet_upper in ("RATIO", "METRIC"):
+            result = self._calculate_ratio_internal(item_name.strip(), ticker, recursion_depth + 1)
+            if isinstance(result, (int, float)):
+                return float(result)
             return None
-    
+
+        return resolve_latest(ticker, sheet_upper, item_name)
+
     def calculate_ratio(self, ratio_name, ticker):
-        """
-        Calculate a specific ratio for a ticker (public interface)
-        
-        Args:
-            ratio_name: Name of the ratio
-            ticker: Stock ticker
-        
-        Returns: Calculated ratio value or error string
-        """
+        """Calculate a specific ratio for a ticker (public interface)."""
         return self._calculate_ratio_internal(ratio_name, ticker, recursion_depth=0)
-    
+
     def _calculate_ratio_internal(self, ratio_name, ticker, recursion_depth=0):
-        """
-        Internal method to calculate a ratio with recursion tracking
-        
-        Args:
-            ratio_name: Name of the ratio
-            ticker: Stock ticker
-            recursion_depth: Current recursion depth to prevent infinite loops
-        
-        Returns: Calculated ratio value or error string
+        """Internal method to calculate a ratio with recursion tracking.
+
+        Returns a rounded float, "N/A" when data is missing, or an "ERROR: ..."
+        string when the formula is invalid.
         """
         try:
-            # Prevent infinite recursion
             if recursion_depth > 10:
                 return "ERROR: Circular reference"
-            
-            # Get ratio formula
+
             ratio_data = self.ratios_config.get(ratio_name)
             if not ratio_data:
                 return "ERROR: Ratio not found"
-            
-            formula = ratio_data.get('formula', '')
+
+            formula = ratio_data.get("formula", "")
             if not formula:
                 return "ERROR: No formula"
-            
-            # Parse formula (returns: operation, left_info, right_info)
-            operation, left_info, right_info = self.parse_ratio_formula(formula)
-            if not operation or not left_info:
+
+            ast = parse_formula_ast(formula)
+            if ast is None:
                 return "ERROR: Invalid formula"
-            
-            left_sheet, left_item = left_info
-            
-            # Debug output for price data
-            print(f"DEBUG: Calculating {ratio_name} for {ticker}")
-            print(f"DEBUG: operation={operation}, left_sheet={left_sheet}, left_item={left_item}")
-            
-            # Handle single-field formulas (just return the value, no calculation)
-            if operation == 'SINGLE':
-                value = self.get_financial_value(ticker, left_sheet, left_item, recursion_depth)
-                print(f"DEBUG: SINGLE value result = {value}")
-                if value is None:
-                    return "N/A"
-                return round(value, 4) if isinstance(value, float) else value
-            
-            # For operations, we need right_info
-            if not right_info:
-                return "ERROR: Invalid formula"
-            
-            right_sheet, right_item = right_info
-            
-            # Get values (pass recursion_depth for RATIO: references)
-            left_value = self.get_financial_value(ticker, left_sheet, left_item, recursion_depth)
-            right_value = self.get_financial_value(ticker, right_sheet, right_item, recursion_depth)
-            
-            # Check for missing data
-            if left_value is None or right_value is None:
+
+            value = eval_ast(
+                ast,
+                lambda sheet, item: self.get_financial_value(ticker, sheet, item, recursion_depth),
+            )
+
+            if value is None:
                 return "N/A"
-            
-            # Perform calculation based on operation
-            if operation == '/':
-                if right_value == 0:
-                    return "DIV/0"
-                result = left_value / right_value
-            elif operation == '-':
-                result = left_value - right_value
-            elif operation == '+':
-                result = left_value + right_value
-            elif operation == '*':
-                result = left_value * right_value
-            else:
-                return f"ERROR: Unknown operation '{operation}'"
-            
-            return round(result, 4)
-            
+
+            return round(value, 6)
+
         except Exception as e:
-            print(f"❌ Error calculating {ratio_name} for {ticker}: {e}")
+            print(f"Error calculating {ratio_name} for {ticker}: {e}")
             import traceback
             traceback.print_exc()
             return "ERROR"
@@ -565,18 +252,19 @@ class RatioCalculator:
         try:
             if not self.assigned_ratios:
                 return
-            row4_data = self.ws.range("B4:Z4").value
+            last_col = min(self.ws.range("B4").end("right").column, 100)
+            row4_data = self.ws.range(f"B4:{_column_letter(last_col)}4").value
             active_columns = set()
             if row4_data:
                 for idx, value in enumerate(row4_data):
                     if value and isinstance(value, str):
                         header = value.strip().upper()
                         if header and header not in ("INDEX", "CUSTOM", ""):
-                            active_columns.add(chr(66 + idx))
+                            active_columns.add(_column_letter(idx + 2))
                         elif header == "CUSTOM":
                             # Protect CUSTOM columns from being cleared
-                            active_columns.add(chr(66 + idx))
-            all_columns = [chr(66 + i) for i in range(25)]
+                            active_columns.add(_column_letter(idx + 2))
+            all_columns = [_column_letter(c) for c in range(2, last_col + 1)]
             num_ratio_rows = len(self.assigned_ratios)
             for col_letter in all_columns:
                 if col_letter not in active_columns:
@@ -753,7 +441,7 @@ def calculate_ratios():
             QMessageBox.information(
                 None,
                 "Success",
-                f"✓ Calculated {len(calculator.assigned_ratios)} ratios for {len(calculator.tickers)} tickers"
+                f"✓ Calculated {len(calculator.assigned_ratios)} metrics for {len(calculator.tickers)} tickers"
             )
         
     except Exception as e:
@@ -761,13 +449,13 @@ def calculate_ratios():
         QMessageBox.critical(
             None,
             "Calculation Error",
-            f"Failed to calculate ratios:\n\n{str(e)}"
+            f"Failed to calculate metrics:\n\n{str(e)}"
         )
 
 
 @xw.sub
 def refresh_ratios():
-    """Excel-callable function to refresh/calculate all ratios"""
+    """Excel-callable function to refresh/calculate all metrics"""
     calculate_ratios()
 
 
@@ -779,37 +467,46 @@ WORKBOOK_PATH = Path(__file__).parent.parent.parent / "FinForge.xlsm"
 
 
 def _open_workbook_readonly():
-    """Open the workbook for read/write operations, handling hidden Excel."""
+    """Open the workbook, returning ``(workbook, app)``.
+
+    ``app`` is None when an already-running Excel instance owns the workbook;
+    otherwise it is the hidden ``xw.App`` created here, which the caller must
+    quit after closing the workbook to avoid leaking an Excel process.
+    """
     try:
         wb = xw.Book(str(WORKBOOK_PATH))
+        return wb, None
     except Exception:
         app = xw.App(visible=False, add_book=False)
         wb = app.books.open(str(WORKBOOK_PATH))
-    return wb
+        return wb, app
 
 
 def sync_ratio_sheet_from_config(workbook):
-    """Sync ratio names into Column A.
+    """Sync metric names into Column A.
 
-    Ratios with a 'row' field set are placed at that exact row position
-    (sorted by row number); ratios without a row are auto-assigned to
+    Metrics with a 'row' field set are placed at that exact row position
+    (sorted by row number); metrics without a row are auto-assigned to
     the remaining rows in order.
 
     Preserves CUSTOM columns (user-entered data) and INDEX columns
     (they are re-populated by the calculator during calculate_all_ratios).
     """
     ratios = get_ratios_from_config()
-    ws = workbook.sheets[RATIOS_SHEET]
+    ws = _resolve_metrics_sheet(workbook)
 
     # Clear data columns but preserve CUSTOM columns (user data)
-    row4_data = ws.range("B4:Z4").value
-    for idx in range(24):  # B-Z
-        col_letter = chr(66 + idx)
+    last_col = min(ws.range("B4").end("right").column, 100)
+    row4_data = ws.range(f"B4:{_column_letter(last_col)}4").value
+    for col_index in range(2, last_col + 1):
+        col_letter = _column_letter(col_index)
         # Skip CUSTOM columns - never touch user data
-        if row4_data and idx < len(row4_data):
-            val = row4_data[idx]
-            if val and isinstance(val, str) and val.strip().upper() == "CUSTOM":
-                continue
+        if row4_data:
+            idx = col_index - 2
+            if idx < len(row4_data):
+                val = row4_data[idx]
+                if val and isinstance(val, str) and val.strip().upper() == "CUSTOM":
+                    continue
         # Clear this column's data area
         ws.range(f"{col_letter}{RATIO_DATA_START_ROW}:{col_letter}200").clear_contents()
 
@@ -840,7 +537,7 @@ def sync_ratio_sheet_from_config(workbook):
 
 
 def refresh_ratios_from_terminal():
-    """Refresh the Ratios sheet directly from the terminal workflow."""
+    """Refresh the Metrics sheet directly from the terminal workflow."""
     app = None
     try:
         try:
@@ -867,28 +564,40 @@ def refresh_ratios_from_terminal():
 
 
 def get_sheet_ratio_names():
-    """Return the list of ratio names currently in Column A of the Ratios sheet."""
+    """Return the list of metric names currently in Column A of the Metrics sheet."""
+    wb = None
+    app = None
     try:
-        wb = _open_workbook_readonly()
-        ws = wb.sheets[RATIOS_SHEET]
+        wb, app = _open_workbook_readonly()
+        ws = _resolve_metrics_sheet(wb)
         col_a = ws.range(f"A{RATIO_DATA_START_ROW}:A200").value
         names = []
         if col_a:
             for item in col_a:
                 if item and isinstance(item, str):
                     names.append(item.strip())
-        wb.close()
         return names
     except Exception as e:
         print(f"Error reading sheet ratios: {e}")
         return []
+    finally:
+        if wb is not None:
+            try:
+                wb.close()
+            except Exception:
+                pass
+        if app is not None:
+            try:
+                app.quit()
+            except Exception:
+                pass
 
 
 def sync_assigned_ratios(ratio_names_json: str):
-    """Set Column A of the Ratios sheet to exactly the given list of ratio names.
+    """Set Column A of the Metrics sheet to exactly the given list of metric names.
     
-    Ratios with a 'row' field in the config are placed at that row position;
-    ratios without one are auto-assigned to the remaining rows in order.
+    Metrics with a 'row' field in the config are placed at that row position;
+    metrics without one are auto-assigned to the remaining rows in order.
     Called from ElectronHome terminal via IPC. Accepts a JSON array string.
     """
     import json
@@ -924,18 +633,21 @@ def sync_assigned_ratios(ratio_names_json: str):
             app = xw.App(visible=False, add_book=False)
             wb = app.books.open(str(WORKBOOK_PATH))
 
-        ws = wb.sheets[RATIOS_SHEET]
+        ws = _resolve_metrics_sheet(wb)
         clear_end = max(RATIO_DATA_START_ROW + 200, RATIO_DATA_START_ROW + len(ordered_names) + 10)
         
         # Clear data columns but preserve CUSTOM columns (user data)
-        row4_data = ws.range("B4:Z4").value
-        for idx in range(24):  # B-Z
-            col_letter = chr(66 + idx)
+        last_col = min(ws.range("B4").end("right").column, 100)
+        row4_data = ws.range(f"B4:{_column_letter(last_col)}4").value
+        for col_index in range(2, last_col + 1):
+            col_letter = _column_letter(col_index)
             # Skip CUSTOM columns - never touch user data
-            if row4_data and idx < len(row4_data):
-                val = row4_data[idx]
-                if val and isinstance(val, str) and val.strip().upper() == "CUSTOM":
-                    continue
+            if row4_data:
+                idx = col_index - 2
+                if idx < len(row4_data):
+                    val = row4_data[idx]
+                    if val and isinstance(val, str) and val.strip().upper() == "CUSTOM":
+                        continue
             # Clear this column's data area
             ws.range(f"{col_letter}{RATIO_DATA_START_ROW}:{col_letter}{clear_end}").clear_contents()
         

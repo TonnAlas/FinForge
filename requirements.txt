@@ -24,7 +24,9 @@ ddgs>=9.0.0
 whoogle-search>=1.2.0
 cachetools>=5.0.0
 
-# Web Framework (for optional web dashboard)
+# Interactive Financial Charting
+plotly>=5.0.0
+
+# Web Framework (for future SaaS deployment)
 # dash>=2.0.0
 # flask>=3.0.0
-# plotly>=5.0.0

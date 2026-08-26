@@ -4,5 +4,22 @@
     "MSFT",
     "GOOG"
   ],
-  "last_updated": "2026-07-23T07:14:13.696Z"
+  "last_updated": "2026-07-23T07:14:13.696Z",
+  "exchanges": {
+    "GOOG": {
+      "exchange": "NMS",
+      "fullExchangeName": "NasdaqGS",
+      "region": "United States"
+    },
+    "MSFT": {
+      "exchange": "NMS",
+      "fullExchangeName": "NasdaqGS",
+      "region": "United States"
+    },
+    "AAPL": {
+      "exchange": "NMS",
+      "fullExchangeName": "NasdaqGS",
+      "region": "United States"
+    }
+  }
 }

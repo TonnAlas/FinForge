@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableExtensions EnableDelayedExpansion
 REM FinForge Launcher
 REM This script launches the Electron-based FinForge launcher window
 
@@ -18,8 +19,10 @@ REM Configure xlwings when virtual environment exists
 if exist ".venv\Scripts\activate.bat" (
     call .venv\Scripts\activate.bat
 
-    REM Refresh xlwings config for the current Windows user and folder location
+    REM Refresh xlwings config for the current Windows user and folder location.
+    REM Capture the exit code immediately: later echo/type commands reset errorlevel.
     powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Installation\configure_xlwings.ps1" -ProjectDir "%~dp0" >>"%LAUNCH_LOG%" 2>&1
+    set "CONFIG_EXIT=!errorlevel!"
 
     REM Log current xlwings config details for easier debugging across accounts
     echo CONF_PATH=%USERPROFILE%\.xlwings\xlwings.conf>>"%LAUNCH_LOG%"
@@ -31,7 +34,7 @@ if exist ".venv\Scripts\activate.bat" (
         echo XLWINGS_CONF_MISSING=true>>"%LAUNCH_LOG%"
     )
 
-    if errorlevel 1 (
+    if not "!CONFIG_EXIT!"=="0" (
         echo CONFIG_STATUS=FAILED>>"%LAUNCH_LOG%"
         echo WARNING: xlwings auto-configuration failed.
         echo Excel buttons may show "Could not find Interpreter".

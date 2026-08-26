@@ -4,7 +4,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>FinForge | Statement Import</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="./vendor/tailwind.min.js"></script>
+<script src="./vendor/plotly-3.0.1.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
@@ -27,6 +28,7 @@
           'on-background': '#e8edf6',
           'outline': '#8a90a0',
           'outline-variant': '#505868',
+          'hairline': '#2f3a4d',
           'primary': '#adc6ff',
           'on-primary': '#002e6a',
           'primary-container': '#4d8eff',
@@ -89,16 +91,37 @@
     font-size: 13px;
     --font-scale: 1;
   }
-  body[data-font-scale="0.85"] { --font-scale: 0.85; }
-  body[data-font-scale="1"]    { --font-scale: 1; }
-  body[data-font-scale="1.15"] { --font-scale: 1.15; }
-  body[data-font-scale="1.3"]  { --font-scale: 1.3; }
-  body[data-font-scale="1.5"]  { --font-scale: 1.5; }
-  body[data-font-scale="1.75"] { --font-scale: 1.75; }
-  body[data-font-scale="2"]    { --font-scale: 2; }
+  body[data-font-scale="0.85"] { --font-scale: 0.85; --font-scale-inverse: 1.176470588; }
+  body[data-font-scale="1"]    { --font-scale: 1; --font-scale-inverse: 1; }
+  body[data-font-scale="1.15"] { --font-scale: 1.15; --font-scale-inverse: 0.869565217; }
+  body[data-font-scale="1.3"]  { --font-scale: 1.3; --font-scale-inverse: 0.769230769; }
+  body[data-font-scale="1.5"]  { --font-scale: 1.5; --font-scale-inverse: 0.666666667; }
+  body[data-font-scale="1.75"] { --font-scale: 1.75; --font-scale-inverse: 0.571428571; }
+  body[data-font-scale="2"]    { --font-scale: 2; --font-scale-inverse: 0.5; }
 
   .scalable {
     zoom: var(--font-scale);
+  }
+
+  /* Plotly charts: cancel the ancestor CSS zoom so Plotly's cursor coordinate
+     math (getBoundingClientRect vs. mouse clientX/Y) stays aligned with the cursor. */
+  #viz-plotly-container,
+  [data-ranking-chart] {
+    zoom: var(--font-scale-inverse);
+  }
+
+  /* Ranking curves use a fixed height (Tailwind h-40 = 10rem); scale it back up so
+     the chart keeps the same on-screen height as the zoomed UI around it. */
+  [data-ranking-chart] {
+    height: calc(10rem * var(--font-scale));
+  }
+
+  /* Ranking advanced single-metric view: full-width layout + taller curve. */
+  #ranking-main-grid.ranking-advanced {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #ranking-main-grid.ranking-advanced [data-ranking-chart] {
+    height: calc(24rem * var(--font-scale));
   }
 
   .mono {
@@ -129,7 +152,7 @@
   .font-size-group {
     display: inline-flex;
     align-items: center;
-    border: 1px solid #424754;
+    border: 1px solid #2f3a4d;
     background: #212b39;
     line-height: 1;
   }
@@ -153,10 +176,10 @@
     color: #adc6ff;
   }
   .font-size-btn.minus {
-    border-right: 1px solid #424754;
+    border-right: 1px solid #2f3a4d;
   }
   .font-size-btn.plus {
-    border-left: 1px solid #424754;
+    border-left: 1px solid #2f3a4d;
   }
   .font-size-label {
     font-family: 'JetBrains Mono', monospace;
@@ -169,55 +192,130 @@
     letter-spacing: 0.02em;
     user-select: none;
   }
+
+  /* ── Collapsible Sidebar ── */
+  #sidebar {
+    width: 200px;
+    transition: width 0.3s ease-in-out;
+    top: 0;
+    bottom: auto;
+    height: calc(100vh / var(--font-scale));
+  }
+  #sidebar.collapsed {
+    width: 56px;
+  }
+  #sidebar.collapsed .sidebar-label,
+  #sidebar.collapsed .sidebar-section-label,
+  #sidebar.collapsed .sidebar-brand-text {
+    opacity: 0;
+    width: 0;
+    pointer-events: none;
+  }
+  #sidebar.collapsed .nav-link {
+    justify-content: center;
+    padding-left: 4px;
+    padding-right: 4px;
+    gap: 0;
+  }
+  #sidebar.collapsed .nav-link .material-symbols-outlined {
+    margin: 0;
+  }
+  #sidebar.collapsed #sidebar-toggle {
+    justify-content: center;
+    width: 100%;
+  }
+  #sidebar.collapsed .sidebar-toggle-row {
+    justify-content: center;
+  }
+  #sidebar.collapsed > div:first-child {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  #sidebar-toggle-icon {
+    transition: transform 0.3s ease-in-out;
+  }
+  #sidebar.collapsed #sidebar-toggle-icon {
+    transform: rotate(180deg);
+  }
+  #main-content {
+    margin-left: calc(200px * var(--font-scale));
+    transition: margin-left 0.3s ease-in-out;
+  }
+  #main-content.collapsed {
+    margin-left: calc(56px * var(--font-scale));
+  }
+
+  /* ── Graph Settings: responsive card grid ── */
+  #viz-graph-settings-view {
+    padding: 4px;
+  }
+  .viz-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 4px;
+  }
+  .viz-settings-card {
+    min-width: 0;
+  }
+  .viz-info-panel {
+    grid-column: 1 / -1;
+  }
 </style>
 </head>
 <body class="flex h-screen overflow-hidden bg-background select-none">
-<aside class="fixed inset-y-0 left-0 w-[200px] bg-surface-container-lowest border-r border-outline-variant flex flex-col z-50">
-  <div class="h-20 px-md flex items-center gap-sm border-b border-outline-variant">
-    <div class="w-8 h-8 bg-primary flex items-center justify-center">
-      <span class="material-symbols-outlined text-on-primary !font-bold">analytics</span>
-    </div>
-    <span class="text-headline-lg font-bold tracking-tighter uppercase mono">FinForge</span>
+<aside id="sidebar" class="scalable fixed inset-y-0 left-0 w-[200px] bg-surface-container-lowest border-r border-hairline flex flex-col z-50 transition-all duration-300 ease-in-out">
+  <div class="h-12 px-md flex items-center gap-sm">
+    <span class="mono font-bold text-primary text-[18px] leading-none shrink-0">&gt;ƒ</span>
+    <span class="sidebar-brand-text text-body-md font-bold tracking-tighter uppercase mono whitespace-nowrap overflow-hidden transition-opacity duration-300 translate-y-[2px]">FinForge</span>
   </div>
-  <div class="px-xs py-xs border-t border-outline-variant">
-    <p class="px-md py-xs text-[9px] text-outline font-bold uppercase">General</p>
+  <div class="sidebar-toggle-row px-xs py-0.5 flex justify-end">
+    <button id="sidebar-toggle" class="w-6 h-6 flex items-center justify-center text-outline-variant hover:text-primary hover:bg-surface-container-high transition-colors border-0 bg-transparent cursor-pointer" title="Collapse sidebar" aria-label="Collapse sidebar">
+      <span class="material-symbols-outlined text-[16px]" id="sidebar-toggle-icon">chevron_left</span>
+    </button>
+  </div>
+  <div class="px-xs py-xs">
+    <p class="sidebar-section-label px-md py-xs text-[9px] text-outline font-bold uppercase whitespace-nowrap overflow-hidden transition-opacity duration-300">General</p>
     <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="home">
-      <span class="material-symbols-outlined">home</span>
-      <span class="font-label-md text-label-md">Home</span>
+      <span class="material-symbols-outlined shrink-0">home</span>
+      <span class="sidebar-label font-label-md text-label-md whitespace-nowrap overflow-hidden transition-opacity duration-300">Home</span>
     </button>
     <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="search">
-      <span class="material-symbols-outlined">search</span>
-      <span class="font-label-md text-label-md">Search</span>
+      <span class="material-symbols-outlined shrink-0">search</span>
+      <span class="sidebar-label font-label-md text-label-md whitespace-nowrap overflow-hidden transition-opacity duration-300">Search</span>
     </button>
     <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="templates">
-      <span class="material-symbols-outlined">bookmarks</span>
-      <span class="font-label-md text-label-md">Templates</span>
+      <span class="material-symbols-outlined shrink-0">bookmarks</span>
+      <span class="sidebar-label font-label-md text-label-md whitespace-nowrap overflow-hidden transition-opacity duration-300">Templates</span>
+    </button>
+    <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="visualize">
+      <span class="material-symbols-outlined shrink-0">bar_chart</span>
+      <span class="sidebar-label font-label-md text-label-md whitespace-nowrap overflow-hidden transition-opacity duration-300">Visualize</span>
     </button>
     <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="settings">
-      <span class="material-symbols-outlined">settings</span>
-      <span class="font-label-md text-label-md">Settings</span>
+      <span class="material-symbols-outlined shrink-0">settings</span>
+      <span class="sidebar-label font-label-md text-label-md whitespace-nowrap overflow-hidden transition-opacity duration-300">Settings</span>
     </button>
   </div>
-  <div class="px-xs py-xs border-b border-outline-variant">
-    <p class="px-md py-xs text-[9px] text-outline font-bold uppercase">Data</p>
+  <div class="px-xs py-xs">
+    <p class="sidebar-section-label px-md py-xs text-[9px] text-outline font-bold uppercase whitespace-nowrap overflow-hidden transition-opacity duration-300">Data</p>
     <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="import">
-      <span class="material-symbols-outlined">table_view</span>
-      <span class="font-label-md text-label-md">Statement Lines</span>
+      <span class="material-symbols-outlined shrink-0">table_view</span>
+      <span class="sidebar-label font-label-md text-label-md whitespace-nowrap overflow-hidden transition-opacity duration-300">Statement Lines</span>
     </button>
     <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="ratios">
-      <span class="material-symbols-outlined">functions</span>
-      <span class="font-label-md text-label-md">Ratios</span>
+      <span class="material-symbols-outlined shrink-0">functions</span>
+      <span class="sidebar-label font-label-md text-label-md whitespace-nowrap overflow-hidden transition-opacity duration-300">Metrics</span>
     </button>
-  </div>
-  <div class="mt-auto p-xs border-t border-outline-variant">
-    <div class="px-md py-2 bg-surface-container-high text-[10px] text-on-surface-variant mono">
-      Shared settings: data/statement_settings.json
-    </div>
+    <button class="nav-link w-full flex items-center gap-md px-md py-1.5 text-on-surface-variant hover:bg-surface-container-high transition-colors" data-page="ranking">
+      <span class="material-symbols-outlined shrink-0">leaderboard</span>
+      <span class="sidebar-label font-label-md text-label-md whitespace-nowrap overflow-hidden transition-opacity duration-300">Ranking</span>
+    </button>
   </div>
 </aside>
 
-<main class="flex-1 ml-[200px] h-screen overflow-hidden flex flex-col">
-  <header class="h-12 md:h-16 bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-md sticky top-0 z-40 shrink-0">
+<main id="main-content" class="flex-1 ml-[200px] h-screen overflow-hidden flex flex-col transition-all duration-300 ease-in-out">
+  <header class="scalable h-6 md:h-8 bg-surface-container-lowest border-b border-hairline flex items-center justify-between px-md sticky top-0 z-40 shrink-0">
     <div class="flex-1"></div>
     <div class="flex items-center gap-sm md:gap-md">
       <div class="font-size-group" title="Adjust font size">
@@ -225,11 +323,12 @@
         <span id="font-size-label" class="font-size-label">1.0</span>
         <button id="font-size-plus" class="font-size-btn plus">+</button>
       </div>
-      <div id="settings-status" class="flex items-center gap-xs px-xs py-0.5 border border-outline-variant bg-surface-container-high">
+      <div id="settings-status" class="flex items-center gap-xs px-xs py-0.5 border border-hairline bg-surface-container-high">
         <span class="w-1.5 h-1.5 bg-secondary rounded-full"></span>
         <span class="text-[9px] font-bold text-secondary uppercase mono">Saved</span>
       </div>
-      <button id="refresh-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Reload</button>
+      <button id="open-workbook-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors" title="Launch FinForge.xlsm in Excel">Excel</button>
+      <button id="refresh-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Reload</button>
       <button id="save-button" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Save</button>
     </div>
   </header>
@@ -239,44 +338,43 @@
 
       <section class="page-section hidden h-full min-h-0 scalable" data-page="search">
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-xs md:gap-sm h-full min-h-0">
-          <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-            <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+          <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
               <div>
                 <p class="text-[9px] text-outline uppercase mono">Search list</p>
                 <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Ticker universe</h2>
               </div>
               <span id="import-search-count" class="text-[9px] text-outline mono uppercase">0 results</span>
             </div>
-            <div class="px-md py-1.5 border-b border-outline-variant flex items-center gap-sm">
-              <input id="import-search-input" class="flex-1 h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search by ticker or company name" type="text"/>
-              <button id="import-search-clear" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Clear</button>
+            <div class="px-md py-1.5 border-b border-hairline flex items-center gap-sm">
+              <input id="import-search-input" class="flex-1 h-7 bg-surface-container border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search by ticker or company name" type="text"/>
+              <button id="import-search-clear" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Clear</button>
             </div>
-            <div class="px-md py-1.5 border-b border-outline-variant bg-surface-container text-[9px] text-outline mono uppercase" id="import-search-status">Type a ticker or company name to search</div>
+            <div class="px-md py-1.5 border-b border-hairline bg-surface-container text-[9px] text-outline mono uppercase" id="import-search-status">Type a ticker or company name to search</div>
             <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-              <div id="import-search-results" class="divide-y divide-outline-variant/25"></div>
+              <div id="import-search-results" class="divide-y divide-hairline"></div>
             </div>
           </div>
 
-          <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-            <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+          <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
               <div>
                 <p class="text-[9px] text-outline uppercase mono">Saved list</p>
                 <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Saved tickers</h2>
               </div>
               <span id="import-selected-count" class="text-[9px] text-outline mono uppercase">0 tickers</span>
             </div>
-            <div class="px-md py-1.5 border-b border-outline-variant bg-surface-container text-[9px] text-outline mono uppercase">Saved to data/tickers.json</div>
             <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-              <div id="import-selected-list" class="divide-y divide-outline-variant/25"></div>
+              <div id="import-selected-list" class="divide-y divide-hairline"></div>
             </div>
-            <div class="px-md py-2 border-t border-outline-variant bg-surface-container flex items-center justify-between gap-sm">
+            <div class="px-md py-2 border-t border-hairline bg-surface-container flex items-center justify-between gap-sm">
               <div class="flex items-center gap-sm">
-                <button id="import-fetch-all-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-secondary transition-colors">Fetch all</button>
-                <button id="import-refetch-all-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-secondary transition-colors">Refetch all</button>
+                <button id="import-fetch-all-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-secondary transition-colors">Fetch all</button>
+                <button id="import-refetch-all-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-secondary transition-colors">Refetch all</button>
               </div>
               <div class="flex items-center gap-sm">
                 <span class="text-[9px] text-outline mono uppercase">Auto-saved</span>
-                <button id="import-clear-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-error transition-colors">Clear list</button>
+                <button id="import-clear-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-error transition-colors">Clear list</button>
               </div>
             </div>
           </div>
@@ -288,9 +386,9 @@
       </section>
 
     <section class="page-section flex-1 min-h-0 scalable" data-page="import">
-      <div class="grid grid-cols-[140px_1fr_1fr] lg:grid-cols-[160px_minmax(0,1fr)_minmax(0,1fr)] gap-xs md:gap-sm h-full min-h-0">
-      <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-        <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
+      <div class="grid grid-cols-[140px_1fr] lg:grid-cols-[160px_minmax(0,1fr)] gap-xs md:gap-sm h-full min-h-0">
+      <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+        <div class="px-md py-1 border-b border-hairline bg-surface-container-high">
           <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Terminal actions</h2>
         </div>
         <div class="p-sm md:p-md flex flex-col gap-sm flex-1 min-h-0 justify-start">
@@ -298,131 +396,187 @@
         </div>
       </div>
 
-      <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-        <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between">
-          <div>
-            <p class="text-[9px] text-outline uppercase mono">Import scope</p>
-            <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Field catalog</h2>
-          </div>
-          <div class="flex items-center gap-xs">
-            <button class="scope-button px-2 py-[2px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-scope="balanceSheet">Balance sheet</button>
-            <button class="scope-button px-2 py-[2px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-scope="incomeStatement">Income statement</button>
-            <button class="scope-button px-2 py-[2px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-scope="cashFlow">Cash flow</button>
-          </div>
-        </div>
-        <div class="px-md py-1.5 border-b border-outline-variant flex items-center gap-sm">
-          <input id="search-input" class="flex-1 h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Filter field names" type="text"/>
-          <span id="catalog-count" class="text-[9px] text-outline mono uppercase">0 fields</span>
-        </div>
-        <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-          <div id="catalog-list" class="divide-y divide-outline-variant/25"></div>
-        </div>
-      </div>
-
-      <div class="flex flex-col gap-sm h-full min-h-0">
-        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden flex-1 min-h-0">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
-            <p class="text-[9px] text-outline uppercase mono">Printed subset</p>
-            <h2 id="selected-title" class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Balance sheet selected lines</h2>
-          </div>
-          <div class="px-md py-1.5 border-b border-outline-variant flex items-center gap-sm">
-            <input id="selected-search-input" class="flex-1 h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Filter selected lines" type="text"/>
-            <span id="selected-count" class="text-[9px] text-outline mono uppercase">0 selected</span>
-          </div>
-          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-            <div id="selected-list" class="divide-y divide-outline-variant/25"></div>
-          </div>
+      <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+        <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center gap-xs">
+          <button id="import-tab-fields" class="import-tab-button px-2 py-[2px] bg-primary/10 text-primary border border-primary font-label-md text-label-md">Fields</button>
+          <button id="import-tab-periods" class="import-tab-button px-2 py-[2px] border border-hairline text-on-surface-variant font-label-md text-label-md">Periods</button>
         </div>
 
-        <div class="bg-surface-container-low border border-outline-variant flex-none">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
-            <p class="text-[9px] text-outline uppercase mono">Display scaling</p>
+        <div id="import-fields-view" class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-xs md:gap-sm">
+          <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center justify-between">
+              <div>
+                <p class="text-[9px] text-outline uppercase mono">Import scope</p>
+                <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Field catalog</h2>
+              </div>
+              <div class="flex items-center gap-xs">
+                <button class="scope-button px-2 py-[2px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-scope="balanceSheet">Balance sheet</button>
+                <button class="scope-button px-2 py-[2px] border border-hairline text-on-surface-variant font-label-md text-label-md" data-scope="incomeStatement">Income statement</button>
+                <button class="scope-button px-2 py-[2px] border border-hairline text-on-surface-variant font-label-md text-label-md" data-scope="cashFlow">Cash flow</button>
+              </div>
+            </div>
+            <div class="px-md py-1.5 border-b border-hairline flex items-center gap-sm">
+              <input id="search-input" class="flex-1 h-7 bg-surface-container border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Filter field names" type="text"/>
+              <span id="catalog-count" class="text-[9px] text-outline mono uppercase">0 fields</span>
+            </div>
+            <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              <div id="catalog-list" class="divide-y divide-hairline"></div>
+            </div>
           </div>
-          <div class="p-sm md:p-md grid grid-cols-2 gap-sm">
-            <label class="space-y-1">
-              <span class="text-[9px] text-outline uppercase mono">Mode</span>
-              <select id="display-mode" class="w-full h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none">
-                <option value="thousands">Thousands</option>
-                <option value="millions">Millions</option>
-                <option value="billions">Billions</option>
-                <option value="custom">Custom</option>
-              </select>
-            </label>
-            <label class="space-y-1">
-              <span class="text-[9px] text-outline uppercase mono">Divisor</span>
-              <input id="display-divisor" class="w-full h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none" type="number" min="1" step="1" value="1000000"/>
-            </label>
+
+          <div class="flex flex-col gap-xs md:gap-sm h-full min-h-0">
+            <div class="bg-surface-container-low flex flex-col overflow-hidden flex-1 min-h-0">
+              <div class="px-md py-1 border-b border-hairline bg-surface-container-high">
+                <p class="text-[9px] text-outline uppercase mono">Printed subset</p>
+                <h2 id="selected-title" class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Balance sheet selected lines</h2>
+              </div>
+              <div class="px-md py-1.5 border-b border-hairline flex items-center gap-sm">
+                <input id="selected-search-input" class="flex-1 h-7 bg-surface-container border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Filter selected lines" type="text"/>
+                <span id="selected-count" class="text-[9px] text-outline mono uppercase">0 selected</span>
+              </div>
+              <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                <div id="selected-list" class="divide-y divide-hairline"></div>
+              </div>
+            </div>
+
+            <div class="bg-surface-container-low flex-none">
+              <div class="px-md py-1 border-b border-hairline bg-surface-container-high">
+                <p class="text-[9px] text-outline uppercase mono">Display scaling</p>
+              </div>
+              <div class="p-sm md:p-md grid grid-cols-2 gap-sm">
+                <label class="space-y-1">
+                  <span class="text-[9px] text-outline uppercase mono">Mode</span>
+                  <select id="display-mode" class="w-full h-7 bg-surface-container border border-hairline px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none">
+                    <option value="thousands">Thousands</option>
+                    <option value="millions">Millions</option>
+                    <option value="billions">Billions</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[9px] text-outline uppercase mono">Divisor</span>
+                  <input id="display-divisor" class="w-full h-7 bg-surface-container border border-hairline px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none" type="number" min="1" step="1" value="1000000"/>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="import-periods-view" class="hidden flex flex-1 min-h-0 flex-col p-xs md:p-sm">
+          <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0 h-full">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
+              <div>
+                <p class="text-[9px] text-outline uppercase mono">Reporting periods</p>
+                <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Pick exact periods</h2>
+              </div>
+              <button id="period-refresh-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Refresh</button>
+            </div>
+            <div class="px-md py-1.5 border-b border-hairline flex items-center gap-xs">
+              <button class="frequency-button px-2 py-[2px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-frequency="annual">Annual</button>
+              <button class="frequency-button px-2 py-[2px] border border-hairline text-on-surface-variant font-label-md text-label-md" data-frequency="quarterly">Quarterly</button>
+              <span id="period-picker-status" class="text-[9px] text-outline mono uppercase ml-auto"></span>
+            </div>
+            <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              <div id="period-picker" class="divide-y divide-hairline"></div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <section class="page-section hidden h-full min-h-0 scalable" data-page="ratios">
-      <div id="ratio-list-view" class="h-full grid grid-cols-[140px_1fr_200px] lg:grid-cols-[160px_minmax(0,1fr)_220px] gap-xs md:gap-sm min-h-0">
-        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
-            <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Terminal actions</h2>
+      <div id="ratio-list-view" class="h-full grid grid-cols-[140px_1fr] lg:grid-cols-[160px_minmax(0,1fr)] gap-xs md:gap-sm min-h-0">
+        <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+          <div class="px-sm py-0.5 border-b border-hairline bg-surface-container-high">
+            <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Actions</h2>
           </div>
-          <div class="p-sm md:p-md flex flex-col gap-sm flex-1 min-h-0 justify-start">
-            <button id="ratio-refresh-button" class="h-8 px-2 bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Refresh ratios sheet</button>
-          </div>
-        </div>
-
-        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
-            <div>
-              <p class="text-[9px] text-outline uppercase mono">Ratio list</p>
-              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Choose an action</h2>
+          <div class="p-xs flex flex-col gap-xs flex-1 min-h-0 justify-start">
+            <button id="ratio-refresh-button" class="h-6 py-0 px-1 bg-primary text-on-primary font-bold text-label-sm hover:opacity-90 transition-opacity">Refresh metrics sheet</button>
+            <button id="ratio-create-button" class="h-6 py-0 px-1 bg-primary text-on-primary font-bold text-label-sm hover:opacity-90 transition-opacity">Create metric</button>
+            <div id="ratio-actions-separator" class="hidden border-t border-hairline my-xs"></div>
+            <div id="ratio-selection-actions" class="hidden flex flex-col gap-xs">
+              <button id="ratio-uncheck-all-button" class="h-6 py-0 px-1 bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors">Uncheck all</button>
+              <button id="ratio-export-timeseries-button" class="h-6 py-0 px-1 bg-primary text-on-primary font-bold text-label-sm hover:opacity-90 transition-opacity">Export timeseries</button>
             </div>
-            <span id="ratio-count" class="text-[9px] text-outline mono uppercase">0 ratios</span>
-          </div>
-          <div class="px-md py-1.5 border-b border-outline-variant flex items-center gap-sm">
-            <input id="ratio-search-input" class="flex-1 h-7 bg-surface-container border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Filter ratios" type="text"/>
-            <span id="ratio-results-count" class="text-[9px] text-outline mono uppercase">0 shown</span>
-          </div>
-          <div class="flex items-center gap-xs px-md py-2 border-b border-outline-variant bg-surface-container">
-            <button id="ratio-create-button" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Create ratio</button>
-            <button id="ratio-list-back-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors hidden">Back to list</button>
-          </div>
-          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-sm">
-            <div id="ratio-list" class="space-y-sm"></div>
+            <button id="ratio-new-folder-button" class="h-6 py-0 px-1 bg-primary text-on-primary font-bold text-label-sm hover:opacity-90 transition-opacity hidden">New folder</button>
           </div>
         </div>
 
-        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high">
-            <p class="text-[9px] text-outline uppercase mono">Sheet assignments</p>
-            <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Column A</h2>
+        <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 bg-surface-container-high flex items-center gap-sm">
+            <div class="flex items-center gap-xs">
+              <button id="ratio-tab-metrics" class="ratio-tab-button px-2 py-[2px] bg-primary/10 text-primary border border-primary font-label-md text-label-md">Metrics</button>
+              <button id="ratio-tab-folder" class="ratio-tab-button px-2 py-[2px] border border-hairline text-on-surface-variant font-label-md text-label-md">Folders</button>
+              <button id="ratio-tab-assignments" class="ratio-tab-button px-2 py-[2px] border border-hairline text-on-surface-variant font-label-md text-label-md">Assignments</button>
+            </div>
           </div>
-          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-sm">
-            <div id="sheet-ratio-list" class="space-y-xs"></div>
+          <div class="px-md py-1 border-b border-hairline flex items-center gap-sm">
+            <input id="ratio-search-input" class="w-1/3 h-7 bg-surface-container border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Filter metrics" type="text"/>
+            <div class="relative" id="ratio-folder-filter-wrap">
+              <button id="ratio-folder-filter-button" class="h-7 px-2 bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors flex items-center gap-1" title="Filter by folder">
+                <span class="material-symbols-outlined text-[14px] text-outline">folder</span>
+                <span id="ratio-folder-filter-label" class="truncate">All folders</span>
+                <span class="material-symbols-outlined text-[12px] text-outline">arrow_drop_down</span>
+              </button>
+              <div id="ratio-folder-filter-menu" class="hidden absolute top-full left-0 mt-xs z-30 w-56 border border-hairline bg-surface-container-high shadow-xl">
+                <div class="p-xs border-b border-hairline">
+                  <input id="ratio-folder-filter-search" class="w-full h-6 bg-surface-container-lowest border border-hairline px-2 text-[10px] font-label-md text-label-md text-on-surface placeholder:text-outline-variant outline-none focus:border-primary" placeholder="Search folders" type="text"/>
+                </div>
+                <div id="ratio-folder-filter-list" class="max-h-56 overflow-y-auto custom-scrollbar divide-y divide-hairline"></div>
+              </div>
+            </div>
+          </div>
+          <div id="ratio-metrics-content" class="flex flex-col flex-1 min-h-0">
+            <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-sm">
+              <div id="ratio-list" class="divide-y divide-hairline"></div>
+            </div>
+          </div>
+          <div id="ratio-assignments-content" class="hidden flex flex-col flex-1 min-h-0">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high">
+              <p class="text-[9px] text-outline uppercase mono">Column A</p>
+            </div>
+            <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-sm">
+              <div id="sheet-ratio-list" class="space-y-xs"></div>
+            </div>
+          </div>
+          <div id="ratio-folder-content" class="hidden flex flex-col flex-1 min-h-0">
+            <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-sm">
+              <div id="ratio-folder-list" class="space-y-sm"></div>
+            </div>
           </div>
         </div>
       </div>
 
       <div id="ratio-maker-view" class="hidden h-full grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-xs md:gap-sm min-h-0">
-        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+        <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
             <div>
-              <p class="text-[9px] text-outline uppercase mono">Ratio builder</p>
-              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Create ratio</h2>
+              <p class="text-[9px] text-outline uppercase mono">Metric builder</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Create metric</h2>
             </div>
-            <span id="ratio-count-maker" class="text-[9px] text-outline mono uppercase">0 ratios</span>
+            <span id="ratio-count-maker" class="text-[9px] text-outline mono uppercase">0 metrics</span>
           </div>
           <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-md space-y-sm">
-            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+            <div class="border border-hairline bg-surface-container p-md space-y-sm">
               <div class="grid grid-cols-1 gap-sm">
                 <label class="space-y-1">
-                  <span class="text-[9px] text-outline uppercase mono">Ratio name</span>
-                  <input id="ratio-name" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Current ratio" type="text"/>
+                  <span class="text-[9px] text-outline uppercase mono">Metric name</span>
+                  <input id="ratio-name" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Current metric" type="text"/>
                 </label>
                 <label class="space-y-1">
                   <span class="text-[9px] text-outline uppercase mono">Row in Column A</span>
-                  <input id="ratio-row" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none mono" placeholder="N/A (leave empty)" type="number" min="7"/>
+                  <input id="ratio-row" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none mono" placeholder="N/A (leave empty)" type="number" min="7"/>
                 </label>
+                <div class="space-y-1">
+                  <span class="text-[9px] text-outline uppercase mono">Folder</span>
+                  <button id="ratio-folder-trigger" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 flex items-center gap-sm font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors text-left">
+                    <span class="material-symbols-outlined text-[14px] text-outline">folder</span>
+                    <span id="ratio-folder-trigger-text" class="truncate">Choose folder...</span>
+                  </button>
+                </div>
                 <label class="space-y-1">
                   <span class="text-[9px] text-outline uppercase mono">Formula</span>
-                  <div id="ratio-formula-shell" class="relative border border-outline-variant bg-surface-container-lowest focus-within:border-secondary">
+                  <div id="ratio-formula-shell" class="relative border border-hairline bg-surface-container-lowest focus-within:border-secondary">
                     <div id="ratio-formula-highlight" class="formula-highlight absolute inset-0 pointer-events-none px-2 py-2 whitespace-pre-wrap break-words overflow-auto font-label-md text-label-md mono">
                       <span class="text-outline">=</span>
                     </div>
@@ -432,19 +586,19 @@
                 </label>
                 <label class="space-y-1">
                   <span class="text-[9px] text-outline uppercase mono">Notes</span>
-                  <textarea id="ratio-notes" class="w-full min-h-[88px] bg-surface-container-lowest border border-outline-variant px-2 py-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none resize-none" placeholder="Add interpretation, thresholds, or source notes."></textarea>
+                  <textarea id="ratio-notes" class="w-full min-h-[88px] bg-surface-container-lowest border border-hairline px-2 py-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none resize-none" placeholder="Add interpretation, thresholds, or source notes."></textarea>
                 </label>
               </div>
               <div class="grid grid-cols-3 gap-xs">
-                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="BS">BS</button>
-                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="IS">IS</button>
-                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="CF">CF</button>
-                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="P">P</button>
-                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="M">M</button>
-                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="RATIO">RATIO</button>
-                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="H">H</button>
-                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="E">E</button>
-                <button class="ratio-prefix border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="A">A</button>
+                <button class="ratio-prefix border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="BS">BS</button>
+                <button class="ratio-prefix border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="IS">IS</button>
+                <button class="ratio-prefix border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="CF">CF</button>
+                <button class="ratio-prefix border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="P">P</button>
+                <button class="ratio-prefix border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="M">M</button>
+                <button class="ratio-prefix border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="METRIC">METRIC</button>
+                <button class="ratio-prefix border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="H">H</button>
+                <button class="ratio-prefix border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="E">E</button>
+                <button class="ratio-prefix border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-prefix="A">A</button>
               </div>
               <div class="flex items-center gap-1 flex-wrap">
                 <span class="text-[9px] text-outline-variant mono">BS=Balance Sheet</span>
@@ -464,48 +618,48 @@
                 <span class="text-[9px] text-outline-variant mono">A=Analyst</span>
               </div>
               <div class="grid grid-cols-3 gap-xs">
-                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" + ">+</button>
-                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" - ">-</button>
-                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" / ">/</button>
-                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" * ">*</button>
-                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token="( ">(</button>
-                <button class="ratio-token border border-outline-variant bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" )">)</button>
+                <button class="ratio-token border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" + ">+</button>
+                <button class="ratio-token border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" - ">-</button>
+                <button class="ratio-token border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" / ">/</button>
+                <button class="ratio-token border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" * ">*</button>
+                <button class="ratio-token border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token="( ">(</button>
+                <button class="ratio-token border border-hairline bg-surface-container-high px-2 py-[5px] font-label-md text-label-md hover:border-primary transition-colors" data-token=" )">)</button>
               </div>
-              <div id="ratio-field-picker" class="hidden border border-outline-variant bg-surface-container-high p-sm space-y-sm">
+              <div id="ratio-field-picker" class="hidden border border-hairline bg-surface-container-high p-sm space-y-sm">
                 <div class="flex items-center justify-between gap-sm">
                   <div>
                     <div id="ratio-field-picker-title" class="text-[9px] text-outline uppercase mono">Field picker</div>
                     <div id="ratio-field-picker-subtitle" class="text-[9px] text-on-surface-variant mono">Search and insert a field</div>
                   </div>
-                  <button id="ratio-field-picker-close" class="px-2 py-[2px] bg-surface-container border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Close</button>
+                  <button id="ratio-field-picker-close" class="px-2 py-[2px] bg-surface-container border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Close</button>
                 </div>
-                <input id="ratio-field-picker-search" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search fields" type="text"/>
-                <div id="ratio-field-picker-list" class="max-h-44 overflow-y-auto custom-scrollbar divide-y divide-outline-variant/25"></div>
+                <input id="ratio-field-picker-search" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search fields" type="text"/>
+                <div id="ratio-field-picker-list" class="max-h-44 overflow-y-auto custom-scrollbar divide-y divide-hairline"></div>
               </div>
-              <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+              <div class="border border-hairline bg-surface-container p-md space-y-sm">
                 <div class="flex items-center justify-between gap-sm">
                   <div>
-                    <div class="text-[9px] text-outline uppercase mono">Ratio maker</div>
+                    <div class="text-[9px] text-outline uppercase mono">Metric maker</div>
                     <div class="text-[9px] text-on-surface-variant mono">Preview</div>
                   </div>
                   <span class="text-[9px] text-outline mono uppercase">Formula display</span>
                 </div>
-                <div id="ratio-preview" class="text-body-sm text-on-surface-variant mono break-words">No ratio selected.</div>
+                <div id="ratio-preview" class="text-body-sm text-on-surface-variant mono break-words">No metric selected.</div>
               </div>
               <div class="flex items-center justify-between gap-sm pt-xs">
-                <div id="ratio-editor-state" class="text-[9px] text-outline mono uppercase">Creating new ratio</div>
+                <div id="ratio-editor-state" class="text-[9px] text-outline mono uppercase">Creating new metric</div>
                 <div class="flex items-center gap-xs">
-                  <button id="ratio-cancel-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors hidden">Cancel edit</button>
-                  <button id="ratio-reset-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Reset</button>
-                  <button id="ratio-save-button" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Save ratio</button>
+                  <button id="ratio-cancel-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors hidden">Cancel edit</button>
+                  <button id="ratio-reset-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Reset</button>
+                  <button id="ratio-save-button" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Save metric</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+        <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
             <div>
               <p class="text-[9px] text-outline uppercase mono">Selection drawer</p>
               <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Available options</h2>
@@ -513,30 +667,30 @@
             <span class="text-[9px] text-outline mono uppercase">Pinned open</span>
           </div>
           <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-sm md:p-md space-y-sm">
-            <div id="ratio-line-panel" class="hidden border border-outline-variant bg-surface-container-high p-sm space-y-sm">
+            <div id="ratio-line-panel" class="hidden border border-hairline bg-surface-container-high p-sm space-y-sm">
               <div class="flex items-start justify-between gap-sm">
                 <div>
                   <div class="text-[9px] text-outline uppercase mono">Statement line</div>
                   <div id="ratio-line-panel-subtitle" class="text-[9px] text-on-surface-variant mono">Choose the financial statement line first</div>
                 </div>
-                <button id="ratio-line-panel-close" class="px-2 py-[2px] bg-surface-container border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Close</button>
+                <button id="ratio-line-panel-close" class="px-2 py-[2px] bg-surface-container border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Close</button>
               </div>
-              <div id="ratio-line-panel-token" class="px-2 py-1 border border-outline-variant bg-surface-container-lowest text-[10px] text-on-surface-variant mono break-words">No line selected</div>
-              <input id="ratio-line-panel-search" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search lines" type="text"/>
+              <div id="ratio-line-panel-token" class="px-2 py-1 border border-hairline bg-surface-container-lowest text-[10px] text-on-surface-variant mono break-words">No line selected</div>
+              <input id="ratio-line-panel-search" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search lines" type="text"/>
               <div id="ratio-line-panel-list" class="grid grid-cols-2 gap-xs"></div>
             </div>
-            <div id="ratio-mode-panel" class="hidden border border-outline-variant bg-surface-container-high p-sm space-y-sm">
+            <div id="ratio-mode-panel" class="hidden border border-hairline bg-surface-container-high p-sm space-y-sm">
               <div class="flex items-start justify-between gap-sm">
                 <div>
                   <div class="text-[9px] text-outline uppercase mono">Data mode</div>
                   <div id="ratio-mode-panel-subtitle" class="text-[9px] text-on-surface-variant mono">Choose how the selected line resolves</div>
                 </div>
-                <button id="ratio-mode-panel-close" class="px-2 py-[2px] bg-surface-container border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Close</button>
+                <button id="ratio-mode-panel-close" class="px-2 py-[2px] bg-surface-container border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Close</button>
               </div>
-              <div id="ratio-mode-panel-token" class="px-2 py-1 border border-outline-variant bg-surface-container-lowest text-[10px] text-on-surface-variant mono break-words">No line selected</div>
+              <div id="ratio-mode-panel-token" class="px-2 py-1 border border-hairline bg-surface-container-lowest text-[10px] text-on-surface-variant mono break-words">No line selected</div>
               <div id="ratio-mode-panel-list" class="grid grid-cols-2 gap-xs"></div>
             </div>
-            <div id="ratio-mode-sub-options" class="hidden border border-outline-variant bg-surface-container-high p-sm space-y-sm">
+            <div id="ratio-mode-sub-options" class="hidden border border-hairline bg-surface-container-high p-sm space-y-sm">
               <div class="flex items-start justify-between gap-sm">
                 <div>
                   <div class="text-[9px] text-outline uppercase mono">Period parameters</div>
@@ -544,6 +698,17 @@
                 </div>
               </div>
               <div id="ratio-mode-sub-options-content"></div>
+            </div>
+            <div id="ratio-folder-picker" class="hidden border border-hairline bg-surface-container-high p-sm space-y-sm">
+              <div class="flex items-start justify-between gap-sm">
+                <div>
+                  <div class="text-[9px] text-outline uppercase mono">Folder</div>
+                  <div id="ratio-folder-picker-subtitle" class="text-[9px] text-on-surface-variant mono">Choose a folder to categorize this metric</div>
+                </div>
+                <button id="ratio-folder-picker-clear" class="px-2 py-[2px] bg-surface-container border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Clear</button>
+              </div>
+              <div id="ratio-folder-picker-current" class="px-2 py-1 border border-hairline bg-surface-container-lowest text-[10px] text-on-surface-variant mono">No folder selected</div>
+              <div id="ratio-folder-picker-list" class="max-h-44 overflow-y-auto custom-scrollbar divide-y divide-hairline"></div>
             </div>
           </div>
         </div>
@@ -553,26 +718,26 @@
     <section class="page-section hidden h-full min-h-0 scalable" data-page="templates">
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-xs md:gap-sm h-full min-h-0">
         <!-- Template list panel -->
-        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+        <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
             <div>
               <p class="text-[9px] text-outline uppercase mono">Manage templates</p>
               <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Saved templates</h2>
             </div>
             <span id="template-list-count" class="text-[9px] text-outline mono uppercase">0 templates</span>
           </div>
-          <div class="flex items-center gap-xs px-md py-2 border-b border-outline-variant bg-surface-container">
+          <div class="flex items-center gap-xs px-md py-2 border-b border-hairline bg-surface-container">
             <button id="template-create-button" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">New template</button>
-            <button id="template-excel-folder-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Open folder</button>
+            <button id="template-excel-folder-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Open folder</button>
           </div>
           <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-            <div id="template-list" class="divide-y divide-outline-variant/25"></div>
+            <div id="template-list" class="divide-y divide-hairline"></div>
           </div>
         </div>
 
         <!-- Template editor panel -->
-        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
+        <div class="bg-surface-container-low flex flex-col overflow-hidden min-h-0">
+          <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
             <div>
               <p class="text-[9px] text-outline uppercase mono" id="template-editor-mode-label">New template</p>
               <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono" id="template-editor-title">Create template</h2>
@@ -582,34 +747,34 @@
           <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-md space-y-sm">
             <label class="space-y-1">
               <span class="text-[9px] text-outline uppercase mono">Template name</span>
-              <input id="template-name-input" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="My template" type="text"/>
+              <input id="template-name-input" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="My template" type="text"/>
             </label>
             <label class="space-y-1">
               <span class="text-[9px] text-outline uppercase mono">Notes</span>
-              <textarea id="template-notes-input" class="w-full min-h-[80px] bg-surface-container-lowest border border-outline-variant px-2 py-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none resize-none" placeholder="Describe what this template is for..."></textarea>
+              <textarea id="template-notes-input" class="w-full min-h-[80px] bg-surface-container-lowest border border-hairline px-2 py-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none resize-none" placeholder="Describe what this template is for..."></textarea>
             </label>
-            <div class="border border-outline-variant bg-surface-container p-sm space-y-sm">
+            <div class="border border-hairline bg-surface-container p-sm space-y-sm">
               <div class="text-[9px] text-outline uppercase mono">Template contents</div>
               <div id="template-contents-summary" class="text-[10px] text-on-surface-variant mono space-y-1">
                 <div>No current settings captured.</div>
               </div>
-              <button id="template-capture-settings" class="w-full px-2 py-[4px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Capture current settings</button>
+              <button id="template-capture-settings" class="w-full px-2 py-[4px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Capture current settings</button>
             </div>
-            <div class="border border-outline-variant bg-surface-container p-sm space-y-sm">
+            <div class="border border-hairline bg-surface-container p-sm space-y-sm">
               <div class="flex items-center justify-between gap-sm">
                 <div class="text-[9px] text-outline uppercase mono">Excel template</div>
                 <span id="template-excel-status" class="text-[9px] text-outline mono uppercase">None</span>
               </div>
-              <button id="template-save-excel" class="w-full px-2 py-[4px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Save current workbook as template</button>
-              <button id="template-open-excel" class="w-full px-2 py-[4px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors hidden">Open Excel template</button>
-              <button id="template-replace-workbook" class="w-full px-2 py-[4px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-secondary hover:text-secondary transition-colors hidden">Replace FinForge.xlsm with this template</button>
-              <button id="template-remove-excel" class="w-full px-2 py-[4px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-error hover:text-error transition-colors hidden">Remove Excel template file</button>
+              <button id="template-save-excel" class="w-full px-2 py-[4px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Save current workbook as template</button>
+              <button id="template-open-excel" class="w-full px-2 py-[4px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors hidden">Open Excel template</button>
+              <button id="template-replace-workbook" class="w-full px-2 py-[4px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-secondary hover:text-secondary transition-colors hidden">Replace FinForge.xlsm with this template</button>
+              <button id="template-remove-excel" class="w-full px-2 py-[4px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-error hover:text-error transition-colors hidden">Remove Excel template file</button>
             </div>
             <div class="flex items-center justify-between gap-sm pt-xs">
-              <button id="template-delete-button" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-error hover:text-error transition-colors hidden">Delete</button>
+              <button id="template-delete-button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-error hover:text-error transition-colors hidden">Delete</button>
               <div class="flex items-center gap-xs ml-auto">
                 <button id="template-load-button" class="flex-1 px-2 py-[2px] bg-secondary text-on-secondary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity hidden">Load template</button>
-                <button id="template-cancel-button" class="flex-1 px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors hidden">Cancel</button>
+                <button id="template-cancel-button" class="flex-1 px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors hidden">Cancel</button>
                 <button id="template-save-button" class="flex-1 px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Save template</button>
               </div>
             </div>
@@ -618,26 +783,169 @@
       </div>
     </section>
 
-    <section class="page-section hidden h-full min-h-0 scalable" data-page="home"></section>
+    <section class="page-section hidden h-full min-h-0 scalable" data-page="home">
+      <div class="h-full overflow-y-auto custom-scrollbar p-md">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-sm auto-rows-min max-w-5xl mx-auto">
+
+          <!-- Links -->
+          <div class="bg-surface-container-low flex flex-col overflow-hidden">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high">
+              <p class="text-[9px] text-outline uppercase mono">Links</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Website &amp; support</h2>
+            </div>
+            <div id="home-links-list" class="flex-1 min-h-0 divide-y divide-hairline"></div>
+          </div>
+
+          <!-- Data -->
+          <div class="bg-surface-container-low flex flex-col overflow-hidden">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high">
+              <p class="text-[9px] text-outline uppercase mono">Data</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Market data</h2>
+            </div>
+            <div class="flex-1 min-h-0 p-md space-y-sm flex flex-col justify-between">
+              <div class="space-y-1">
+                <div class="text-[9px] text-outline uppercase mono">Last fetched</div>
+                <div id="home-last-fetched" class="text-body-md text-on-surface mono">Never</div>
+              </div>
+              <div class="space-y-sm">
+                <div id="home-fetch-status" class="text-[9px] text-outline mono uppercase hidden"></div>
+                <button id="home-fetch-all-button" class="w-full px-2 py-[4px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Fetch all data</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Template -->
+          <div class="bg-surface-container-low flex flex-col overflow-hidden">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high">
+              <p class="text-[9px] text-outline uppercase mono">Template</p>
+              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Active template</h2>
+            </div>
+            <div class="flex-1 min-h-0 p-md space-y-sm flex flex-col justify-between">
+              <div class="space-y-1">
+                <div class="text-[9px] text-outline uppercase mono">Current template</div>
+                <div id="home-template-name" class="text-body-md text-on-surface mono">—</div>
+              </div>
+              <button id="home-open-templates-button" class="w-full px-2 py-[4px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Open templates</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section hidden h-full min-h-0 scalable" data-page="visualize">
+      <div id="viz-grid" style="display:grid; grid-template-columns:1fr 6px 1fr; grid-template-rows:minmax(150px,1fr) 6px minmax(80px,1fr); height:100%; min-height:0;">
+        <!-- Chart Area (left/main) -->
+        <div style="grid-column:1; grid-row:1; min-height:0; display:flex; flex-direction:column; overflow:hidden;" class="bg-surface-container-low">
+          <div class="flex-1 min-h-0 relative flex flex-col" id="viz-chart-wrapper">
+            <div class="flex-1 min-h-0" id="viz-plotly-container"></div>
+            <div id="viz-empty-state" class="absolute inset-0 flex flex-col items-center justify-center gap-sm text-outline-variant">
+              <span class="material-symbols-outlined text-[48px] opacity-30">show_chart</span>
+              <p class="text-[11px] mono uppercase">Add metrics and tickers from the right panel</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vertical Splitter (chart &harr; sidebar) -->
+        <div class="viz-splitter viz-splitter-v" style="grid-column:2; grid-row:1; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">&#8942;</div>
+
+        <!-- Horizontal Splitter (resize top / bottom panels) -->
+        <div class="viz-splitter viz-splitter-h" style="grid-column:1 / span 3; grid-row:2; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">&#8943;</div>
+
+        <!-- Right Sidebar: Chart Views -->
+        <div style="grid-column:3; grid-row:1; min-height:0; display:flex; flex-direction:column; overflow:hidden;" class="bg-surface-container-low">
+          <!-- View Switcher Icons -->
+          <div class="px-sm py-1 shrink-0 flex items-center gap-xs border-b border-hairline">
+            <button class="viz-view-switch flex items-center justify-center p-xs text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" type="button" data-viz-view="metrics" title="Metrics" aria-label="Metrics">
+              <span class="material-symbols-outlined">functions</span>
+            </button>
+            <button class="viz-view-switch flex items-center justify-center p-xs text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" type="button" data-viz-view="tickers" title="Tickers" aria-label="Tickers">
+              <span class="material-symbols-outlined">tag</span>
+            </button>
+          </div>
+          <!-- Tickers View -->
+          <div id="viz-tickers-view" class="flex-1 min-h-0 flex flex-col">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high shrink-0">
+              <input id="viz-ticker-search" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search tickers" type="text"/>
+            </div>
+            <div id="viz-tickers-list" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              <div class="px-md py-3 text-[10px] text-outline mono uppercase">No tickers imported yet. Go to Search tab to import tickers.</div>
+            </div>
+            <div class="px-sm py-1 border-t border-hairline bg-surface-container-high shrink-0 flex items-center gap-xs">
+              <button id="viz-tickers-show-selected" type="button" data-kind="tickers" class="viz-show-selected-btn px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors" title="Show only selected tickers" aria-label="Toggle showing only selected tickers" aria-pressed="false">
+                Show selected
+              </button>
+              <button id="viz-tickers-remove-all" type="button" data-kind="tickers" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-error hover:text-error transition-colors" title="Unselect all tickers" aria-label="Unselect all tickers">
+                Remove all
+              </button>
+            </div>
+          </div>
+          <!-- Metrics View -->
+          <div id="viz-metrics-view" class="hidden flex-1 min-h-0 flex flex-col">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high shrink-0">
+              <input id="viz-metric-search" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search metrics" type="text"/>
+            </div>
+            <div id="viz-metrics-list" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-sm">
+              <div class="px-md py-3 text-[10px] text-outline mono uppercase">No metrics defined. Create one in the Metrics tab.</div>
+            </div>
+            <div class="px-sm py-1 border-t border-hairline bg-surface-container-high shrink-0 flex items-center gap-xs">
+              <button id="viz-metrics-show-selected" type="button" data-kind="metrics" class="viz-show-selected-btn px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors" title="Show only selected metrics" aria-label="Toggle showing only selected metrics" aria-pressed="false">
+                Show selected
+              </button>
+              <button id="viz-metrics-remove-all" type="button" data-kind="metrics" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-error hover:text-error transition-colors" title="Unselect all metrics" aria-label="Unselect all metrics">
+                Remove all
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Container (spans full width below chart + sidebar) -->
+        <div id="viz-bottom-container" style="grid-column:1 / span 3; grid-row:3; min-height:0; display:flex; flex-direction:column; overflow:hidden;" class="bg-surface-container-low">
+          <!-- Bottom Container Header -->
+          <div class="px-md py-0.5 shrink-0 flex items-center justify-between gap-sm border-b border-hairline bg-surface-container-high">
+            <div class="flex items-center gap-xs min-w-0">
+              <button class="viz-bottom-tab flex items-center justify-center p-0.5 text-primary hover:text-primary hover:bg-surface-container-high transition-colors" type="button" data-viz-bottom-tab="legend" title="Chart legend" aria-label="Chart legend">
+                <span class="material-symbols-outlined text-[16px]">legend_toggle</span>
+              </button>
+              <button class="viz-bottom-tab flex items-center justify-center p-0.5 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" type="button" data-viz-bottom-tab="graph" title="Graph settings" aria-label="Graph settings">
+                <span class="material-symbols-outlined text-[16px]">tune</span>
+              </button>
+            </div>
+            <button id="viz-bottom-scroll-toggle" class="flex items-center justify-center p-0.5 text-on-surface-variant transition-colors" data-scroll-mode="internal" title="Internal scrolling (locked)" aria-label="Toggle scroll mode">
+              <span data-mode="internal" class="material-symbols-outlined text-[16px]">lock</span>
+              <span class="hidden material-symbols-outlined text-[16px]" data-mode="page">lock_open</span>
+            </button>
+          </div>
+          <!-- Bottom Container Content (scrollable) -->
+          <div id="viz-bottom-content" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+            <div class="px-md py-3 text-[10px] text-outline mono uppercase text-center">
+              Content will appear here. Select data to populate this panel.
+            </div>
+          </div>
+          <!-- Graph Settings View (bottom container tab) -->
+          <div id="viz-graph-settings-view" class="hidden flex-1 min-h-0 overflow-y-auto custom-scrollbar"></div>
+        </div>
+
+      </div>
+    </section>
 
     <section class="page-section hidden h-full min-h-0 scalable" data-page="settings">
-      <div class="grid grid-cols-1 gap-xs md:gap-sm h-full min-h-0 overflow-y-auto custom-scrollbar">
-        <div class="bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden min-h-0">
-          <div class="px-md py-1 border-b border-outline-variant bg-surface-container-high flex items-center justify-between gap-sm">
-            <div>
-              <p class="text-[9px] text-outline uppercase mono">Application settings</p>
-              <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Settings</h2>
-            </div>
-            <span id="settings-version" class="text-[9px] text-outline mono uppercase">v0.1.0</span>
+      <div class="h-full min-h-0 overflow-y-auto custom-scrollbar">
+        <div class="px-md py-1 border-b border-hairline flex items-center justify-between gap-sm">
+          <div>
+            <p class="text-[9px] text-outline uppercase mono">Application settings</p>
+            <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Settings</h2>
           </div>
-          <div class="flex-1 p-md space-y-md overflow-y-auto custom-scrollbar">
+          <span id="settings-version" class="text-[9px] text-outline mono uppercase">v0.1.0</span>
+        </div>
+          <div class="p-md space-y-md divide-y divide-hairline">
             <!-- Display Scaling -->
-            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+            <div class="space-y-sm">
               <div class="text-[9px] text-outline uppercase mono">Display scaling</div>
               <div class="grid grid-cols-2 gap-sm">
                 <label class="space-y-1">
                   <span class="text-[9px] text-outline uppercase mono">Mode</span>
-                  <select id="settings-display-mode" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none">
+                  <select id="settings-display-mode" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none">
                     <option value="thousands">Thousands</option>
                     <option value="millions" selected>Millions</option>
                     <option value="billions">Billions</option>
@@ -646,13 +954,13 @@
                 </label>
                 <label class="space-y-1">
                   <span class="text-[9px] text-outline uppercase mono">Divisor</span>
-                  <input id="settings-display-divisor" class="w-full h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none" type="number" min="1" step="1" value="1000000"/>
+                  <input id="settings-display-divisor" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none" type="number" min="1" step="1" value="1000000"/>
                 </label>
               </div>
             </div>
 
             <!-- Font Scale -->
-            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+            <div class="space-y-sm">
               <div class="text-[9px] text-outline uppercase mono">Font scale</div>
               <div class="flex items-center gap-sm">
                 <div class="font-size-group" title="Adjust font size">
@@ -665,56 +973,56 @@
             </div>
 
             <!-- Number Format -->
-            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+            <div class="space-y-sm">
               <div class="text-[9px] text-outline uppercase mono">Number format</div>
               <div class="text-[10px] text-outline-variant mono">Thousands separator for large numbers</div>
               <div class="flex items-center gap-xs flex-wrap">
                 <button class="settings-num-sep px-3 py-[5px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-sep=",">,</button>
-                <button class="settings-num-sep px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-sep=".">.</button>
-                <button class="settings-num-sep px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-sep=" ">␣ (space)</button>
-                <button class="settings-num-sep px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-sep="_custom_">Custom</button>
+                <button class="settings-num-sep px-3 py-[5px] border border-hairline text-on-surface-variant font-label-md text-label-md" data-sep=".">.</button>
+                <button class="settings-num-sep px-3 py-[5px] border border-hairline text-on-surface-variant font-label-md text-label-md" data-sep=" ">␣ (space)</button>
+                <button class="settings-num-sep px-3 py-[5px] border border-hairline text-on-surface-variant font-label-md text-label-md" data-sep="_custom_">Custom</button>
               </div>
               <div id="settings-num-sep-custom-wrap" class="hidden">
-                <input id="settings-num-sep-custom" class="w-24 h-7 bg-surface-container-lowest border border-outline-variant px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none" placeholder="e.g. '"' maxlength="3" type="text"/>
+                <input id="settings-num-sep-custom" class="w-24 h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface focus:border-primary outline-none" placeholder="e.g. '"' maxlength="3" type="text"/>
               </div>
               <div class="text-[10px] text-on-surface-variant mono">Example: <span id="settings-num-preview" class="text-primary">1,234,567.89</span></div>
             </div>
 
             <!-- Date Format -->
-            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+            <div class="space-y-sm">
               <div class="text-[9px] text-outline uppercase mono">Date format</div>
               <div class="flex items-center gap-xs flex-wrap">
                 <button class="settings-date-fmt px-3 py-[5px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-fmt="eu">DD/MM/YYYY</button>
-                <button class="settings-date-fmt px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-fmt="us">MM/DD/YYYY</button>
+                <button class="settings-date-fmt px-3 py-[5px] border border-hairline text-on-surface-variant font-label-md text-label-md" data-fmt="us">MM/DD/YYYY</button>
               </div>
               <div class="text-[10px] text-on-surface-variant mono">Example: <span id="settings-date-preview" class="text-primary">13/07/2026</span></div>
             </div>
 
             <!-- Time Format -->
-            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+            <div class="space-y-sm">
               <div class="text-[9px] text-outline uppercase mono">Time format</div>
               <div class="flex items-center gap-xs flex-wrap">
                 <button class="settings-time-fmt px-3 py-[5px] bg-primary/10 text-primary border border-primary font-label-md text-label-md" data-fmt="24h">HH:MM (24h)</button>
-                <button class="settings-time-fmt px-3 py-[5px] border border-outline-variant text-on-surface-variant font-label-md text-label-md" data-fmt="12h">HH:MM AM/PM (12h)</button>
+                <button class="settings-time-fmt px-3 py-[5px] border border-hairline text-on-surface-variant font-label-md text-label-md" data-fmt="12h">HH:MM AM/PM (12h)</button>
               </div>
               <div class="text-[10px] text-on-surface-variant mono">Example: <span id="settings-time-preview" class="text-primary">14:30</span></div>
             </div>
 
             <!-- Data Locations -->
-            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+            <div class="space-y-sm">
               <div class="text-[9px] text-outline uppercase mono">Data locations</div>
               <div class="space-y-xs">
                 <div class="flex items-center justify-between gap-sm">
                   <span class="text-[10px] text-on-surface-variant mono">Project root</span>
-                  <button id="settings-open-root" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Open folder</button>
+                  <button id="settings-open-root" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Open folder</button>
                 </div>
                 <div class="flex items-center justify-between gap-sm">
                   <span class="text-[10px] text-on-surface-variant mono">Data folder</span>
-                  <button id="settings-open-data" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Open folder</button>
+                  <button id="settings-open-data" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Open folder</button>
                 </div>
                 <div class="flex items-center justify-between gap-sm">
                   <span class="text-[10px] text-on-surface-variant mono">Workbook (FinForge.xlsm)</span>
-                  <button id="settings-open-workbook" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Open</button>
+                  <button id="settings-open-workbook" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Open</button>
                 </div>
                 <div class="flex items-center justify-between gap-sm">
                   <span class="text-[10px] text-on-surface-variant mono">Shared settings file</span>
@@ -724,17 +1032,146 @@
             </div>
 
             <!-- System -->
-            <div class="border border-outline-variant bg-surface-container p-md space-y-sm">
+            <div class="space-y-sm">
               <div class="text-[9px] text-outline uppercase mono">System</div>
               <div class="space-y-xs">
                 <div class="flex items-center justify-between gap-sm">
                   <span class="text-[10px] text-on-surface-variant mono">Check system health</span>
-                  <button id="settings-health-check" class="px-2 py-[2px] bg-surface-container-high border border-outline-variant font-label-md text-label-md hover:border-primary transition-colors">Run check</button>
+                  <button id="settings-health-check" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Run check</button>
                 </div>
                 <div id="settings-health-result" class="text-[9px] text-outline mono hidden"></div>
               </div>
             </div>
           </div>
+        </div>
+    </section>
+
+    <section class="page-section hidden h-full min-h-0 scalable" data-page="ranking">
+      <div id="ranking-main-grid" class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-xs md:gap-sm h-full min-h-0">
+        <!-- Left: universe + metrics + presets (icon subtabs) -->
+        <div id="ranking-left-panel" class="bg-surface-container-low flex flex-col min-h-0 overflow-hidden">
+          <div class="px-sm py-1 shrink-0 flex items-center gap-xs border-b border-hairline">
+            <button class="ranking-view-switch flex items-center justify-center p-xs text-primary bg-primary/10 transition-colors" type="button" data-ranking-view="tickers" title="Tickers" aria-label="Tickers">
+              <span class="material-symbols-outlined text-[16px]">tag</span>
+            </button>
+            <button class="ranking-view-switch flex items-center justify-center p-xs text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" type="button" data-ranking-view="metrics" title="Metrics" aria-label="Metrics">
+              <span class="material-symbols-outlined text-[16px]">functions</span>
+            </button>
+            <button class="ranking-view-switch flex items-center justify-center p-xs text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" type="button" data-ranking-view="presets" title="Presets" aria-label="Presets">
+              <span class="material-symbols-outlined text-[16px]">bookmark</span>
+            </button>
+          </div>
+
+          <!-- Tickers View -->
+          <div id="ranking-tickers-view" class="flex-1 min-h-0 flex flex-col">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high shrink-0">
+              <input id="ranking-ticker-list-search" class="w-full h-7 bg-surface-container-high border-0 px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant outline-none" placeholder="Search tickers" type="text"/>
+            </div>
+            <div id="ranking-ticker-list" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              <div class="px-md py-3 text-[10px] text-outline mono uppercase">No tickers imported yet. Go to Search tab to import tickers.</div>
+            </div>
+            <div class="px-sm py-1 border-t border-hairline bg-surface-container-high shrink-0 flex items-center gap-xs">
+              <span id="ranking-ticker-count" class="text-[9px] text-outline mono uppercase flex-1">0 selected</span>
+              <button id="ranking-ticker-all" type="button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors" title="Select all imported tickers" aria-label="Select all tickers">All</button>
+              <button id="ranking-ticker-remove-all" type="button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-error hover:text-error transition-colors" title="Unselect all tickers" aria-label="Unselect all tickers">Remove all</button>
+            </div>
+          </div>
+
+          <!-- Metrics View -->
+          <div id="ranking-metrics-view" class="hidden flex-1 min-h-0 flex flex-col">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high shrink-0">
+              <input id="ranking-metric-list-search" class="w-full h-7 bg-surface-container-high border-0 px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant outline-none" placeholder="Search metrics" type="text"/>
+            </div>
+            <div id="ranking-metric-list" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar divide-y divide-hairline">
+              <div class="px-md py-3 text-[10px] text-outline mono uppercase">No metrics defined. Create one in the Metrics tab.</div>
+            </div>
+            <div class="px-sm py-1 border-t border-hairline bg-surface-container-high shrink-0 flex items-center gap-xs">
+              <button id="ranking-metric-show-selected" type="button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors" title="Show only selected metrics" aria-label="Toggle showing only selected metrics" aria-pressed="false">Show selected</button>
+              <button id="ranking-metric-remove-all" type="button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-error hover:text-error transition-colors" title="Unselect all metrics" aria-label="Unselect all metrics">Remove all</button>
+            </div>
+          </div>
+
+          <!-- Presets View -->
+          <div id="ranking-presets-view" class="hidden flex-1 min-h-0 flex flex-col gap-sm p-md overflow-y-auto custom-scrollbar">
+            <label class="space-y-0.5">
+              <span class="text-[9px] text-outline uppercase mono">Preset name</span>
+              <input id="ranking-preset-name" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Preset name" type="text"/>
+            </label>
+            <label class="space-y-0.5">
+              <span class="text-[9px] text-outline uppercase mono">Load preset</span>
+              <select id="ranking-preset-select" class="w-full h-7 py-0 pl-1 pr-6 bg-surface-container-lowest border border-hairline font-label-md text-label-md text-on-surface focus:border-primary outline-none" title="Load preset">
+                <option value="">Select a preset…</option>
+              </select>
+            </label>
+            <div class="flex items-center gap-xs">
+              <button id="ranking-preset-new" type="button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors" title="Start a new preset">New</button>
+              <button id="ranking-preset-save" type="button" class="flex-1 px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity" title="Save current configuration as a preset">Save</button>
+              <button id="ranking-preset-delete" type="button" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-error hover:text-error transition-colors" title="Delete the loaded preset">Delete</button>
+            </div>
+            <div id="ranking-preset-status" class="text-[10px] text-outline mono leading-snug"></div>
+          </div>
+        </div>
+
+        <!-- Right: scoring cards + results -->
+        <div class="bg-surface-container-low flex flex-col min-h-0 overflow-hidden">
+          <!-- Advanced single-metric view header (hidden until Advanced is clicked) -->
+          <div id="ranking-advanced-header" class="hidden px-md py-1 border-b border-hairline bg-surface-container-high flex items-center gap-xs shrink-0">
+            <button id="ranking-advanced-back" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors flex items-center gap-1" title="Back to ranking grid" aria-label="Back to ranking grid">
+              <span class="material-symbols-outlined text-[12px]">arrow_back</span>
+              <span>Back</span>
+            </button>
+            <div class="relative" id="ranking-advanced-dropdown">
+              <button id="ranking-advanced-dropdown-btn" type="button" class="h-6 px-2 bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors flex items-center gap-1" title="Switch metric" aria-haspopup="listbox">
+                <span id="ranking-advanced-dropdown-label" class="truncate max-w-[220px]">Metric</span>
+                <span class="material-symbols-outlined text-[12px] text-outline">arrow_drop_down</span>
+              </button>
+              <div id="ranking-advanced-dropdown-menu" class="hidden absolute top-full left-0 mt-xs z-30 w-64 border border-hairline bg-surface-container-high shadow-xl flex flex-col">
+                <div class="p-sm border-b border-hairline shrink-0">
+                  <input id="ranking-advanced-metric-search" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search metrics" type="text"/>
+                </div>
+                <div id="ranking-advanced-metric-list" class="max-h-72 overflow-y-auto custom-scrollbar divide-y divide-hairline"></div>
+                <button id="ranking-advanced-create" type="button" class="shrink-0 w-full text-left px-md py-1 border-t border-hairline bg-surface-container-low text-primary font-label-md text-label-md hover:bg-primary/10 transition-colors flex items-center gap-sm" title="Create a new metric in the Metrics tab">
+                  <span class="material-symbols-outlined text-[14px]">add</span>
+                  <span>Create new metric</span>
+                </button>
+              </div>
+            </div>
+            <span id="ranking-advanced-status" class="flex-1 min-w-0 text-right text-[9px] text-outline mono uppercase truncate"></span>
+          </div>
+          <div id="ranking-toolbar" class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center gap-xs shrink-0">
+            <button id="ranking-run" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Analyze</button>
+            <button id="ranking-collapse-all" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors">Collapse all</button>
+            <button id="ranking-advanced" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors" title="Open advanced single-metric view">Advanced</button>
+            <button id="ranking-results-btn" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors" title="Open full results table">Results</button>
+            <span id="ranking-status" class="flex-1 min-w-0 text-right text-[9px] text-outline mono uppercase truncate">Select stocks and metrics to start</span>
+          </div>
+          <div id="ranking-cards" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-md space-y-sm"></div>
+          <div id="ranking-ticker-panel" class="shrink-0 border-t border-hairline bg-surface-container-low flex flex-col">
+            <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center gap-xs shrink-0">
+              <span class="font-label-sm text-label-sm text-on-surface uppercase mono">Tickers</span>
+              <input id="ranking-ticker-panel-search" class="flex-1 min-w-0 h-6 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Search tickers" type="text"/>
+            </div>
+            <div id="ranking-ticker-panel-header" class="hidden px-sm py-0.5 flex items-center gap-sm border-b border-hairline shrink-0"></div>
+            <div id="ranking-ticker-panel-list" class="overflow-y-auto custom-scrollbar" style="max-height:160px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full-screen Results view (opened via the Results toolbar button) -->
+      <div id="ranking-results-view" class="hidden h-full min-h-0 bg-surface-container-low flex flex-col overflow-hidden">
+        <div class="px-md py-1 border-b border-hairline bg-surface-container-high flex items-center gap-xs shrink-0">
+          <button id="ranking-results-back" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md text-on-surface-variant hover:border-primary transition-colors flex items-center gap-1" title="Back to ranking grid" aria-label="Back to ranking grid">
+            <span class="material-symbols-outlined text-[12px]">arrow_back</span>
+            <span>Back</span>
+          </button>
+          <span class="text-[10px] text-outline mono uppercase">Ranking / Results</span>
+          <span id="ranking-results-status" class="flex-1 min-w-0 text-right text-[9px] text-outline mono uppercase truncate"></span>
+        </div>
+        <div id="ranking-results-table-wrap" class="flex-1 min-h-0 overflow-auto custom-scrollbar p-md">
+          <table id="ranking-results-table" class="w-full border-collapse">
+            <thead id="ranking-results-head"></thead>
+            <tbody id="ranking-results-body"></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -921,6 +1358,77 @@
   ]
 }
 </script>
+<!-- Folder name modal (create / rename) -->
+<div id="folder-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+  <div class="w-[380px] bg-surface-container border border-hairline shadow-xl">
+    <div class="px-md py-1.5 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
+      <div>
+        <p class="text-[9px] text-outline uppercase mono">Folders</p>
+        <h2 id="folder-modal-title" class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">New folder</h2>
+      </div>
+      <button id="folder-modal-close" class="px-2 py-[2px] bg-surface-container border border-hairline font-label-md text-label-md hover:border-error hover:text-error transition-colors">Close</button>
+    </div>
+    <div class="p-md space-y-sm">
+      <label class="space-y-1">
+        <span class="text-[9px] text-outline uppercase mono">Folder name</span>
+        <input id="folder-modal-input" class="w-full h-7 bg-surface-container-lowest border border-hairline px-2 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:border-primary outline-none" placeholder="Enter folder name" type="text"/>
+      </label>
+      <div id="folder-modal-error" class="hidden text-[10px] text-error mono"></div>
+      <div class="flex items-center justify-end gap-xs pt-xs">
+        <button id="folder-modal-cancel" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Cancel</button>
+        <button id="folder-modal-save" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Folder delete confirmation modal -->
+<div id="folder-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+  <div class="w-[380px] bg-surface-container border border-hairline shadow-xl">
+    <div class="px-md py-1.5 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
+      <div>
+        <p class="text-[9px] text-outline uppercase mono">Folders</p>
+        <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Delete folder</h2>
+      </div>
+      <button id="folder-confirm-close" class="px-2 py-[2px] bg-surface-container border border-hairline font-label-md text-label-md hover:border-error hover:text-error transition-colors">Close</button>
+    </div>
+    <div class="p-md space-y-sm">
+      <div id="folder-confirm-message" class="text-body-sm text-on-surface-variant mono"></div>
+      <div class="flex items-center justify-end gap-xs pt-xs">
+        <button id="folder-confirm-cancel" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Cancel</button>
+        <button id="folder-confirm-delete" class="px-2 py-[2px] bg-error-container text-on-error-container font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export ratios timeseries: ticker selection modal -->
+<div id="export-tickers-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+  <div class="w-[420px] max-h-[80vh] flex flex-col bg-surface-container border border-hairline shadow-xl">
+    <div class="px-md py-1.5 border-b border-hairline bg-surface-container-high flex items-center justify-between gap-sm">
+      <div>
+        <p class="text-[9px] text-outline uppercase mono">Metrics</p>
+        <h2 class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider mono">Export timeseries</h2>
+      </div>
+      <button id="export-tickers-close" class="px-2 py-[2px] bg-surface-container border border-hairline font-label-md text-label-md hover:border-error hover:text-error transition-colors">Close</button>
+    </div>
+    <div class="p-md space-y-sm min-h-0 overflow-hidden">
+      <div class="flex items-center justify-between">
+        <span class="text-[9px] text-outline uppercase mono">Select tickers</span>
+        <div class="flex items-center gap-xs">
+          <button id="export-tickers-select-all" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Select all</button>
+          <button id="export-tickers-deselect-all" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Deselect all</button>
+        </div>
+      </div>
+      <div id="export-tickers-list" class="max-h-[50vh] overflow-y-auto border border-hairline bg-surface-container-lowest p-xs space-y-xs"></div>
+      <div id="export-tickers-error" class="hidden text-[10px] text-error mono"></div>
+      <div class="flex items-center justify-end gap-xs pt-xs">
+        <button id="export-tickers-cancel" class="px-2 py-[2px] bg-surface-container-high border border-hairline font-label-md text-label-md hover:border-primary transition-colors">Cancel</button>
+        <button id="export-tickers-export" class="px-2 py-[2px] bg-primary text-on-primary font-bold font-label-md text-label-md hover:opacity-90 transition-opacity">Export</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="./renderer.js"></script>
 </body>
 </html>

@@ -326,10 +326,14 @@ class StockDataManager:
         for file in self.dirs['prices'].glob('*.parquet'):
             tickers.add(file.stem)
             
-        # Check fundamentals
+        # Check fundamentals (old flat structure)
         for file in self.dirs['fundamentals'].glob('*.parquet'):
-            df = pd.read_parquet(file)
-            tickers.update(df['ticker'].unique())
+            try:
+                df = pd.read_parquet(file)
+                if 'ticker' in df.columns:
+                    tickers.update(df['ticker'].dropna().astype(str).str.upper().unique())
+            except Exception as e:
+                print(f"Warning: Could not read tickers from {file.name}: {e}")
             
         return sorted(list(tickers))
 

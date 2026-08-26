@@ -35,6 +35,7 @@ For day-to-day use of FinForge:
 | [09_Color_Reference](User/09_Color_Reference.md) | Syntax highlighting color reference |
 | [10_Data_Cleanup](User/10_Data_Cleanup.md) | Automatic data cleanup system |
 | [11_Uninstalling_FinForge](User/11_Uninstalling_FinForge.md) | Reverse setup and remove environment components |
+| [12_Ranking_Tab](User/12_Ranking_Tab.md) | Score and rank stocks with the Ranking tab |
 | [Complete_User_Guide](User/Complete_User_Guide.md) | Full end-to-end walkthrough |
 
 ### Quick Start Path
@@ -68,7 +69,6 @@ For technical reference and development:
 | [Research_Search_Module_Guide](Developer/Research_Search_Module_Guide.md) | Research paper search module |
 | [Whoogle_Search_Setup_Guide](Developer/Whoogle_Search_Setup_Guide.md) | Whoogle Google proxy setup |
 | [Alternative_Research_Search_Ideas](Developer/Alternative_Research_Search_Ideas.md) | Alternative research API ideas |
-| [Git_Push_Public_Repo_Report](Developer/Git_Push_Public_Repo_Report.md) | Git push to public repo report |
 
 ---
 
@@ -83,6 +83,7 @@ For technical reference and development:
 | Import balance sheet | [Importing Data](User/03_Importing_Data.md) |
 | Create a ratio | [Creating Ratios](User/04_Creating_Ratios.md) |
 | Assign ratio to column | [Assigning Ratios](User/05_Assigning_Ratios.md) |
+| Rank stocks with scoring | [Ranking Tab](User/12_Ranking_Tab.md) |
 | See all available fields | [Available Data Reference](User/08_Available_Data_Reference.md) |
 
 ### Formula Examples

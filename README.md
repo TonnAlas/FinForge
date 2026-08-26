@@ -14,6 +14,7 @@ A comprehensive financial analysis tool that fetches stock data from Yahoo Finan
 - **Efficient Storage** - Data stored in Parquet format for fast access
 - **Electron Desktop UI** - Modern launcher and workspace with sidebar navigation
 - **Excel Dashboard** - Interactive dashboard in Excel via xlwings
+- **Interactive Charts** - Zoomable, multi-stock, multi-ratio time-series charts via Plotly
 - **Custom Ratios** - Create your own financial ratios with a visual formula builder
 - **Multi-Ticker Support** - Analyze multiple stocks simultaneously
 - **Automatic Calculations** - Ratios calculated and updated automatically
@@ -22,6 +23,7 @@ A comprehensive financial analysis tool that fetches stock data from Yahoo Finan
 - **Company Profiles** - View detailed company metadata
 - **Cash Flow Import** - Import cash flow statements alongside BS and IS
 - **Template System** - Save and load Excel workbook templates
+- **Interactive Charting (Plotly)** - Zoomable time-series charts for ratio comparison across multiple stocks, with dual y-axes and range sliders. See [Financial Charting Guide](Guides/Developer/Financial_Charting_Guide.md).
 - **FinForge Add-in** - Excel ribbon add-in for launching the workspace from Excel
 
 ---

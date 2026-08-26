@@ -268,7 +268,7 @@ pip install xlwings
 
 ### Step 2: Assemble the Add-in
 
-Follow the instructions in: [Temporary/AddIn_Assembly_Instructions.md](../Temporary/AddIn_Assembly_Instructions.md)
+Follow the instructions in: [FinForge_addin/AddIn_Assembly_Instructions.md](../FinForge_addin/AddIn_Assembly_Instructions.md)
 
 Three methods are provided:
 - **Method 1:** Visual Basic IDE (easiest, most direct)
@@ -280,7 +280,7 @@ Three methods are provided:
 1. Open Excel
 2. File → Options → Trust Center → Trust Center Settings
 3. Trusted Locations → Add New Location
-4. Browse to: `C:\Users\tonna\Desktop\Stocks-Main_Public_Test\FinForge_addin\`
+4. Browse to: `C:\path\to\FinForge_addin\`
 5. Click OK
 
 ### Step 4: Enable the Add-in
@@ -311,7 +311,7 @@ Three methods are provided:
 4. Excel macro security blocked the add-in
 
 **Solutions:**
-1. Verify XLAM file structure using 7-Zip (see [AddIn_Assembly_Instructions.md](../Temporary/AddIn_Assembly_Instructions.md))
+1. Verify XLAM file structure using 7-Zip (see [AddIn_Assembly_Instructions.md](../FinForge_addin/AddIn_Assembly_Instructions.md))
 2. Re-run assembly process using correct method
 3. Add XLAM folder to Trusted Locations (see Step 3 above)
 4. Restart Excel completely (not just close workbook)
@@ -356,7 +356,7 @@ Three methods are provided:
 3. Under System variables, find "Path"
 4. Click "Edit"
 5. Click "New"
-6. Add: `C:\Users\tonna\AppData\Local\Programs\Python\Python311` (adjust version as needed)
+6. Add: `C:\path\to\Python\Python311` (adjust version as needed)
 7. Click OK, restart command prompt and Excel
 
 ---
@@ -548,7 +548,7 @@ A: No practical limit, but too many buttons clutter the UI. Consider using dropd
 
 ## Support & Documentation
 
-- **Assembly Instructions:** [Temporary/AddIn_Assembly_Instructions.md](../Temporary/AddIn_Assembly_Instructions.md)
+- **Assembly Instructions:** [FinForge_addin/AddIn_Assembly_Instructions.md](../FinForge_addin/AddIn_Assembly_Instructions.md)
 - **Python Backend:** [FinForge_addin/FinForge_addin.py](../FinForge_addin/FinForge_addin.py)
 - **Dashboard Implementation:** [Internal/launch/stock_launcher.py](../Internal/launch/stock_launcher.py)
 - **xlwings Documentation:** https://docs.xlwings.org/
@@ -566,7 +566,7 @@ A: No practical limit, but too many buttons clutter the UI. Consider using dropd
 
 ## Next Steps
 
-1. **Assemble the add-in** using [Temporary/AddIn_Assembly_Instructions.md](../Temporary/AddIn_Assembly_Instructions.md)
+1. **Assemble the add-in** using [FinForge_addin/AddIn_Assembly_Instructions.md](../FinForge_addin/AddIn_Assembly_Instructions.md)
 2. **Test installation** by following verification checklist
 3. **Customize the dashboard** with your portfolio features (currently placeholder)
 4. **Add more ribbon controls** as needed using customization guide

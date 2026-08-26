@@ -32,23 +32,12 @@ The conversion uses:
 - Otherwise, a Yahoo-style template list is applied, and any remaining items are appended in the source order.
 
 ## Migration Script
-Temporary script:
-- Temporary/migrate_income_statement_long_format.py
-
-Purpose:
-- Converts existing wide income statement files to long format.
-
-Removal:
-- This script can be deleted after long-format files are created.
+The wide-to-long conversion is now handled in production code by
+`data_management/stock_data_manager.py` (`convert_fundamental_wide_to_long`).
+The one-off migration script has been removed.
 
 ## Example Usage
-Run the migration script once to generate long-format files:
-
-```
-python Temporary/migrate_income_statement_long_format.py
-```
-
-Then run the Income Statement import in Excel as usual.
+Run the Income Statement import in Excel as usual.
 
 ## Assumptions and Limitations
 - Only annual income statement data is converted to long format at this time.

@@ -45,8 +45,8 @@ Welcome to the FinForge Developer Documentation. This folder contains technical 
 - **[Whoogle_Search_Setup_Guide.md](Whoogle_Search_Setup_Guide.md)** - Whoogle Google proxy setup
 - **[Alternative_Research_Search_Ideas.md](Alternative_Research_Search_Ideas.md)** - Alternative research API ideas
 
-### Repository
-- **[Git_Push_Public_Repo_Report.md](Git_Push_Public_Repo_Report.md)** - Git push to public repo report
+### Charting & Visualization
+- **[Financial_Charting_Guide.md](Financial_Charting_Guide.md)** - Interactive charting with Plotly (multi-stock, multi-ratio, zoomable time-series charts)
 
 ## Core Modules
 

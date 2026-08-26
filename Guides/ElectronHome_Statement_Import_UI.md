@@ -28,6 +28,15 @@ The workspace window has a left sidebar navigation and a main content panel.
 - Left panel: searchable statement catalog with line items
 - Right panel: selected items for printing, display mode and divisor controls
 - Footer: ticker search bar with autocomplete results from Yahoo Finance
+- Sub-tabs: **Fields** (field catalog + printed subset + display scaling) and **Periods** (reporting period picker)
+
+### Frequency & Period Selection (Advanced)
+- A **Periods** sub-tab in the Statement Lines tab lets the user switch between **Annual** and **Quarterly** data and pick exact reporting dates per ticker.
+- The frequency is stored as `frequency` (`annual` | `quarterly`) in `data/statement_settings.json`.
+- Picked periods are stored as `periods[frequency][TICKER]` (newest-first arrays of statement dates).
+- Available dates are fetched from parquet (income statement is the canonical source) via `getStatementPeriods(frequency, tickers)`.
+- On import, the Python importer reads tickers from Excel row 4 (the sheet is the source of truth). Each column is one period: a date chosen in the row-5 dropdown wins, then the UI-picked dates map to occurrences newest-first, and a ticker with no picks uses only its newest period. `CUSTOM` and `INDEX` columns in row 4 are left untouched.
+- The importer also writes an Excel data-validation dropdown into the date cell (row 5) for every ticker column, listing that ticker's available periods for the selected frequency, so periods can be changed directly in the sheet.
 
 ## Renderer Behavior
 ### Data model
@@ -97,6 +106,7 @@ The renderer depends on `window.finforge` with these methods:
 - `saveImportList(importList)` persists the ticker list.
 - `searchTickerUniverse(query)` searches Yahoo Finance for tickers.
 - `importStatement(scope)` runs the Python import script.
+- `getStatementPeriods(frequency, tickers)` returns available statement dates per ticker for the given frequency.
 - `fetchTickerData(ticker)` fetches data for a single ticker.
 - `loadCompanyProfile(ticker)` loads company metadata.
 - `searchResearchPapers(query, source)` searches for research papers.

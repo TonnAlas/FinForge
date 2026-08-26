@@ -10,8 +10,11 @@ const statementSettingsPath = path.join(dataDir, 'statement_settings.json');
 const statementCatalogPath = path.join(dataDir, 'statement_catalog.json');
 const importListPath = path.join(dataDir, 'tickers.json');
 const ratioConfigPath = path.join(rootDir, 'Importing', 'ratio_config.json');
+const folderConfigPath = path.join(dataDir, 'folders.json');
 const templatesPath = path.join(dataDir, 'templates.json');
 const templatesExcelDir = path.join(dataDir, 'templates_excel');
+const homeStatePath = path.join(dataDir, 'home_state.json');
+const rankingPresetsPath = path.join(dataDir, 'ranking_presets.json');
 const pythonExecutablePath = path.join(rootDir, '.venv', 'Scripts', 'python.exe');
 const workbookPath = path.join(rootDir, 'FinForge.xlsm');
 const setupBatchPath = path.join(rootDir, 'setup.bat');
@@ -238,6 +241,18 @@ function buildCompanyProfileCommand(ticker) {
   ].join('\n');
 }
 
+function buildCompanyReportsCommand(ticker, refresh) {
+  return [
+    'import json',
+    'from Internal.Reports.company_reports import get_company_reports',
+    '',
+    'ticker = ' + JSON.stringify(ticker),
+    'refresh = ' + (refresh ? 'True' : 'False'),
+    'result = get_company_reports(ticker, refresh=refresh)',
+    'print(json.dumps(result, ensure_ascii=True))',
+  ].join('\n');
+}
+
 function loadCompanyProfile(ticker) {
   return new Promise((resolve, reject) => {
     let child = null;
@@ -282,6 +297,55 @@ function loadCompanyProfile(ticker) {
         resolve(JSON.parse(stdout || '{}'));
       } catch (error) {
         reject(new Error(`Company profile parse error: ${error.message || error}`));
+      }
+    });
+  });
+}
+
+function loadCompanyReports(ticker, refresh) {
+  return new Promise((resolve, reject) => {
+    let child = null;
+    const timeout = setTimeout(() => {
+      if (child) { child.kill(); }
+      reject(new Error('Company reports fetch timed out. SEC EDGAR may be unreachable or rate-limited. Please try again.'));
+    }, 45000);
+
+    child = spawn(getPythonCommand(), ['-c', buildCompanyReportsCommand(ticker, refresh)], {
+      cwd: rootDir,
+      windowsHide: true,
+      env: {
+        ...process.env,
+        PYTHONUTF8: '1',
+      },
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    child.on('error', (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+
+    child.on('close', (code) => {
+      clearTimeout(timeout);
+      if (code !== 0) {
+        reject(new Error((stderr || stdout || `Company reports fetch exited with code ${code}`).trim()));
+        return;
+      }
+
+      try {
+        resolve(JSON.parse(stdout || '{}'));
+      } catch (error) {
+        reject(new Error(`Company reports parse error: ${error.message || error}`));
       }
     });
   });
@@ -908,6 +972,36 @@ function saveTemplates(templates) {
   return cleaned;
 }
 
+function loadHomeState() {
+  const saved = readJson(homeStatePath, { activeTemplateId: 'default', lastDataFetch: null });
+  const activeTemplateId = String(saved && saved.activeTemplateId ? saved.activeTemplateId : 'default');
+  const templates = loadTemplates();
+
+  let activeTemplate = null;
+  for (const template of templates) {
+    if (template && template.id === activeTemplateId) {
+      activeTemplate = template;
+      break;
+    }
+  }
+  if (!activeTemplate && templates.length) {
+    activeTemplate = templates[0];
+  }
+
+  return {
+    activeTemplateId: activeTemplate ? activeTemplate.id : activeTemplateId,
+    activeTemplateName: activeTemplate ? (activeTemplate.name || activeTemplate.id) : activeTemplateId,
+    lastDataFetch: saved && saved.lastDataFetch ? saved.lastDataFetch : null,
+  };
+}
+
+function saveHomeState(partial) {
+  const current = readJson(homeStatePath, { activeTemplateId: 'default', lastDataFetch: null });
+  const next = Object.assign({}, current, partial || {});
+  writeJson(homeStatePath, next);
+  return next;
+}
+
 ipcMain.handle('finforge:loadTemplates', function () {
   try {
     return { ok: true, templates: loadTemplates() };
@@ -1019,6 +1113,8 @@ ipcMain.handle('finforge:loadTemplate', async function (_event, templateId) {
         } catch (_) {}
       }
     }
+
+    saveHomeState({ activeTemplateId: template.id });
 
     return {
       ok: true,
@@ -1134,6 +1230,8 @@ ipcMain.handle('finforge:replaceWorkbookWithTemplate', async function (_event, t
       });
     }
 
+    saveHomeState({ activeTemplateId: template.id });
+
     return { ok: true, template: template };
   } catch (error) {
     return { ok: false, error: error && error.message ? error.message : String(error) };
@@ -1164,11 +1262,34 @@ ipcMain.handle('finforge:openTemplateFolder', async function () {
   }
 });
 
+ipcMain.handle('finforge:loadHomeState', function () {
+  try {
+    return Object.assign({ ok: true }, loadHomeState());
+  } catch (error) {
+    return { ok: false, error: error && error.message ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle('finforge:setLastDataFetch', function (_event, timestamp) {
+  try {
+    if (!timestamp || typeof timestamp !== 'string') {
+      return { ok: false, error: 'A valid ISO timestamp string is required.' };
+    }
+    saveHomeState({ lastDataFetch: timestamp });
+    return { ok: true, lastDataFetch: timestamp };
+  } catch (error) {
+    return { ok: false, error: error && error.message ? error.message : String(error) };
+  }
+});
+
 ipcMain.handle('finforge:loadImportList', () => {
   const savedImportList = readJson(importListPath, { tickers: [] });
   return {
     tickers: normalizeTickerList(savedImportList && savedImportList.tickers),
     last_updated: savedImportList && savedImportList.last_updated ? savedImportList.last_updated : '',
+    exchanges: savedImportList && savedImportList.exchanges && typeof savedImportList.exchanges === 'object'
+      ? savedImportList.exchanges
+      : {},
   };
 });
 
@@ -1185,6 +1306,13 @@ ipcMain.handle('finforge:saveImportList', (_event, importList) => {
       tickers: nextTickers,
       last_updated: new Date().toISOString(),
     };
+
+    // Preserve exchange/region metadata (populated by the Python fetcher) when
+    // the user edits the import list from the terminal.
+    const existing = readJson(importListPath, { tickers: [] });
+    if (existing && existing.exchanges && typeof existing.exchanges === 'object') {
+      nextImportList.exchanges = existing.exchanges;
+    }
 
     writeJson(importListPath, nextImportList);
     return { ok: true, importList: nextImportList };
@@ -1399,9 +1527,33 @@ ipcMain.handle('finforge:loadCompanyProfile', async (_event, ticker) => {
   }
 });
 
+ipcMain.handle('finforge:loadCompanyReports', async (_event, ticker, refresh) => {
+  try {
+    const normalizedTicker = normalizeTickerSymbol(ticker);
+    if (!normalizedTicker) {
+      return {
+        ok: false,
+        error: 'Ticker symbol is required',
+      };
+    }
+
+    return {
+      ok: true,
+      reports: await loadCompanyReports(normalizedTicker, Boolean(refresh)),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error && error.message ? error.message : String(error),
+    };
+  }
+});
+
 ipcMain.handle('finforge:loadStatementSettings', () => {
   return readJson(statementSettingsPath, {
     mode: 'balanceSheet',
+    frequency: 'annual',
+    periods: { annual: {}, quarterly: {} },
     display: { mode: 'millions', divisor: 1000000 },
     balanceSheet: { selected: [] },
     incomeStatement: { selected: [] },
@@ -1517,11 +1669,27 @@ ipcMain.handle('finforge:saveRatios', (_event, ratios) => {
   }
 });
 
+ipcMain.handle('finforge:loadFolders', () => {
+  return readJson(folderConfigPath, []);
+});
+
+ipcMain.handle('finforge:saveFolders', (_event, folders) => {
+  try {
+    writeJson(folderConfigPath, folders);
+    return { ok: true, folders };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error && error.message ? error.message : String(error),
+    };
+  }
+});
+
 ipcMain.handle('finforge:loadSheetRatios', async () => {
   try {
     const result = await new Promise((resolve, reject) => {
       const child = spawn(getPythonCommand(), ['-c',
-        'from Internal.Ratios.ratio_calculator import get_sheet_ratio_names; print(get_sheet_ratio_names())'
+        'from Internal.Ratios.ratio_calculator import get_sheet_ratio_names; import json; print(json.dumps(get_sheet_ratio_names()))'
       ], {
         cwd: rootDir,
         windowsHide: true,
@@ -1544,7 +1712,7 @@ ipcMain.handle('finforge:loadSheetRatios', async () => {
         reject(new Error(`Exited with code ${code}`));
       });
     });
-    const names = JSON.parse(result.replaceAll("'", '"'));
+    const names = JSON.parse(result);
     return { ok: true, names: Array.isArray(names) ? names : [] };
   } catch (error) {
     return { ok: true, names: [] };
@@ -1579,6 +1747,231 @@ ipcMain.handle('finforge:syncAssignedRatios', async (_event, ratioNames) => {
       });
     });
     return { ok: true, stdout: result.stdout };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error && error.message ? error.message : String(error),
+    };
+  }
+});
+
+// ── Visualize: Compute Historical Metric Values ──
+
+function buildMetricHistoryCommand(payloadJson) {
+  const escaped = payloadJson.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+  return `from Internal.Ratios.metric_history import compute_metric_history_entry; compute_metric_history_entry('${escaped}')`;
+}
+
+ipcMain.handle('finforge:computeMetricHistory', async (_event, payload) => {
+  // payload: { mode: "batch", requests: [{ticker, metricName, formula}, ...] }
+  //   or: { mode: "single", ticker, metricName, formula }
+  try {
+    const payloadJson = JSON.stringify(payload);
+    const result = await new Promise((resolve, reject) => {
+      const child = spawn(getPythonCommand(), ['-c', buildMetricHistoryCommand(payloadJson)], {
+        cwd: rootDir,
+        windowsHide: true,
+        env: { ...process.env, PYTHONUTF8: '1' },
+      });
+      const computeTimeout = setTimeout(() => {
+        if (child) { child.kill(); }
+        reject(new Error('Metric history computation timed out after 120 seconds.'));
+      }, 120000);
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (d) => { stdout += d.toString(); });
+      child.stderr.on('data', (d) => { stderr += d.toString(); });
+      child.on('error', (error) => {
+        clearTimeout(computeTimeout);
+        reject(error);
+      });
+      child.on('close', (code) => {
+        clearTimeout(computeTimeout);
+        if (code === 0) {
+          try {
+            const parsed = JSON.parse(stdout.trim());
+            return resolve(parsed);
+          } catch (parseErr) {
+            return reject(new Error('Failed to parse metric history output: ' + parseErr.message));
+          }
+        }
+        reject(new Error((stderr || stdout || `Metric history exited with code ${code}`).trim()));
+      });
+    });
+    return { ok: true, data: result };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error && error.message ? error.message : String(error),
+    };
+  }
+});
+
+// ── Ranking: Latest Metric Values for the Ranking Tab ──
+
+function buildRankingCommand(payloadJson) {
+  const escaped = payloadJson.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+  return `from Internal.Ranking.ranking_entry import ranking_entry; ranking_entry('${escaped}')`;
+}
+
+ipcMain.handle('finforge:computeRanking', async (_event, payload) => {
+  // payload: { tickers: [...], metrics: [{ name, formula }, ...] }
+  try {
+    const payloadJson = JSON.stringify(payload || {});
+    const result = await new Promise((resolve, reject) => {
+      const child = spawn(getPythonCommand(), ['-c', buildRankingCommand(payloadJson)], {
+        cwd: rootDir,
+        windowsHide: true,
+        env: { ...process.env, PYTHONUTF8: '1' },
+      });
+      const rankingTimeout = setTimeout(() => {
+        if (child) { child.kill(); }
+        reject(new Error('Ranking computation timed out after 120 seconds.'));
+      }, 120000);
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (d) => { stdout += d.toString(); });
+      child.stderr.on('data', (d) => { stderr += d.toString(); });
+      child.on('error', (error) => {
+        clearTimeout(rankingTimeout);
+        reject(error);
+      });
+      child.on('close', (code) => {
+        clearTimeout(rankingTimeout);
+        if (code === 0) {
+          try {
+            return resolve(JSON.parse(stdout.trim()));
+          } catch (parseErr) {
+            return reject(new Error('Failed to parse ranking output: ' + parseErr.message));
+          }
+        }
+        reject(new Error((stderr || stdout || `Ranking exited with code ${code}`).trim()));
+      });
+    });
+    // The Python entry already returns { ok, ... }; normalize for the renderer.
+    return result && typeof result === 'object' ? result : { ok: false, error: 'Empty ranking response' };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error && error.message ? error.message : String(error),
+    };
+  }
+});
+
+ipcMain.handle('finforge:loadRankingPresets', () => {
+  const data = readJson(rankingPresetsPath, { presets: [] });
+  return { ok: true, presets: Array.isArray(data && data.presets) ? data.presets : [] };
+});
+
+ipcMain.handle('finforge:saveRankingPresets', (_event, presets) => {
+  writeJson(rankingPresetsPath, { presets: Array.isArray(presets) ? presets : [] });
+  return { ok: true };
+});
+
+// ── Export Ratios Time Series ──
+
+function buildExportRatiosTimeseriesCommand(payloadJson) {
+  const escaped = payloadJson.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+  return `from Internal.Ratios.export_ratios_timeseries import export_ratios_timeseries_entry; export_ratios_timeseries_entry('${escaped}')`;
+}
+
+ipcMain.handle('finforge:exportRatiosTimeseries', async (_event, payload) => {
+  // payload: { tickers: [...], metrics: [{ name, formula }, ...] }
+  try {
+    if (!existsAtPath(workbookPath)) {
+      return {
+        ok: false,
+        error: 'FinForge workbook was not found. Run setup.bat to create it.',
+      };
+    }
+
+    const payloadJson = JSON.stringify(payload || {});
+    const result = await new Promise((resolve, reject) => {
+      const child = spawn(getPythonCommand(), ['-c', buildExportRatiosTimeseriesCommand(payloadJson)], {
+        cwd: rootDir,
+        windowsHide: true,
+        env: { ...process.env, PYTHONUTF8: '1' },
+      });
+      const exportTimeout = setTimeout(() => {
+        if (child) { child.kill(); }
+        reject(new Error('Ratios export timed out after 120 seconds.'));
+      }, 120000);
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (d) => { stdout += d.toString(); });
+      child.stderr.on('data', (d) => { stderr += d.toString(); });
+      child.on('error', (error) => {
+        clearTimeout(exportTimeout);
+        reject(error);
+      });
+      child.on('close', (code) => {
+        clearTimeout(exportTimeout);
+        if (code === 0) {
+          try {
+            const parsed = JSON.parse(stdout.trim());
+            return resolve(parsed);
+          } catch (parseErr) {
+            return reject(new Error('Failed to parse ratios export output: ' + parseErr.message));
+          }
+        }
+        reject(new Error((stderr || stdout || `Ratios export exited with code ${code}`).trim()));
+      });
+    });
+
+    if (result && result.ok) {
+      return { ok: true, data: result };
+    }
+    return { ok: false, error: (result && result.error) || 'Ratios export failed.' };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error && error.message ? error.message : String(error),
+    };
+  }
+});
+
+// ── Statement Periods: List available reporting dates ──
+
+function buildStatementPeriodsCommand(frequency, tickersJson) {
+  const escapedFrequency = String(frequency || 'annual').replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+  const escapedTickers = String(tickersJson || '[]').replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+  return `from Importing.statement_periods import list_statement_periods_entry; list_statement_periods_entry('${escapedFrequency}', '${escapedTickers}')`;
+}
+
+ipcMain.handle('finforge:getStatementPeriods', async (_event, frequency, tickers) => {
+  try {
+    const tickersJson = JSON.stringify(Array.isArray(tickers) ? tickers : []);
+    const result = await new Promise((resolve, reject) => {
+      const child = spawn(getPythonCommand(), ['-c', buildStatementPeriodsCommand(frequency, tickersJson)], {
+        cwd: rootDir,
+        windowsHide: true,
+        env: { ...process.env, PYTHONUTF8: '1' },
+      });
+      const periodTimeout = setTimeout(() => {
+        if (child) { child.kill(); }
+        reject(new Error('Statement period listing timed out after 60 seconds.'));
+      }, 60000);
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (d) => { stdout += d.toString(); });
+      child.stderr.on('data', (d) => { stderr += d.toString(); });
+      child.on('error', (error) => {
+        clearTimeout(periodTimeout);
+        reject(error);
+      });
+      child.on('close', (code) => {
+        clearTimeout(periodTimeout);
+        if (code === 0) {
+          try {
+            return resolve(JSON.parse(stdout.trim()));
+          } catch (parseErr) {
+            return reject(new Error('Failed to parse statement periods output: ' + parseErr.message));
+          }
+        }
+        reject(new Error((stderr || stdout || `Statement periods exited with code ${code}`).trim()));
+      });
+    });
+    return { ok: true, data: result };
   } catch (error) {
     return {
       ok: false,

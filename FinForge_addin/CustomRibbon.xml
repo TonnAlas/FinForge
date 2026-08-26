@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+================================================================================
+FinForge Excel Add-in - Custom Ribbon UI Definition
+================================================================================
+
+DESCRIPTION:
+Office Open XML (ECMA-376) ribbon definition for the FinForge Excel add-in.
+Defines the custom "FinForge" ribbon tab with a "Dashboard" button that
+launches the portfolio management GUI.
+
+FORMAT:
+This file uses Microsoft's Fluent Ribbon Extensibility Framework (RibbonX).
+It is an XML-based ribbon customization format used by Excel 2007 and later.
+
+STRUCTURE:
+- customUI: Root element (version="1.0" for Excel 2007-2016, "1.1"+ for later)
+- ribbon: Ribbon UI container
+  - tabs: Collection of ribbon tabs
+    - tab: Single ribbon tab ("FinForge")
+      - group: Logical group of controls
+        - button: Clickable button control ("Dashboard")
+
+ATTRIBUTES:
+- id: Unique identifier (used in VBA callbacks)
+- label: Display text shown to user
+- image: Icon image (optional, uses default if omitted)
+- onAction: VBA macro called when control is activated
+- size: Control size ("large", "normal")
+
+EVENT CALLBACKS:
+- onAction="LaunchDashboard": Maps to LaunchDashboard() subroutine in VBA
+- onLoad="OnRibbonLoad": Maps to OnRibbonLoad() subroutine in VBA
+
+ICON IMAGES:
+- Currently uses built-in Excel image (no custom icon)
+- To add custom icon: Replace image="" with image="idemoticon"
+- Icons must be base64-encoded PNG or embedded as Office Art XML
+
+NOTE ON NAMESPACE:
+- Namespace: http://schemas.microsoft.com/office/2006/01/customui
+- This is the standard namespace for Excel 2007+ ribbon customization
+- Do NOT change the namespace URL
+
+ASSEMBLY INSTRUCTIONS:
+This XML must be embedded in the XLAM file at the path:
+  customUI/customUI1.xml
+
+This requires manual editing of the XLAM's internal ZIP structure.
+See: FinForge_addin/AddIn_Assembly_Instructions.md for detailed steps.
+
+TESTING:
+After assembly:
+1. Open Excel
+2. File > Options > Trust Center > Trust Center Settings > Trusted Locations
+3. Add the XLAM file's directory as trusted
+4. Enable the add-in (File > Options > Add-ins > Manage Excel Add-ins)
+5. Close and reopen Excel
+6. Look for "FinForge" tab in the ribbon
+7. Click "Dashboard" button to test
+
+TROUBLESHOOTING:
+- Ribbon not showing: Check CustomUI1.xml path in XLAM package (use WinRAR/7-Zip)
+- Button not working: Verify VBA is not in edit mode; check Excel Macro Security
+- Error messages: Enable "Developer" tab for error details in VBA IDE
+- XML syntax error: Validate XML with online validator if ribbon doesn't appear
+
+================================================================================
+-->
+
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="OnRibbonLoad">
+  
+  <ribbon startFromScratch="false">
+    
+    <tabs>
+      
+      <!-- FinForge Tab: Main ribbon tab for the add-in -->
+      <tab id="finforgeTab" label="FinForge">
+        
+        <!-- Main Group: Contains primary controls for FinForge -->
+        <group id="mainGroup" label="Dashboard">
+          
+          <!-- Dashboard Button: Launch portfolio management application -->
+          <button
+              id="dashboardButton"
+              label="Dashboard"
+              imageMso="PowerPointSlideShowFromCurrent"
+              size="large"
+              onAction="LaunchDashboard"
+              screentip="Launch FinForge Dashboard"
+              supertip="Click to open the FinForge portfolio dashboard. This will launch the main application in a new window."
+          />
+          
+        </group>
+        
+        <!-- Info Group: Help and documentation (placeholder for future) -->
+        <group id="infoGroup" label="Help">
+          
+          <!-- Placeholder for future help/documentation button -->
+          <!-- Uncomment below to add Help button in future versions:
+          
+          <button
+              id="helpButton"
+              label="Help"
+              imageMso="Help"
+              size="normal"
+              onAction="ShowHelp"
+              screentip="FinForge Help"
+              supertip="Open FinForge documentation and user guide."
+          />
+          
+          -->
+          
+        </group>
+        
+      </tab>
+      
+    </tabs>
+    
+  </ribbon>
+  
+</customUI>
+
+<!--
+================================================================================
+RIBBON XML ATTRIBUTE REFERENCE
+================================================================================
+
+BUTTON ATTRIBUTES:
+- id: Unique identifier within the ribbon (used in VBA callbacks)
+- label: Text displayed on the button
+- imageMso: Built-in Excel icon ID (e.g., "PowerPointSlideShowFromCurrent")
+  Available icons: https://officeribbonxeditor.codeplex.com/
+- image: Custom image ID (requires manual image embedding)
+- size: "large" (normal icon) or "normal" (smaller icon)
+- onAction: VBA macro name to call when button is clicked
+- screentip: Tooltip text shown on hover
+- supertip: Extended tooltip (multi-line help text)
+- enabled: true/false to enable/disable button at startup
+
+COMMON ICON IDs (imageMso):
+- PowerPointSlideShowFromCurrent: Play icon
+- Help: Question mark icon
+- Refresh: Refresh icon
+- Save: Save icon
+- Open: Open file icon
+- Print: Print icon
+- Settings: Gear icon
+- Calculator: Calculator icon
+- ChartInsertColumn: Chart icon
+
+GROUP ATTRIBUTES:
+- id: Unique identifier for group
+- label: Group label text (shown if label is set)
+
+TAB ATTRIBUTES:
+- id: Unique identifier for tab
+- label: Tab name shown in ribbon
+
+RIBBON ATTRIBUTES:
+- startFromScratch: false = add to existing ribbon; true = replace entire ribbon
+- onLoad: VBA macro called when ribbon initializes
+
+================================================================================
+EXAMPLE: ADDING A SECOND BUTTON
+================================================================================
+
+To add another button to the Dashboard group, add this inside <group id="mainGroup">:
+
+  <button
+      id="refreshButton"
+      label="Refresh Data"
+      imageMso="Refresh"
+      size="large"
+      onAction="RefreshData"
+      screentip="Refresh Stock Data"
+      supertip="Update all stock data from Yahoo Finance."
+  />
+
+Then create the corresponding VBA subroutine in RibbonCallback.vba:
+
+  Sub RefreshData(control As IRibbonControl)
+      ' Your refresh logic here
+  End Sub
+
+================================================================================
+-->

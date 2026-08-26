@@ -1,5 +1,15 @@
 {
   "mode": "balanceSheet",
+  "frequency": "annual",
+  "periods": {
+    "annual": {
+      "AAPL": [],
+      "MSFT": []
+    },
+    "quarterly": {
+      "AAPL": []
+    }
+  },
   "display": {
     "mode": "millions",
     "divisor": 1000000

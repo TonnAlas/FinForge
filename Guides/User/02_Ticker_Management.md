@@ -108,7 +108,7 @@ See [Available Data Reference](Available_Data_Reference.md) for complete field l
 
 ## Where is Ticker Data Stored?
 
-Tickers are saved in: `Ticker_management/tickers.json`
+Tickers are saved in: `data/tickers.json`
 
 ```json
 {

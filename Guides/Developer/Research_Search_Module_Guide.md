@@ -38,31 +38,15 @@ Searches for documents matching the query using DuckDuckGo.
 
 **Raises:** `ImportError` if the `ddgs` package is not installed. `Exception` on network failure.
 
-#### `search_papers_for_ticker(ticker, company_name="", topic="Market Research", max_results=8)`
-
-Convenience function: constructs a query for a stock ticker and topic.
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `ticker` | str | - | Stock ticker (e.g. "AAPL") |
-| `company_name` | str | `""` | Full company name (uses ticker if empty) |
-| `topic` | str | `"Market Research"` | Research category |
-| `max_results` | int | 8 | Max results to return |
-
-**Returns:** Same format as `search_papers()`.
-
 ### Example Usage (Python)
 
 ```python
-from Internal.Research.research_paper_search import search_papers, search_papers_for_ticker
+from Internal.Research.research_paper_search import search_papers
 
 # General search
 results = search_papers("Equity Research Apple", max_results=5)
 for r in results:
     print(r["title"], "-", r["url"])
-
-# Ticker-specific search
-results = search_papers_for_ticker("AAPL", "Apple Inc.", "Valuation Models")
 ```
 
 ### Dependencies

@@ -1,0 +1,48 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const base = import.meta.env.BASE_URL;
+
+const links = [
+  {
+    title: 'Installation',
+    href: `${base}docs/installation/`,
+    text: 'Get FinForge running on your Windows computer in a few minutes.',
+  },
+  {
+    title: 'Features',
+    href: `${base}docs/features/`,
+    text: 'A plain-English tour of everything FinForge can do.',
+  },
+];
+---
+
+<Layout title="Docs - FinForge">
+  <div class="docs-grid">
+    <aside class="docs-sidebar">
+      <a href={`${base}docs/`} class:list={['active']}>Overview</a>
+      <a href={`${base}docs/installation/`}>Installation</a>
+      <a href={`${base}docs/features/`}>Features</a>
+      <a href={`${base}docs/guides/`}>Guides</a>
+      <a href={`${base}docs/disclaimer/`}>Disclaimer</a>
+    </aside>
+    <div class="docs-content">
+      <h1>Welcome</h1>
+      <p>
+        FinForge is a stock analysis app for Windows that brings live market data, an
+        easy-to-use desktop workspace, and a familiar Excel dashboard together in one
+        place. You do not need to write code or build formulas by hand - FinForge handles
+        the data while you focus on the numbers that matter.
+      </p>
+      <h2>Start here</h2>
+      <div class="grid">
+        {links.map((link) => (
+          <article class="card">
+            <h3><a href={link.href}>{link.title}</a></h3>
+            <p>{link.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

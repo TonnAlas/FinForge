@@ -1,0 +1,46 @@
+---
+import { getEntry, render } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import GuidesSidebar from '../../../components/GuidesSidebar.astro';
+import { getGuides } from '../../../lib/guides';
+
+const base = import.meta.env.BASE_URL;
+
+export async function getStaticPaths() {
+  const guides = await getGuides();
+  return guides.map((guide) => ({
+    params: { slug: guide.slug },
+    props: { guide },
+  }));
+}
+
+const { guide } = Astro.props;
+
+const entry = await getEntry('guides', guide.id);
+if (!entry) {
+  throw new Error(`Guide not found: ${guide.id}`);
+}
+const { Content } = await render(entry);
+
+const guides = await getGuides();
+const index = guides.findIndex((item) => item.id === guide.id);
+const prev = index > 0 ? guides[index - 1] : null;
+const next = index < guides.length - 1 ? guides[index + 1] : null;
+---
+
+<Layout title={`${guide.title} - FinForge`}>
+  <div class="docs-grid">
+    <GuidesSidebar currentSlug={guide.slug} />
+    <div class="docs-content">
+      <Content />
+      <nav class="guide-pager" aria-label="Guide navigation">
+        {prev && (
+          <a class="button button-secondary" href={`${base}docs/guides/${prev.slug}/`}>Previous: {prev.title}</a>
+        )}
+        {next && (
+          <a class="button button-secondary" href={`${base}docs/guides/${next.slug}/`}>Next: {next.title}</a>
+        )}
+      </nav>
+    </div>
+  </div>
+</Layout>

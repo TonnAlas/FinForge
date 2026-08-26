@@ -12,12 +12,18 @@ import pandas as pd
 from datetime import datetime, timedelta
 import xlwings as xw
 
+# Make the repo root importable so the shared formula engine can be imported
+# even when this module is launched standalone (`python Importing/ratio_maker.py`).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from Internal.Ratios.formula_resolver import eval_ast, parse_formula_ast, resolve_latest
+
 # Configuration
 CONFIG_FILE = Path(__file__).parent / "ratio_config.json"
 DATA_DIR = Path(__file__).parent.parent / "data"
 FUNDAMENTALS_DIR = DATA_DIR / "fundamentals"
 PRICES_DIR = DATA_DIR / "prices"
-TICKERS_FILE = Path(__file__).parent.parent / "Ticker_management" / "tickers.json"
+TICKERS_FILE = Path(__file__).parent.parent / "data" / "tickers.json"
 
 
 class FormulaHighlighter(QSyntaxHighlighter):
@@ -121,7 +127,7 @@ class FormulaHighlighter(QSyntaxHighlighter):
                         format_to_use = self.balance_sheet_format
                     elif field.startswith('IS:'):
                         format_to_use = self.income_statement_format
-                    elif field.startswith('RATIO:'):
+                    elif field.startswith('METRIC:') or field.startswith('RATIO:'):
                         format_to_use = self.ratio_format
                     else:
                         continue  # Unknown prefix, skip
@@ -186,7 +192,7 @@ class FormulaHighlighter(QSyntaxHighlighter):
                     re.fullmatch(r'[=+\-*/(),]', token) or
                     re.fullmatch(r'\d+\.?\d*', token) or
                     re.fullmatch(r'(AVERAGE|SUM|MAX|MIN|MEDIAN|STDEV|VAR|COUNT|GROWTH_RATE)', token, re.IGNORECASE) or
-                    token in ['P:', 'IS:', 'BS:', 'RATIO:'] or  # Prefixes alone
+                    token in ['P:', 'IS:', 'BS:', 'RATIO:', 'METRIC:'] or  # Prefixes alone
                     re.match(r'[\[\]-]', token) or  # Brackets and dashes used in date references
                     re.match(r'\d+[DWM]', token)  # Rolling date suffixes like 15D, 3W, 2M
                 )
@@ -200,231 +206,8 @@ class FormulaHighlighter(QSyntaxHighlighter):
 # Configuration
 CONFIG_FILE = Path(__file__).parent / "ratio_config.json"
 DASHBOARD_PATH = Path(__file__).parent.parent / "FinForge.xlsm"
-RATIO_SHEET_NAME = "Ratios"
-
-class AdvancedFunctionDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.init_ui()
-        
-    def init_ui(self):
-        self.setWindowTitle('Advanced Functions')
-        self.setMinimumSize(500, 400)
-        
-        # Apply dark theme styling
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #121212;
-                color: #E0E0E0;
-            }
-            QLabel {
-                color: #E0E0E0;
-                font-size: 12px;
-                font-weight: bold;
-                margin: 3px;
-            }
-            QComboBox, QLineEdit, QSpinBox {
-                background-color: #1E1E1E;
-                color: #E0E0E0;
-                border: 1px solid #2C2C2C;
-                border-radius: 6px;
-                padding: 8px;
-                font-size: 11px;
-                margin: 2px;
-                min-width: 120px;
-            }
-            QComboBox:focus, QLineEdit:focus, QSpinBox:focus {
-                border-color: #29B6F6;
-            }
-            QPushButton {
-                background-color: #1E1E1E;
-                color: #E0E0E0;
-                border: 1px solid #29B6F6;
-                padding: 8px;
-                font-size: 11px;
-                font-weight: bold;
-                border-radius: 6px;
-                margin: 2px;
-                min-height: 20px;
-            }
-            QPushButton:hover {
-                background-color: #2C2C2C;
-                border-color: #1E88E5;
-            }
-            QPushButton:pressed {
-                background-color: #29B6F6;
-                border-color: #1565C0;
-            }
-            QTextEdit {
-                background-color: #1E1E1E;
-                color: #E0E0E0;
-                border: 1px solid #2C2C2C;
-                border-radius: 6px;
-                padding: 8px;
-                font-size: 11px;
-                margin: 2px;
-            }
-            QTextEdit:focus {
-                border-color: #29B6F6;
-            }
-        """)
-        
-        layout = QVBoxLayout()
-        
-        # Function type selection
-        func_layout = QGridLayout()
-        func_layout.addWidget(QLabel('Function Type:'), 0, 0)
-        self.function_combo = QComboBox()
-        self.function_combo.addItems([
-            'AVERAGE (Moving Average)',
-            'SUM',
-            'MAX',
-            'MIN',
-            'MEDIAN',
-            'STDEV (Standard Deviation)',
-            'VAR (Variance)',
-            'COUNT',
-            'GROWTH_RATE'
-        ])
-        func_layout.addWidget(self.function_combo, 0, 1)
-        
-        # Data source selection
-        func_layout.addWidget(QLabel('Data Source:'), 1, 0)
-        self.data_source_combo = QComboBox()
-        self.data_source_combo.addItems([
-            'Financial Statement Item',
-            'Stock Price',
-            'Custom Formula'
-        ])
-        self.data_source_combo.currentTextChanged.connect(self.on_data_source_changed)
-        func_layout.addWidget(self.data_source_combo, 1, 1)
-        
-        # Financial statement field (hidden initially)
-        self.fs_label = QLabel('Financial Item:')
-        func_layout.addWidget(self.fs_label, 2, 0)
-        self.fs_combo = QComboBox()
-        self.fs_combo.setEditable(True)
-        # Add common financial statement items
-        fs_items = [
-            'IS: Revenue', 'IS: Net Income', 'IS: Operating Income', 'IS: EBITDA',
-            'BS: Total Assets', 'BS: Total Equity', 'BS: Total Debt', 'BS: Cash'
-        ]
-        self.fs_combo.addItems(fs_items)
-        func_layout.addWidget(self.fs_combo, 2, 1)
-        
-        # Stock price type (hidden initially)
-        self.price_label = QLabel('Price Type:')
-        func_layout.addWidget(self.price_label, 3, 0)
-        self.price_combo = QComboBox()
-        self.price_combo.addItems([
-            'Closing Price',
-            'Opening Price', 
-            'High Price',
-            'Low Price',
-            'Volume',
-            'Adjusted Close'
-        ])
-        func_layout.addWidget(self.price_combo, 3, 1)
-        
-        # Hide price controls initially
-        self.price_label.hide()
-        self.price_combo.hide()
-        
-        # Period/Lookback
-        func_layout.addWidget(QLabel('Period/Lookback:'), 4, 0)
-        self.period_spin = QSpinBox()
-        self.period_spin.setMinimum(1)
-        self.period_spin.setMaximum(1000)
-        self.period_spin.setValue(50)  # Default for MA50
-        func_layout.addWidget(self.period_spin, 4, 1)
-        
-        layout.addLayout(func_layout)
-        
-        # Preview section
-        layout.addWidget(QLabel('Function Preview:'))
-        self.preview_text = QTextEdit()
-        self.preview_text.setMaximumHeight(60)
-        self.preview_text.setReadOnly(True)
-        layout.addWidget(self.preview_text)
-        
-        # Update preview when selections change
-        self.function_combo.currentTextChanged.connect(self.update_preview)
-        self.data_source_combo.currentTextChanged.connect(self.update_preview)
-        self.fs_combo.currentTextChanged.connect(self.update_preview)
-        self.price_combo.currentTextChanged.connect(self.update_preview)
-        self.period_spin.valueChanged.connect(self.update_preview)
-        
-        # Buttons
-        button_layout = QHBoxLayout()
-        self.insert_btn = QPushButton('Insert Function')
-        self.insert_btn.clicked.connect(self.accept)
-        self.cancel_btn = QPushButton('Cancel')
-        self.cancel_btn.clicked.connect(self.reject)
-        button_layout.addWidget(self.insert_btn)
-        button_layout.addWidget(self.cancel_btn)
-        layout.addLayout(button_layout)
-        
-        self.setLayout(layout)
-        self.update_preview()
-    
-    def on_data_source_changed(self):
-        source = self.data_source_combo.currentText()
-        if source == 'Stock Price':
-            self.fs_label.hide()
-            self.fs_combo.hide()
-            self.price_label.show()
-            self.price_combo.show()
-        elif source == 'Financial Statement Item':
-            self.price_label.hide()
-            self.price_combo.hide()
-            self.fs_label.show()
-            self.fs_combo.show()
-        else:  # Custom Formula
-            self.fs_label.hide()
-            self.fs_combo.hide()
-            self.price_label.hide()
-            self.price_combo.hide()
-        self.update_preview()
-    
-    def update_preview(self):
-        func_type = self.function_combo.currentText().split(' ')[0]  # Get function name
-        data_source = self.data_source_combo.currentText()
-        period = self.period_spin.value()
-        
-        if data_source == 'Stock Price':
-            price_type = self.price_combo.currentText()
-            # Add P: prefix for price data
-            preview = f"{func_type}(P: {price_type}, {period} periods)"
-        elif data_source == 'Financial Statement Item':
-            fs_item = self.fs_combo.currentText()
-            # Add IS: prefix for income statement items
-            preview = f"{func_type}(IS: {fs_item}, {period} periods)"
-        else:
-            preview = f"{func_type}(Custom Formula, {period} periods)"
-        
-        self.preview_text.setPlainText(preview)
-    
-    def get_function_data(self):
-        func_type = self.function_combo.currentText().split(' ')[0]
-        data_source = self.data_source_combo.currentText()
-        period = self.period_spin.value()
-        
-        if data_source == 'Stock Price':
-            data_field = self.price_combo.currentText()
-            formula = f"{func_type}(P: {data_field}, {period} periods)"
-        elif data_source == 'Financial Statement Item':
-            data_field = self.fs_combo.currentText()
-            formula = f"{func_type}(IS: {data_field}, {period} periods)"
-        else:
-            formula = self.preview_text.toPlainText()
-        
-        return {
-            'function': func_type,
-            'data_source': data_source,
-            'data_field': data_field if data_source != 'Custom Formula' else "CUSTOM",
-            'period': period,
-            'formula': formula
-        }
+METRICS_SHEET_NAME = "Metrics"          # canonical sheet name (renamed from "Ratios")
+LEGACY_RATIOS_SHEET_NAME = "Ratios"     # pre-rename sheet name, kept for backward compatibility
 
 class StockPriceDialog(QDialog):
     def __init__(self, parent=None):
@@ -931,31 +714,6 @@ class FormulaBuilderDialog(QDialog):
         
         layout.addLayout(op_layout)
         
-        # Advanced Functions button - DISABLED for future implementation
-        advanced_layout = QHBoxLayout()
-        self.advanced_btn = QPushButton('📊 Advanced Functions (Coming Soon)')
-        self.advanced_btn.setEnabled(False)  # Disable button
-        self.advanced_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #1E1E1E;
-                color: #999999;
-                border: 1px solid #666666;
-                padding: 10px;
-                font-size: 11px;
-                font-weight: bold;
-                border-radius: 6px;
-                margin: 2px;
-                min-height: 25px;
-            }
-            QPushButton:disabled {
-                background-color: #1E1E1E;
-                color: #666666;
-                border: 1px solid #444444;
-            }
-        """)
-        advanced_layout.addWidget(self.advanced_btn)
-        layout.addLayout(advanced_layout)
-        
         # Color legend
         legend_layout = QHBoxLayout()
         legend_layout.addWidget(QLabel('Color Legend:'))
@@ -1106,16 +864,6 @@ class FormulaBuilderDialog(QDialog):
         cursor.insertText(f"{op} " if op != '(' else op)
         self.formula_preview.setTextCursor(cursor)
     
-    def show_advanced_functions(self):
-        dialog = AdvancedFunctionDialog(self)
-        if dialog.exec():
-            func_data = dialog.get_function_data()
-            # Insert the function formula into the preview
-            current_text = self.formula_preview.toPlainText()
-            if current_text and not current_text.endswith((' ', '(', '+', '-', '*', '/')):
-                self.formula_preview.append(' ')
-            self.formula_preview.append(func_data['formula'])
-    
     def show_notes_dialog(self):
         """Show the notes dialog for this ratio"""
         dialog = NotesDialog(self, self.notes)
@@ -1128,6 +876,41 @@ class FormulaBuilderDialog(QDialog):
             'formula': self.formula_preview.toPlainText().strip(),
             'notes': self.notes
         }
+
+
+def _evaluate_formula_latest(ticker, formula, ratios_config, cache, depth=0):
+    """Evaluate a formula to its latest value for one ticker.
+
+    Uses the shared formula engine (the same parser and resolver that the
+    Metrics sheet and the charts/ranking engine use) so every calculation
+    surface produces identical values. RATIO:/METRIC: references are resolved
+    recursively from ``ratios_config`` with a cycle guard.
+    """
+    if depth > 10:
+        return None
+
+    formula = (formula or '').strip()
+    if formula.startswith('='):
+        formula = formula[1:].strip()
+
+    ast = parse_formula_ast(formula)
+    if ast is None:
+        return None
+
+    def resolve(sheet, item):
+        sheet_upper = (sheet or '').upper()
+        if sheet_upper in ('RATIO', 'METRIC'):
+            metric_data = ratios_config.get((item or '').strip())
+            if not metric_data:
+                return None
+            ref_formula = metric_data if isinstance(metric_data, str) else metric_data.get('formula', '')
+            if not ref_formula:
+                return None
+            return _evaluate_formula_latest(ticker, ref_formula, ratios_config, cache, depth + 1)
+        return resolve_latest(ticker, sheet_upper, item, cache)
+
+    return eval_ast(ast, resolve)
+
 
 class RatioMaker(QMainWindow):
     def __init__(self):
@@ -1390,11 +1173,13 @@ class RatioMaker(QMainWindow):
             ]
             fields.extend(price_fields)
             
-            # Add existing ratios with RATIO: prefix so they can be used in formulas
+            # Add existing metrics with METRIC: prefix so they can be used in formulas.
+            # RATIO: is kept as a legacy alias so previously saved formulas still highlight.
             if hasattr(self, 'ratios') and self.ratios:
                 for ratio_name in self.ratios.keys():
+                    fields.append(f"METRIC: {ratio_name}")
                     fields.append(f"RATIO: {ratio_name}")
-                print(f"Added {len(self.ratios)} existing ratios as available fields")
+                print(f"Added {len(self.ratios)} existing metrics as available fields")
             
             return sorted(fields)
         except Exception as e:
@@ -1714,7 +1499,7 @@ class RatioMaker(QMainWindow):
                 self.update_ratios_display()
     
     def _update_excel_ratio_name(self, old_name, new_name):
-        """Update ratio name in Excel Ratios sheet when a ratio is renamed"""
+        """Update metric name in Excel Metrics sheet when a metric is renamed"""
         try:
             # Try to connect to Excel
             try:
@@ -1735,11 +1520,17 @@ class RatioMaker(QMainWindow):
                 else:
                     return
             
-            # Get Ratios sheet
+            # Get Metrics sheet (falling back to legacy "Ratios" sheet name)
             try:
-                ws = wb.sheets["Ratios"]
-            except:
-                # No Ratios sheet, nothing to update
+                sheet_names = [s.name for s in wb.sheets]
+                if METRICS_SHEET_NAME in sheet_names:
+                    ws = wb.sheets[METRICS_SHEET_NAME]
+                elif LEGACY_RATIOS_SHEET_NAME in sheet_names:
+                    ws = wb.sheets[LEGACY_RATIOS_SHEET_NAME]
+                else:
+                    # No Metrics sheet, nothing to update
+                    return
+            except Exception:
                 return
             
             # Search row 4 for the old ratio name and replace with new name
@@ -1803,137 +1594,27 @@ class RatioMaker(QMainWindow):
             
             print(f"Found {len(tickers)} tickers: {', '.join(tickers[:5])}{'...' if len(tickers) > 5 else ''}")
             
-            # Load parquet data (supports new per-ticker structure)
-            print("\nLoading parquet data...")
-            
-            # Load income statement data
-            is_df = self._load_fundamentals_data("income_statement")
-            
-            # Load balance sheet data
-            bs_df = self._load_fundamentals_data("balance_sheet")
-            
-            if is_df is None and bs_df is None:
-                print("No fundamental data found")
-                return
-            
-            print(f"Loaded income statement: {is_df.shape if is_df is not None else 'N/A'}")
-            print(f"Loaded balance sheet: {bs_df.shape if bs_df is not None else 'N/A'}")
-            
-            # Build data dictionary for each ticker
-            data = {}
-            fields = self.get_available_fields()
-            
+            # Evaluate every ratio for every ticker using the shared formula
+            # engine (the same parser and resolver used by the Metrics sheet
+            # and the charts/ranking engine), so all calculation surfaces agree
+            # and no user-supplied formula is ever passed to eval().
+            ratio_names = list(self.ratios.keys())
+            results = {}
+            cache = {}
+            print(f"\nCalculating {len(ratio_names)} ratios...")
+
             for ticker in tickers:
-                ticker_data = {}
-                
-                # Get income statement data for this ticker
-                if is_df is not None:
-                    ticker_is = is_df[is_df['ticker'].str.upper() == ticker.upper()]
-                    for _, row in ticker_is.iterrows():
-                        field_name = f"IS: {row['index']}"
-                        # Get most recent non-null value
-                        date_cols = [col for col in ticker_is.columns if col not in ['index', 'ticker', 'last_updated']]
-                        for col in date_cols:
-                            value = row[col]
-                            if pd.notna(value):
-                                try:
-                                    ticker_data[field_name] = float(value)
-                                    break
-                                except (ValueError, TypeError):
-                                    continue
-                
-                # Get balance sheet data for this ticker
-                if bs_df is not None:
-                    ticker_bs = bs_df[bs_df['ticker'].str.upper() == ticker.upper()]
-                    for _, row in ticker_bs.iterrows():
-                        field_name = f"BS: {row['index']}"
-                        # Get most recent non-null value
-                        date_cols = [col for col in ticker_bs.columns if col not in ['index', 'ticker', 'last_updated']]
-                        for col in date_cols:
-                            value = row[col]
-                            if pd.notna(value):
-                                try:
-                                    ticker_data[field_name] = float(value)
-                                    break
-                                except (ValueError, TypeError):
-                                    continue
-                
-                # Get price data for this ticker
-                price_file = PRICES_DIR / f"{ticker}.parquet"
-                if price_file.exists():
-                    price_df = pd.read_parquet(price_file)
-                    if not price_df.empty:
-                        # Get most recent price data (live/intraday, or today's close after hours)
-                        latest = price_df.iloc[-1]
-                        ticker_data['P: Open Price'] = float(latest.get('Open', 0)) if pd.notna(latest.get('Open')) else 0
-                        ticker_data['P: High Price'] = float(latest.get('High', 0)) if pd.notna(latest.get('High')) else 0
-                        ticker_data['P: Low Price'] = float(latest.get('Low', 0)) if pd.notna(latest.get('Low')) else 0
-                        ticker_data['P: Close Price'] = float(latest.get('Close', 0)) if pd.notna(latest.get('Close')) else 0
-                        ticker_data['P: Volume'] = float(latest.get('Volume', 0)) if pd.notna(latest.get('Volume')) else 0
-                        ticker_data['P: Dividends'] = float(latest.get('Dividends', 0)) if pd.notna(latest.get('Dividends')) else 0
-                        
-                        # Get previous completed trading day's close price
-                        if len(price_df) >= 2:
-                            previous = price_df.iloc[-2]
-                            ticker_data['P: Previous Close'] = float(previous.get('Close', 0)) if pd.notna(previous.get('Close')) else 0
-                
-                data[ticker] = ticker_data
-            
-            # Convert to DataFrame
-            df = pd.DataFrame.from_dict(data, orient='index')
-            print(f"\n✓ Created DataFrame with {len(df)} tickers and {len(df.columns)} fields")
-            
-            # Calculate ratios
-            print(f"\n🧮 Calculating {len(self.ratios)} ratios...")
-            for ratio_name, ratio_data in self.ratios.items():
-                try:
-                    # Handle both old format (string) and new format (dict)
-                    if isinstance(ratio_data, str):
-                        formula = ratio_data
-                    else:
-                        formula = ratio_data.get('formula', '')
-                    
-                    # Clean up formula - remove newlines and extra spaces
-                    formula = ' '.join(formula.split())
-                    
-                    # Remove leading '=' if present
-                    if formula.startswith('='):
-                        formula = formula[1:].strip()
-                    
-                    # Replace field names with df column references
-                    py_formula = formula
-                    
-                    # Handle price fields with date references (e.g., P: Close [Q0])
-                    price_pattern = r'P:\s+[A-Za-z0-9\s]+(?: \[[^\]]+\])?'
-                    price_matches = re.findall(price_pattern, py_formula)
-                    
-                    # Replace price fields with date references to base price field
-                    for match in sorted(price_matches, key=len, reverse=True):
-                        # Extract base price type (without date reference)
-                        base_match = re.match(r'(P:\s+[A-Za-z0-9\s]+)', match)
-                        if base_match:
-                            base_field = base_match.group(1).strip()
-                            # Replace the full match with reference to base field
-                            py_formula = py_formula.replace(match, f"df['{base_field}']")
-                    
-                    # Replace remaining standard fields (use actual DataFrame columns)
-                    df_columns = df.columns.tolist()
-                    for field in sorted(df_columns, key=len, reverse=True):
-                        if field in py_formula:
-                            py_formula = py_formula.replace(field, f"df['{field}']")
-                    
-                    # Evaluate formula
-                    df[ratio_name] = eval(py_formula)
-                    print(f"  ✓ {ratio_name}")
-                except Exception as e:
-                    print(f"  ❌ Error calculating {ratio_name}: {e}")
-                    print(f"     Formula: {formula}")
-                    print(f"     Python formula: {py_formula}")
-                    df[ratio_name] = None
-            
+                ticker_key = str(ticker).upper()
+                results[ticker_key] = {}
+                for ratio_name, ratio_data in self.ratios.items():
+                    formula = ratio_data if isinstance(ratio_data, str) else ratio_data.get('formula', '')
+                    results[ticker_key][ratio_name] = _evaluate_formula_latest(
+                        ticker_key, formula, self.ratios, cache
+                    )
+                print(f"  OK {ticker_key}")
+
             # Prepare results
-            ratio_columns = list(self.ratios.keys())
-            result_df = df[ratio_columns].copy()
+            result_df = pd.DataFrame.from_dict(results, orient='index')
             result_df.index.name = 'ticker'
             
             # Add timestamp
@@ -1987,12 +1668,15 @@ class RatioMaker(QMainWindow):
                         return
                     wb = xw.Book(str(excel_file))
 
-            # Check if 'Ratios' sheet exists
-            if 'Ratios' not in [s.name for s in wb.sheets]:
-                print("  'Ratios' sheet not found in Excel")
+            # Check if the Metrics sheet exists (fall back to legacy 'Ratios' sheet name)
+            sheet_names = [s.name for s in wb.sheets]
+            if METRICS_SHEET_NAME in sheet_names:
+                ws = wb.sheets[METRICS_SHEET_NAME]
+            elif LEGACY_RATIOS_SHEET_NAME in sheet_names:
+                ws = wb.sheets[LEGACY_RATIOS_SHEET_NAME]
+            else:
+                print(f"  '{METRICS_SHEET_NAME}' sheet not found in Excel")
                 return
-
-            ws = wb.sheets['Ratios']
             data_start_row = 7
 
             # ── Read tickers from Row 4 (columns B-Z) ──

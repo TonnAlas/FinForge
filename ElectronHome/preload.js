@@ -17,6 +17,9 @@ contextBridge.exposeInMainWorld('finforge', {
   loadCompanyProfile(ticker) {
     return ipcRenderer.invoke('finforge:loadCompanyProfile', ticker);
   },
+  loadCompanyReports(ticker, refresh) {
+    return ipcRenderer.invoke('finforge:loadCompanyReports', ticker, refresh);
+  },
   loadStatementSettings() {
     return ipcRenderer.invoke('finforge:loadStatementSettings');
   },
@@ -26,6 +29,9 @@ contextBridge.exposeInMainWorld('finforge', {
   importStatement(scope) {
     return ipcRenderer.invoke('finforge:importStatement', scope);
   },
+  getStatementPeriods(frequency, tickers) {
+    return ipcRenderer.invoke('finforge:getStatementPeriods', frequency, tickers);
+  },
   refreshRatiosSheet() {
     return ipcRenderer.invoke('finforge:refreshRatiosSheet');
   },
@@ -34,6 +40,12 @@ contextBridge.exposeInMainWorld('finforge', {
   },
   saveRatios(ratios) {
     return ipcRenderer.invoke('finforge:saveRatios', ratios);
+  },
+  loadFolders() {
+    return ipcRenderer.invoke('finforge:loadFolders');
+  },
+  saveFolders(folders) {
+    return ipcRenderer.invoke('finforge:saveFolders', folders);
   },
   loadSheetRatios() {
     return ipcRenderer.invoke('finforge:loadSheetRatios');
@@ -98,6 +110,14 @@ contextBridge.exposeInMainWorld('finforge', {
     return ipcRenderer.invoke('finforge:openExternalUrl', url);
   },
 
+  // ── Home Tab ──
+  loadHomeState() {
+    return ipcRenderer.invoke('finforge:loadHomeState');
+  },
+  setLastDataFetch(timestamp) {
+    return ipcRenderer.invoke('finforge:setLastDataFetch', timestamp);
+  },
+
   // ── Research Paper Search ──
   searchResearchPapers(query, source) {
     return ipcRenderer.invoke('finforge:searchResearchPapers', query, source);
@@ -118,5 +138,26 @@ contextBridge.exposeInMainWorld('finforge', {
   },
   checkAllTickersDataStatus(tickers) {
     return ipcRenderer.invoke('finforge:checkAllTickersDataStatus', tickers);
+  },
+
+  // ── Visualize: Metric History ──
+  computeMetricHistory(payload) {
+    return ipcRenderer.invoke('finforge:computeMetricHistory', payload);
+  },
+
+  // ── Export Ratios Time Series ──
+  exportRatiosTimeseries(payload) {
+    return ipcRenderer.invoke('finforge:exportRatiosTimeseries', payload);
+  },
+
+  // ── Ranking ──
+  computeRanking(payload) {
+    return ipcRenderer.invoke('finforge:computeRanking', payload);
+  },
+  loadRankingPresets() {
+    return ipcRenderer.invoke('finforge:loadRankingPresets');
+  },
+  saveRankingPresets(presets) {
+    return ipcRenderer.invoke('finforge:saveRankingPresets', presets);
   },
 });

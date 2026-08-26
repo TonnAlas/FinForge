@@ -37,6 +37,7 @@ import os
 import subprocess
 import datetime
 import json
+import re
 import requests
 from pathlib import Path
 from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
@@ -48,7 +49,12 @@ from PySide6.QtGui import QFont, QIcon
 # Add the parent directory to path to import ticker_manager
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from Ticker_management.ticker_manager import TickerManager
-from data_management.stock_data_manager import StockDataManager, convert_fundamental_wide_to_long
+from data_management.stock_data_manager import StockDataManager
+
+
+def _is_valid_ticker(ticker):
+    """Return True for a plausible ticker symbol (letters, digits, dot, hyphen)."""
+    return bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.\-]{0,11}", ticker or ""))
 
 
 class DataFetchWorker(QThread):
@@ -62,90 +68,19 @@ class DataFetchWorker(QThread):
         self.data_manager = data_manager
     
     def run(self):
-        """Fetch all data for a single ticker and save to parquet"""
+        """Fetch all data for a single ticker via the shared fetcher and save to parquet."""
         try:
-            import yfinance as yf
-            import pandas as pd
             from datetime import datetime, timedelta
-            
+            from Internal.ticker_management.fetch_stocks import fetch_ticker_data
+
             self.progress.emit(f"Fetching data for {self.ticker}...")
-            
-            stock = yf.Ticker(self.ticker)
-            
-            # Date range for historical data
+
             end_date = datetime.today().date()
-            start_date = end_date - timedelta(days=365)
-            
-            def prepare_df(df):
-                """Prepare DataFrame for storage"""
-                if df is None or df.empty:
-                    return pd.DataFrame()
-                df = df.copy()
-                if isinstance(df.index, pd.DatetimeIndex):
-                    df.index = df.index.tz_localize(None)
-                df.reset_index(inplace=True)
-                return df
-            
-            # 1. Historical Data
-            hist = stock.history(start=start_date, end=end_date)
-            if not hist.empty:
-                hist = prepare_df(hist)
-                self.data_manager.save_stock_prices(self.ticker, hist)
-            
-            # 2. Income Statement
-            income = prepare_df(stock.income_stmt)
-            if not income.empty:
-                self.data_manager.save_fundamental_data(self.ticker, 'income_statement', income)
-                income_long = convert_fundamental_wide_to_long(income)
-                if not income_long.empty:
-                    self.data_manager.save_fundamental_data(self.ticker, 'income_statement_long', income_long)
-            
-            # 3. Balance Sheet
-            balance = prepare_df(stock.balance_sheet)
-            if not balance.empty:
-                self.data_manager.save_fundamental_data(self.ticker, 'balance_sheet', balance)
-                balance_long = convert_fundamental_wide_to_long(balance)
-                if not balance_long.empty:
-                    self.data_manager.save_fundamental_data(self.ticker, 'balance_sheet_long', balance_long)
-            
-            # 4. Cash Flow
-            cashflow = prepare_df(stock.cashflow)
-            if not cashflow.empty:
-                self.data_manager.save_fundamental_data(self.ticker, 'cash_flow', cashflow)
-            
-            # 5. Major Holders
-            major_holders = prepare_df(stock.major_holders)
-            if not major_holders.empty:
-                self.data_manager.save_holders_data(self.ticker, 'major_holders', major_holders)
-            
-            # 6. Institutional Holders
-            institutional_holders = prepare_df(stock.institutional_holders)
-            if not institutional_holders.empty:
-                self.data_manager.save_holders_data(self.ticker, 'institutional_holders', institutional_holders)
-            
-            # 7. Mutual Fund Holders
-            mutualfund_holders = prepare_df(stock.mutualfund_holders)
-            if not mutualfund_holders.empty:
-                self.data_manager.save_holders_data(self.ticker, 'mutualfund_holders', mutualfund_holders)
-            
-            # 8. Recommendations
-            recommendations = prepare_df(stock.recommendations)
-            if not recommendations.empty:
-                self.data_manager.save_fundamental_data(self.ticker, 'recommendations', recommendations)
-            
-            # 9. Calendar
-            cal = stock.calendar
-            if isinstance(cal, pd.DataFrame) and not cal.empty:
-                cal = prepare_df(cal)
-                self.data_manager.save_fundamental_data(self.ticker, 'calendar', cal)
-            
-            # 10. Info (full metadata)
-            info = stock.info
-            if info and isinstance(info, dict):
-                self.data_manager.save_metadata(self.ticker, info)
-            
+            start_date = end_date - timedelta(days=365 * 5)
+            fetch_ticker_data(self.ticker, self.data_manager, start_date, end_date)
+
             self.finished.emit(self.ticker, True, f"Data saved for {self.ticker}")
-            
+
         except Exception as e:
             self.finished.emit(self.ticker, False, f"Error fetching {self.ticker}: {str(e)}")
 
@@ -353,8 +288,8 @@ class TickerItemWidget(QWidget):
         if ok and new_ticker.strip():
             new_ticker = new_ticker.strip().upper()
             
-            if not new_ticker.isalpha() or len(new_ticker) > 5:
-                QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-5 letters only.")
+            if not _is_valid_ticker(new_ticker):
+                QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-12 characters (letters, digits, '.', '-').")
                 return
             
             # Check if new ticker already exists
@@ -392,9 +327,9 @@ class StockLauncher(TickerManager):
         # Initialize the QMainWindow first
         QMainWindow.__init__(self)
         
-        # Set up the tickers file path (go back to main Stocks directory)
+        # Set up the tickers file path (single source of truth in data/)
         main_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        self.tickers_file = os.path.join(main_dir, 'Ticker_management', 'tickers.json')
+        self.tickers_file = os.path.join(main_dir, 'data', 'tickers.json')
         
         # Initialize the data manager for fetching stock data to parquet
         self.data_manager = StockDataManager(base_path=os.path.join(main_dir, 'data'))
@@ -934,8 +869,8 @@ class StockLauncher(TickerManager):
             QMessageBox.warning(self, "Invalid Input", "Please enter a ticker symbol.")
             return
         
-        if not ticker.isalpha() or len(ticker) > 5:
-            QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-5 letters only.")
+        if not _is_valid_ticker(ticker):
+            QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-12 characters (letters, digits, '.', '-').")
             return
         
         # Check if ticker already exists
@@ -983,8 +918,8 @@ class StockLauncher(TickerManager):
             if ok and new_ticker.strip():
                 new_ticker = new_ticker.strip().upper()
                 
-                if not new_ticker.isalpha() or len(new_ticker) > 5:
-                    QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-5 letters only.")
+                if not _is_valid_ticker(new_ticker):
+                    QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-12 characters (letters, digits, '.', '-').")
                     return
                 
                 # Check if new ticker already exists

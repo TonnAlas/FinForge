@@ -69,7 +69,7 @@ Responsibilities:
 Responsibilities:
 
 - Keep the main import/ratio workspace independent from launcher UI.
-- Start on statement import page when main workspace opens.
+- Start on the Home tab when the main workspace opens.
 
 ## Inputs and Outputs
 

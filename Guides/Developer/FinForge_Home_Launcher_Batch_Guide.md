@@ -9,12 +9,12 @@ This guide documents the launcher chain used to open the Electron-based FinForge
 The batch files are now the entry point for both desktop launches and ribbon-driven launches.
 
 - `launch_finforge.bat` handles diagnostics and optional xlwings configuration, then forwards to Electron.
-- `Internal/launch/launch_finforge_home.bat` starts the Electron runtime.
+- `Internal/launch/launch_finforge_terminal.bat` starts the Electron runtime.
 
 ## File
 
 - [launch_finforge.bat](../../launch_finforge.bat)
-- [launch_finforge_home.bat](../../Internal/launch/launch_finforge_home.bat)
+- [launch_finforge_terminal.bat](../../Internal/launch/launch_finforge_terminal.bat)
 
 ## Behavior
 
@@ -24,9 +24,9 @@ When `launch_finforge.bat` is executed, it:
 2. Creates a temporary diagnostics log in `Temporary/`
 3. Activates the virtual environment if it exists
 4. Refreshes xlwings configuration when possible
-5. Calls `Internal/launch/launch_finforge_home.bat`
+5. Calls `Internal/launch/launch_finforge_launcher.bat`
 
-When `launch_finforge_home.bat` is executed, it:
+When `launch_finforge_terminal.bat` is executed, it:
 
 1. Resolves the project root
 2. Writes launcher diagnostics
@@ -43,7 +43,7 @@ When `launch_finforge_home.bat` is executed, it:
 
 - a new Electron-based FinForge home window
 - JavaScript launcher home page (terminal-style actions)
-- a diagnostics log at `Temporary/launch_home_diagnostics.log`
+- a diagnostics log at `Temporary/launch_terminal_diagnostics.log`
 - a warning message if Electron is not installed
 
 ## Environment Requirements
@@ -69,7 +69,7 @@ launch_finforge.bat
 or:
 
 ```bat
-Internal/launch/launch_finforge_home.bat
+Internal/launch/launch_finforge_terminal.bat
 ```
 
 From VBA, the ribbon callback now starts it through a hidden `WScript.Shell.Run` call so no console window stays open.

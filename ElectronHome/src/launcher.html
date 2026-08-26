@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>FinForge Launcher</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<script src="./vendor/tailwind.launcher.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
   tailwind.config = {
@@ -115,14 +115,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: #adc6ff;
     margin-bottom: 12px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 18px;
+    font-size: 28px;
     font-weight: 700;
-    color: #002e6a;
+    color: #adc6ff;
   }
   .login-brand h1 {
     font-family: 'JetBrains Mono', monospace;
@@ -375,7 +372,7 @@
     <div class="login-card pointer-events-auto scalable">
       <!-- Brand -->
       <div class="login-brand">
-        <div class="brand-icon">FF</div>
+        <div class="brand-icon">&gt;ƒ</div>
         <h1>FinForge</h1>
         <p>System launcher</p>
       </div>
@@ -423,7 +420,7 @@
   </div>
 
   <!-- Footer -->
-  <div class="footer-copy">&copy; 2026 FinForge. All rights reserved.</div>
+  <div class="footer-copy">&copy; FinForge</div>
 
   <script src="./launcher_renderer.js"></script>
 </body>

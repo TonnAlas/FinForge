@@ -6,7 +6,7 @@ from pathlib import Path
 TEMPLATE_PATH = Path(__file__).parent / "Template.xlsm"
 
 # Expected sheets in the workbook
-REQUIRED_SHEETS = ["balance sheets", "income statements", "cash flow", "Ratios", "Settings"]
+REQUIRED_SHEETS = ["balance sheets", "income statements", "cash flow", "Metrics", "Settings"]
 
 
 def get_main_workbook_path():
@@ -42,7 +42,11 @@ def restore_missing_sheets(wb=None):
     
     # Get list of existing sheet names
     existing_sheets = [sheet.name for sheet in wb.sheets]
-    missing_sheets = [s for s in REQUIRED_SHEETS if s not in existing_sheets]
+    existing_names = set(existing_sheets)
+    # Backward compatibility: a legacy "Ratios" sheet satisfies the "Metrics" requirement
+    if "Ratios" in existing_names:
+        existing_names.add("Metrics")
+    missing_sheets = [s for s in REQUIRED_SHEETS if s not in existing_names]
     
     if not missing_sheets:
         print("All required sheets are present")
@@ -60,8 +64,17 @@ def restore_missing_sheets(wb=None):
     try:
         for sheet_name in missing_sheets:
             try:
+                # Backward compatibility: if the template only has the legacy
+                # "Ratios" sheet, restore from it and rename to "Metrics".
+                template_sheet_name = sheet_name
+                if (
+                    sheet_name == "Metrics"
+                    and "Ratios" in [s.name for s in template_wb.sheets]
+                ):
+                    template_sheet_name = "Ratios"
+
                 # Get the sheet from template
-                template_sheet = template_wb.sheets[sheet_name]
+                template_sheet = template_wb.sheets[template_sheet_name]
                 
                 # Copy the sheet to the target workbook
                 template_sheet.api.Copy(Before=wb.sheets[0].api)

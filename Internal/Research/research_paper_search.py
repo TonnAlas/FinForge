@@ -10,7 +10,7 @@ DuckDuckGo is tried first (no server needed), with Google/Whoogle as fallback.
 
 Usage:
     from Internal.Research.research_paper_search import (
-        search_papers, search_papers_google, search_papers_for_ticker
+        search_papers, search_papers_google
     )
 
     # DuckDuckGo (default, works out of the box)
@@ -256,37 +256,6 @@ def search_papers_google(query: str, max_results: int = 10) -> list[dict]:
     # Sort: PDFs first, then the rest
     google_results.sort(key=lambda r: (0 if r["is_pdf"] else 1, r["title"].lower()))
     return google_results[:capped_results]
-
-
-# ── Ticker Convenience ─────────────────────────────────────────────────────────
-
-def search_papers_for_ticker(
-    ticker: str,
-    company_name: str = "",
-    topic: str = "Market Research",
-    max_results: int = 8,
-    source: str = "duckduckgo",
-) -> list[dict]:
-    """
-    Convenience function: search for PDF research papers about a stock ticker.
-
-    Args:
-        ticker: Stock ticker symbol (e.g. "AAPL")
-        company_name: Full company name (uses ticker if empty)
-        topic: Research category (e.g. "Equity Research")
-        max_results: Max results to return
-        source: "duckduckgo" (default) or "google"
-
-    Returns:
-        Same format as search_papers() / search_papers_google()
-    """
-    name = company_name or ticker
-    query = f"{topic} {name}"
-
-    if source == "google":
-        return search_papers_google(query + " filetype:pdf", max_results=max_results)
-
-    return search_papers(query, max_results=max_results)
 
 
 if __name__ == "__main__":

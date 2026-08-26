@@ -31,27 +31,9 @@ xlwings ServerAddin configuration for standalone use. See setup documentation
 for installation instructions.
 """
 
-import xlwings as xw
-import sys
 import os
 import subprocess
 from pathlib import Path
-
-
-def main():
-    """
-    Legacy function for testing xlwings connection.
-    Can be used to verify add-in is properly configured.
-    """
-    try:
-        wb = xw.Book.caller()
-        sheet = wb.sheets[0]
-        if sheet["A1"].value == "Hello xlwings!":
-            sheet["A1"].value = "Bye xlwings!"
-        else:
-            sheet["A1"].value = "Hello xlwings!"
-    except Exception as e:
-        print(f"Error in main: {e}")
 
 
 def launch_home_window():
@@ -121,21 +103,3 @@ def launch_home_window():
             "success": False,
             "message": f"Unexpected error: {type(e).__name__}: {e}\n\nPlease check your FinForge installation."
         }
-
-
-def launch_dashboard():
-    """Backward-compatible alias for older ribbon or macro hooks."""
-    return launch_home_window()
-
-
-@xw.func
-def hello(name):
-    """
-    Simple test function to verify xlwings connectivity.
-    """
-    return f"Hello {name}!"
-
-
-if __name__ == "__main__":
-    xw.Book("FinForge_addin.xlsm").set_mock_caller()
-    main()

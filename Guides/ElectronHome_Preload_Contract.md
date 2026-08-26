@@ -93,6 +93,20 @@ The bridge registers `window.finforge` with these members:
 
 ---
 
+### Home Tab
+
+#### `loadHomeState()`
+- Input: none
+- Output: `{ ok: boolean, activeTemplateId: string, activeTemplateName: string, lastDataFetch: string | null }`
+- Behavior: reads `data/home_state.json` and resolves the active template display name. Falls back to the first template when the stored ID no longer exists.
+
+#### `setLastDataFetch(timestamp)`
+- Input: `timestamp` — string ISO timestamp.
+- Output: `{ ok: boolean, lastDataFetch: string }`
+- Behavior: persists the timestamp to `data/home_state.json`.
+
+---
+
 ### Statement Import
 
 #### `importStatement(scope)`

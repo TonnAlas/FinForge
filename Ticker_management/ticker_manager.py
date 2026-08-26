@@ -33,16 +33,43 @@ RELATED FILES:
 import sys
 import os
 import json
+import re
 from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
                                QWidget, QPushButton, QLineEdit, QListWidget, QLabel, 
                                QMessageBox, QInputDialog, QListWidgetItem)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QFont
+
+# Make the repo root importable so the data fetcher can be imported from here.
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), '..')))
+
+
+def _is_valid_ticker(ticker):
+    """Return True for a plausible ticker symbol (letters, digits, dot, hyphen)."""
+    return bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.\-]{0,11}", ticker or ""))
+
+
+class _FetchWorker(QThread):
+    """Fetch data for every ticker off the UI thread so the window stays responsive."""
+
+    finished = Signal(bool, str)
+
+    def run(self):
+        try:
+            import Internal.ticker_management.fetch_stocks as fetch_stocks
+            fetch_stocks.main()
+            self.finished.emit(True, "")
+        except Exception as exc:
+            self.finished.emit(False, str(exc))
+
 
 class TickerManager(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.tickers_file = os.path.join(os.path.dirname(__file__), 'tickers.json')
+        # Single source of truth for the ticker list, shared with the
+        # Electron UI and the data fetcher (data/tickers.json).
+        self.tickers_file = os.path.normpath(os.path.join(
+            os.path.dirname(__file__), '..', 'data', 'tickers.json'))
         self.init_ui()
         self.load_tickers()
         
@@ -239,8 +266,8 @@ class TickerManager(QMainWindow):
             QMessageBox.warning(self, "Invalid Input", "Please enter a ticker symbol.")
             return
         
-        if not ticker.isalpha() or len(ticker) > 5:
-            QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-5 letters only.")
+        if not _is_valid_ticker(ticker):
+            QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-12 characters (letters, digits, '.', '-').")
             return
         
         # Check if ticker already exists
@@ -284,8 +311,8 @@ class TickerManager(QMainWindow):
             if ok and new_ticker.strip():
                 new_ticker = new_ticker.strip().upper()
                 
-                if not new_ticker.isalpha() or len(new_ticker) > 5:
-                    QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-5 letters only.")
+                if not _is_valid_ticker(new_ticker):
+                    QMessageBox.warning(self, "Invalid Ticker", "Ticker should be 1-12 characters (letters, digits, '.', '-').")
                     return
                 
                 # Check if new ticker already exists
@@ -315,7 +342,7 @@ class TickerManager(QMainWindow):
             QMessageBox.information(self, "No Tickers", "No tickers to clear.")
     
     def fetch_all_data(self):
-        """Fetch data for all tickers"""
+        """Fetch data for all tickers in a background thread."""
         if self.tickers_list.count() == 0:
             QMessageBox.warning(self, "No Tickers", "Please add some tickers first.")
             return
@@ -325,15 +352,18 @@ class TickerManager(QMainWindow):
                                    QMessageBox.Yes | QMessageBox.No)
         
         if reply == QMessageBox.Yes:
-            try:
-                # Import and run fetch_stocks
-                sys.path.append(os.path.dirname(__file__))
-                import Internal.ticker_management.fetch_stocks as fetch_stocks
-                
-                QMessageBox.information(self, "Success", "Data fetching started! Check the terminal for progress.")
-                
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Error fetching data: {str(e)}")
+            # Persist the current list so the fetcher reads the latest tickers.
+            self.save_tickers()
+            self._fetch_worker = _FetchWorker(self)
+            self._fetch_worker.finished.connect(self._on_fetch_finished)
+            self._fetch_worker.start()
+            QMessageBox.information(self, "Fetching", "Data fetching started in the background.")
+    
+    def _on_fetch_finished(self, success, message):
+        if success:
+            QMessageBox.information(self, "Success", "Data fetching completed for all tickers.")
+        else:
+            QMessageBox.critical(self, "Error", f"Error fetching data: {message}")
     
     def save_and_close(self):
         """Save and close the application"""
@@ -359,7 +389,8 @@ def main():
 
 def get_tickers_from_file():
     """Utility function to get tickers from the JSON file"""
-    tickers_file = os.path.join(os.path.dirname(__file__), 'tickers.json')
+    tickers_file = os.path.normpath(os.path.join(
+        os.path.dirname(__file__), '..', 'data', 'tickers.json'))
     try:
         if os.path.exists(tickers_file):
             with open(tickers_file, 'r') as f:

@@ -1,0 +1,2214 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="description" content="FinForge brings live stock data, side-by-side charts, and a familiar Excel dashboard together in one simple app for investors."><meta name="generator" content="Astro v7.2.3"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"><title>Available Data Reference - FinForge</title><link rel="stylesheet" href="/_astro/Layout.CQluC8CQ.css"></head><body><header class="site-header"><div class="container header-inner"><a class="brand" href="/"><span class="brand-mark">&gt;ƒ</span><span class="brand-name">FinForge</span></a><nav class="site-nav" aria-label="Primary navigation"><a href="/" class="nav-link">Home</a><a href="/docs/" class="nav-link">Docs</a><a href="/docs/installation/" class="nav-link">Installation</a><a href="/docs/features/" class="nav-link">Features</a><a href="/docs/roadmap/" class="nav-link">Roadmap</a><a class="nav-link external" href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></header><main class="container main"><div class="docs-grid"><aside class="docs-sidebar"><a href="/docs/">Overview</a><a href="/docs/installation/">Installation</a><a href="/docs/features/">Features</a><a href="/docs/roadmap/">Roadmap</a><a href="/docs/guides/">Guides</a><a href="/docs/disclaimer/">Disclaimer</a><div class="docs-sidebar-label">User guides</div><a href="/docs/guides/01-getting-started/">Getting Started</a><a href="/docs/guides/02-ticker-management/">Ticker Management</a><a href="/docs/guides/03-importing-data/">Importing Data to Excel</a><a href="/docs/guides/04-creating-ratios/">Creating Ratios</a><a href="/docs/guides/05-assigning-ratios/">Assigning Ratios to Excel</a><a href="/docs/guides/06-advanced-ratio-features/">Advanced Ratio Features</a><a href="/docs/guides/07-quick-reference/">Quick Reference</a><a href="/docs/guides/08-available-data-reference/" class="active">Available Data Reference</a><a href="/docs/guides/09-color-reference/">Color Reference</a><a href="/docs/guides/10-data-cleanup/">Data Cleanup System</a><a href="/docs/guides/11-uninstalling-finforge/">Uninstalling FinForge</a><a href="/docs/guides/complete-user-guide/">Complete User Guide</a><a href="/docs/guides/13-ranking/">Ranking</a></aside><div class="docs-content"><h1 id="available-data-reference">Available Data Reference</h1>
+<p>This document lists all data fetched from Yahoo Finance and stored in Parquet format.</p>
+<hr>
+<h2 id="data-storage-structure">Data Storage Structure</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>data/</span></span>
+<span class="line"><span>  fundamentals/</span></span>
+<span class="line"><span>    income_statement/{TICKER}.parquet</span></span>
+<span class="line"><span>    balance_sheet/{TICKER}.parquet</span></span>
+<span class="line"><span>    cash_flow/{TICKER}.parquet</span></span>
+<span class="line"><span>    quarterly_income_statement/{TICKER}.parquet</span></span>
+<span class="line"><span>    quarterly_balance_sheet/{TICKER}.parquet</span></span>
+<span class="line"><span>    quarterly_cash_flow/{TICKER}.parquet</span></span>
+<span class="line"><span>    earnings_estimate/{TICKER}.parquet</span></span>
+<span class="line"><span>    revenue_estimate/{TICKER}.parquet</span></span>
+<span class="line"><span>    analyst_price_targets/{TICKER}.parquet</span></span>
+<span class="line"><span>    eps_trend/{TICKER}.parquet</span></span>
+<span class="line"><span>    growth_estimates/{TICKER}.parquet</span></span>
+<span class="line"><span>    earnings_history/{TICKER}.parquet</span></span>
+<span class="line"><span>    recommendations/{TICKER}.parquet</span></span>
+<span class="line"><span>    recommendations_summary/{TICKER}.parquet</span></span>
+<span class="line"><span>    upgrades_downgrades/{TICKER}.parquet</span></span>
+<span class="line"><span>    insider_transactions/{TICKER}.parquet</span></span>
+<span class="line"><span>    insider_purchases/{TICKER}.parquet</span></span>
+<span class="line"><span>    calendar/{TICKER}.parquet</span></span>
+<span class="line"><span>    dividends/{TICKER}.parquet</span></span>
+<span class="line"><span>    splits/{TICKER}.parquet</span></span>
+<span class="line"><span>    actions/{TICKER}.parquet</span></span>
+<span class="line"><span>    news/{TICKER}.parquet</span></span>
+<span class="line"><span>    sec_filings/{TICKER}.parquet</span></span>
+<span class="line"><span>  holders/</span></span>
+<span class="line"><span>    major_holders/{TICKER}.parquet</span></span>
+<span class="line"><span>    institutional_holders/{TICKER}.parquet</span></span>
+<span class="line"><span>    mutualfund_holders/{TICKER}.parquet</span></span>
+<span class="line"><span>    insider_roster_holders/{TICKER}.parquet</span></span>
+<span class="line"><span>  prices/</span></span>
+<span class="line"><span>    {TICKER}.parquet</span></span>
+<span class="line"><span>  metadata/</span></span>
+<span class="line"><span>    {TICKER}.json</span></span></code></pre>
+<hr>
+<h2 id="1-financial-statements-annual">1. Financial Statements (Annual)</h2>
+<h3 id="income-statement">Income Statement</h3>
+<p><strong>File:</strong> <code>fundamentals/income_statement/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total Revenue</td>
+<td>Total revenue from all sources</td>
+</tr>
+<tr>
+<td>Operating Revenue</td>
+<td>Revenue from core operations</td>
+</tr>
+<tr>
+<td>Cost Of Revenue</td>
+<td>Direct costs of goods/services sold</td>
+</tr>
+<tr>
+<td>Gross Profit</td>
+<td>Revenue minus cost of revenue</td>
+</tr>
+<tr>
+<td>Operating Expense</td>
+<td>Operating costs (R&amp;D, SG&amp;A, etc.)</td>
+</tr>
+<tr>
+<td>Research And Development</td>
+<td>R&amp;D spending</td>
+</tr>
+<tr>
+<td>Selling General And Administration</td>
+<td>SG&amp;A expenses</td>
+</tr>
+<tr>
+<td>Selling And Marketing Expense</td>
+<td>Marketing costs</td>
+</tr>
+<tr>
+<td>General And Administrative Expense</td>
+<td>Admin costs</td>
+</tr>
+<tr>
+<td>Other Gand A</td>
+<td>Other general &amp; admin expenses</td>
+</tr>
+<tr>
+<td>Operating Income</td>
+<td>Profit from core operations</td>
+</tr>
+<tr>
+<td>Net Non Operating Interest Income Expense</td>
+<td>Non-operating interest</td>
+</tr>
+<tr>
+<td>Interest Income Non Operating</td>
+<td>Interest earned</td>
+</tr>
+<tr>
+<td>Interest Expense Non Operating</td>
+<td>Interest paid</td>
+</tr>
+<tr>
+<td>Other Non Operating Income Expenses</td>
+<td>Other non-operating items</td>
+</tr>
+<tr>
+<td>Special Income Charges</td>
+<td>One-time charges</td>
+</tr>
+<tr>
+<td>Write Off</td>
+<td>Asset write-offs</td>
+</tr>
+<tr>
+<td>Gain On Sale Of Security</td>
+<td>Gains from selling securities</td>
+</tr>
+<tr>
+<td>Other Income Expense</td>
+<td>Other income/expense items</td>
+</tr>
+<tr>
+<td>Pretax Income</td>
+<td>Income before taxes</td>
+</tr>
+<tr>
+<td>Tax Provision</td>
+<td>Income tax expense</td>
+</tr>
+<tr>
+<td>Net Income Continuous Operations</td>
+<td>Net income from continuing ops</td>
+</tr>
+<tr>
+<td>Net Income Including Noncontrolling Interests</td>
+<td>Total net income</td>
+</tr>
+<tr>
+<td>Net Income</td>
+<td>Net income attributable to company</td>
+</tr>
+<tr>
+<td>Net Income Common Stockholders</td>
+<td>Net income for common shareholders</td>
+</tr>
+<tr>
+<td>Diluted NI Availto Com Stockholders</td>
+<td>Diluted net income</td>
+</tr>
+<tr>
+<td>Basic EPS</td>
+<td>Earnings per share (basic)</td>
+</tr>
+<tr>
+<td>Diluted EPS</td>
+<td>Earnings per share (diluted)</td>
+</tr>
+<tr>
+<td>Basic Average Shares</td>
+<td>Average shares (basic)</td>
+</tr>
+<tr>
+<td>Diluted Average Shares</td>
+<td>Average shares (diluted)</td>
+</tr>
+<tr>
+<td>Total Operating Income As Reported</td>
+<td>Reported operating income</td>
+</tr>
+<tr>
+<td>Total Expenses</td>
+<td>Total expenses</td>
+</tr>
+<tr>
+<td>Net Income From Continuing And Discontinued Operation</td>
+<td>Combined net income</td>
+</tr>
+<tr>
+<td>Normalized Income</td>
+<td>Adjusted net income</td>
+</tr>
+<tr>
+<td>Interest Income</td>
+<td>Total interest income</td>
+</tr>
+<tr>
+<td>Interest Expense</td>
+<td>Total interest expense</td>
+</tr>
+<tr>
+<td>Net Interest Income</td>
+<td>Net interest income</td>
+</tr>
+<tr>
+<td>EBIT</td>
+<td>Earnings before interest &amp; taxes</td>
+</tr>
+<tr>
+<td>EBITDA</td>
+<td>Earnings before interest, taxes, depreciation &amp; amortization</td>
+</tr>
+<tr>
+<td>Reconciled Cost Of Revenue</td>
+<td>Adjusted cost of revenue</td>
+</tr>
+<tr>
+<td>Reconciled Depreciation</td>
+<td>Adjusted depreciation</td>
+</tr>
+<tr>
+<td>Net Income From Continuing Operation Net Minority Interest</td>
+<td>Net income excluding minority interest</td>
+</tr>
+<tr>
+<td>Total Unusual Items Excluding Goodwill</td>
+<td>Unusual items (excl. goodwill)</td>
+</tr>
+<tr>
+<td>Total Unusual Items</td>
+<td>All unusual items</td>
+</tr>
+<tr>
+<td>Normalized EBITDA</td>
+<td>Adjusted EBITDA</td>
+</tr>
+<tr>
+<td>Tax Rate For Calcs</td>
+<td>Effective tax rate</td>
+</tr>
+<tr>
+<td>Tax Effect Of Unusual Items</td>
+<td>Tax impact of unusual items</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="balance-sheet">Balance Sheet</h3>
+<p><strong>File:</strong> <code>fundamentals/balance_sheet/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ASSETS</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Total Assets</td>
+<td>Sum of all assets</td>
+</tr>
+<tr>
+<td>Current Assets</td>
+<td>Assets convertible to cash within 1 year</td>
+</tr>
+<tr>
+<td>Cash Cash Equivalents And Short Term Investments</td>
+<td>Liquid assets</td>
+</tr>
+<tr>
+<td>Cash And Cash Equivalents</td>
+<td>Cash on hand</td>
+</tr>
+<tr>
+<td>Cash Financial</td>
+<td>Cash position</td>
+</tr>
+<tr>
+<td>Cash Equivalents</td>
+<td>Near-cash instruments</td>
+</tr>
+<tr>
+<td>Other Short Term Investments</td>
+<td>Short-term investment securities</td>
+</tr>
+<tr>
+<td>Receivables</td>
+<td>Money owed to company</td>
+</tr>
+<tr>
+<td>Accounts Receivable</td>
+<td>Customer receivables</td>
+</tr>
+<tr>
+<td>Gross Accounts Receivable</td>
+<td>Total receivables before allowances</td>
+</tr>
+<tr>
+<td>Allowance For Doubtful Accounts Receivable</td>
+<td>Bad debt reserve</td>
+</tr>
+<tr>
+<td>Inventory</td>
+<td>Goods held for sale</td>
+</tr>
+<tr>
+<td>Raw Materials</td>
+<td>Unprocessed inventory</td>
+</tr>
+<tr>
+<td>Work In Process</td>
+<td>Partially completed goods</td>
+</tr>
+<tr>
+<td>Finished Goods</td>
+<td>Completed inventory</td>
+</tr>
+<tr>
+<td>Hedging Assets Current</td>
+<td>Current hedging instruments</td>
+</tr>
+<tr>
+<td>Other Current Assets</td>
+<td>Other short-term assets</td>
+</tr>
+<tr>
+<td>Total Non Current Assets</td>
+<td>Long-term assets</td>
+</tr>
+<tr>
+<td>Net PPE</td>
+<td>Property, plant &amp; equipment (net)</td>
+</tr>
+<tr>
+<td>Gross PPE</td>
+<td>Property, plant &amp; equipment (gross)</td>
+</tr>
+<tr>
+<td>Accumulated Depreciation</td>
+<td>Total depreciation to date</td>
+</tr>
+<tr>
+<td>Land And Improvements</td>
+<td>Land assets</td>
+</tr>
+<tr>
+<td>Buildings And Improvements</td>
+<td>Building assets</td>
+</tr>
+<tr>
+<td>Machinery Furniture Equipment</td>
+<td>Equipment assets</td>
+</tr>
+<tr>
+<td>Leases</td>
+<td>Lease assets</td>
+</tr>
+<tr>
+<td>Other Properties</td>
+<td>Other property assets</td>
+</tr>
+<tr>
+<td>Properties</td>
+<td>Total property</td>
+</tr>
+<tr>
+<td>Goodwill And Other Intangible Assets</td>
+<td>Intangible assets</td>
+</tr>
+<tr>
+<td>Goodwill</td>
+<td>Goodwill from acquisitions</td>
+</tr>
+<tr>
+<td>Other Intangible Assets</td>
+<td>Patents, trademarks, etc.</td>
+</tr>
+<tr>
+<td>Investments And Advances</td>
+<td>Investment holdings</td>
+</tr>
+<tr>
+<td>Investmentin Financial Assets</td>
+<td>Financial investments</td>
+</tr>
+<tr>
+<td>Available For Sale Securities</td>
+<td>Securities available for sale</td>
+</tr>
+<tr>
+<td>Long Term Equity Investment</td>
+<td>Long-term equity stakes</td>
+</tr>
+<tr>
+<td>Financial Assets</td>
+<td>Total financial assets</td>
+</tr>
+<tr>
+<td>Other Non Current Assets</td>
+<td>Other long-term assets</td>
+</tr>
+<tr>
+<td><strong>LIABILITIES</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Total Liabilities Net Minority Interest</td>
+<td>All liabilities</td>
+</tr>
+<tr>
+<td>Current Liabilities</td>
+<td>Debts due within 1 year</td>
+</tr>
+<tr>
+<td>Payables And Accrued Expenses</td>
+<td>Current payables</td>
+</tr>
+<tr>
+<td>Payables</td>
+<td>Money owed to suppliers</td>
+</tr>
+<tr>
+<td>Accounts Payable</td>
+<td>Supplier payables</td>
+</tr>
+<tr>
+<td>Total Tax Payable</td>
+<td>Taxes owed</td>
+</tr>
+<tr>
+<td>Income Tax Payable</td>
+<td>Income taxes due</td>
+</tr>
+<tr>
+<td>Pensionand Other Post Retirement Benefit Plans Current</td>
+<td>Current pension obligations</td>
+</tr>
+<tr>
+<td>Current Debt And Capital Lease Obligation</td>
+<td>Short-term debt</td>
+</tr>
+<tr>
+<td>Current Debt</td>
+<td>Short-term borrowings</td>
+</tr>
+<tr>
+<td>Commercial Paper</td>
+<td>Short-term commercial paper</td>
+</tr>
+<tr>
+<td>Other Current Borrowings</td>
+<td>Other short-term loans</td>
+</tr>
+<tr>
+<td>Current Deferred Liabilities</td>
+<td>Current deferred items</td>
+</tr>
+<tr>
+<td>Current Deferred Revenue</td>
+<td>Prepaid customer payments</td>
+</tr>
+<tr>
+<td>Other Current Liabilities</td>
+<td>Other short-term liabilities</td>
+</tr>
+<tr>
+<td>Total Non Current Liabilities Net Minority Interest</td>
+<td>Long-term liabilities</td>
+</tr>
+<tr>
+<td>Long Term Debt And Capital Lease Obligation</td>
+<td>Long-term debt</td>
+</tr>
+<tr>
+<td>Long Term Debt</td>
+<td>Long-term borrowings</td>
+</tr>
+<tr>
+<td>Long Term Capital Lease Obligation</td>
+<td>Long-term leases</td>
+</tr>
+<tr>
+<td>Non Current Deferred Liabilities</td>
+<td>Long-term deferred items</td>
+</tr>
+<tr>
+<td>Non Current Deferred Revenue</td>
+<td>Long-term prepayments</td>
+</tr>
+<tr>
+<td>Non Current Deferred Taxes Liabilities</td>
+<td>Deferred tax liabilities</td>
+</tr>
+<tr>
+<td>Tradeand Other Payables Non Current</td>
+<td>Long-term payables</td>
+</tr>
+<tr>
+<td>Other Non Current Liabilities</td>
+<td>Other long-term liabilities</td>
+</tr>
+<tr>
+<td><strong>EQUITY</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Total Equity Gross Minority Interest</td>
+<td>Total equity</td>
+</tr>
+<tr>
+<td>Stockholders Equity</td>
+<td>Shareholder equity</td>
+</tr>
+<tr>
+<td>Common Stock Equity</td>
+<td>Common stockholder equity</td>
+</tr>
+<tr>
+<td>Capital Stock</td>
+<td>Total capital stock</td>
+</tr>
+<tr>
+<td>Common Stock</td>
+<td>Common shares value</td>
+</tr>
+<tr>
+<td>Retained Earnings</td>
+<td>Accumulated profits</td>
+</tr>
+<tr>
+<td>Gains Losses Not Affecting Retained Earnings</td>
+<td>Other comprehensive income</td>
+</tr>
+<tr>
+<td>Other Equity Adjustments</td>
+<td>Other equity items</td>
+</tr>
+<tr>
+<td>Total Capitalization</td>
+<td>Total capital</td>
+</tr>
+<tr>
+<td><strong>CALCULATED METRICS</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Net Debt</td>
+<td>Total debt minus cash</td>
+</tr>
+<tr>
+<td>Total Debt</td>
+<td>Sum of all debt</td>
+</tr>
+<tr>
+<td>Working Capital</td>
+<td>Current assets minus current liabilities</td>
+</tr>
+<tr>
+<td>Invested Capital</td>
+<td>Equity plus debt</td>
+</tr>
+<tr>
+<td>Tangible Book Value</td>
+<td>Book value minus intangibles</td>
+</tr>
+<tr>
+<td>Net Tangible Assets</td>
+<td>Tangible assets minus liabilities</td>
+</tr>
+<tr>
+<td>Capital Lease Obligations</td>
+<td>Total lease obligations</td>
+</tr>
+<tr>
+<td>Ordinary Shares Number</td>
+<td>Number of common shares</td>
+</tr>
+<tr>
+<td>Share Issued</td>
+<td>Total shares issued</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="cash-flow-statement">Cash Flow Statement</h3>
+<p><strong>File:</strong> <code>fundamentals/cash_flow/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OPERATING ACTIVITIES</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Operating Cash Flow</td>
+<td>Cash from operations</td>
+</tr>
+<tr>
+<td>Cash Flow From Continuing Operating Activities</td>
+<td>Operating cash (continuing)</td>
+</tr>
+<tr>
+<td>Net Income From Continuing Operations</td>
+<td>Starting net income</td>
+</tr>
+<tr>
+<td>Depreciation Amortization Depletion</td>
+<td>Non-cash depreciation</td>
+</tr>
+<tr>
+<td>Depreciation And Amortization</td>
+<td>D&amp;A expense</td>
+</tr>
+<tr>
+<td>Depreciation</td>
+<td>Depreciation only</td>
+</tr>
+<tr>
+<td>Deferred Tax</td>
+<td>Deferred tax adjustments</td>
+</tr>
+<tr>
+<td>Deferred Income Tax</td>
+<td>Deferred income tax</td>
+</tr>
+<tr>
+<td>Stock Based Compensation</td>
+<td>Stock-based comp expense</td>
+</tr>
+<tr>
+<td>Asset Impairment Charge</td>
+<td>Impairment charges</td>
+</tr>
+<tr>
+<td>Unrealized Gain Loss On Investment Securities</td>
+<td>Unrealized investment changes</td>
+</tr>
+<tr>
+<td>Operating Gains Losses</td>
+<td>Operating gains/losses</td>
+</tr>
+<tr>
+<td>Gain Loss On Investment Securities</td>
+<td>Investment gains/losses</td>
+</tr>
+<tr>
+<td>Change In Working Capital</td>
+<td>Working capital changes</td>
+</tr>
+<tr>
+<td>Change In Receivables</td>
+<td>Receivables change</td>
+</tr>
+<tr>
+<td>Changes In Account Receivables</td>
+<td>A/R change</td>
+</tr>
+<tr>
+<td>Change In Inventory</td>
+<td>Inventory change</td>
+</tr>
+<tr>
+<td>Change In Payables And Accrued Expense</td>
+<td>Payables change</td>
+</tr>
+<tr>
+<td>Change In Payable</td>
+<td>Payables change</td>
+</tr>
+<tr>
+<td>Change In Account Payable</td>
+<td>A/P change</td>
+</tr>
+<tr>
+<td>Change In Tax Payable</td>
+<td>Tax payable change</td>
+</tr>
+<tr>
+<td>Change In Income Tax Payable</td>
+<td>Income tax payable change</td>
+</tr>
+<tr>
+<td>Change In Other Current Assets</td>
+<td>Other current asset changes</td>
+</tr>
+<tr>
+<td>Change In Other Current Liabilities</td>
+<td>Other current liability changes</td>
+</tr>
+<tr>
+<td>Change In Other Working Capital</td>
+<td>Other working capital changes</td>
+</tr>
+<tr>
+<td><strong>INVESTING ACTIVITIES</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Investing Cash Flow</td>
+<td>Cash used in investing</td>
+</tr>
+<tr>
+<td>Cash Flow From Continuing Investing Activities</td>
+<td>Investing cash (continuing)</td>
+</tr>
+<tr>
+<td>Capital Expenditure</td>
+<td>CapEx spending</td>
+</tr>
+<tr>
+<td>Purchase Of PPE</td>
+<td>Property purchases</td>
+</tr>
+<tr>
+<td>Net PPE Purchase And Sale</td>
+<td>Net property transactions</td>
+</tr>
+<tr>
+<td>Purchase Of Investment</td>
+<td>Investment purchases</td>
+</tr>
+<tr>
+<td>Sale Of Investment</td>
+<td>Investment sales</td>
+</tr>
+<tr>
+<td>Net Investment Purchase And Sale</td>
+<td>Net investment transactions</td>
+</tr>
+<tr>
+<td>Purchase Of Business</td>
+<td>Business acquisitions</td>
+</tr>
+<tr>
+<td>Net Business Purchase And Sale</td>
+<td>Net business transactions</td>
+</tr>
+<tr>
+<td>Net Other Investing Changes</td>
+<td>Other investing items</td>
+</tr>
+<tr>
+<td><strong>FINANCING ACTIVITIES</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Financing Cash Flow</td>
+<td>Cash from financing</td>
+</tr>
+<tr>
+<td>Cash Flow From Continuing Financing Activities</td>
+<td>Financing cash (continuing)</td>
+</tr>
+<tr>
+<td>Issuance Of Debt</td>
+<td>New debt raised</td>
+</tr>
+<tr>
+<td>Long Term Debt Issuance</td>
+<td>Long-term borrowings</td>
+</tr>
+<tr>
+<td>Short Term Debt Issuance</td>
+<td>Short-term borrowings</td>
+</tr>
+<tr>
+<td>Repayment Of Debt</td>
+<td>Debt repayments</td>
+</tr>
+<tr>
+<td>Long Term Debt Payments</td>
+<td>Long-term debt repaid</td>
+</tr>
+<tr>
+<td>Net Issuance Payments Of Debt</td>
+<td>Net debt change</td>
+</tr>
+<tr>
+<td>Net Long Term Debt Issuance</td>
+<td>Net long-term debt</td>
+</tr>
+<tr>
+<td>Net Short Term Debt Issuance</td>
+<td>Net short-term debt</td>
+</tr>
+<tr>
+<td>Issuance Of Capital Stock</td>
+<td>New shares issued</td>
+</tr>
+<tr>
+<td>Common Stock Issuance</td>
+<td>Common stock issued</td>
+</tr>
+<tr>
+<td>Repurchase Of Capital Stock</td>
+<td>Stock buybacks</td>
+</tr>
+<tr>
+<td>Common Stock Payments</td>
+<td>Stock repurchases</td>
+</tr>
+<tr>
+<td>Net Common Stock Issuance</td>
+<td>Net share issuance</td>
+</tr>
+<tr>
+<td>Cash Dividends Paid</td>
+<td>Dividend payments</td>
+</tr>
+<tr>
+<td>Common Stock Dividend Paid</td>
+<td>Common dividends</td>
+</tr>
+<tr>
+<td>Net Other Financing Charges</td>
+<td>Other financing items</td>
+</tr>
+<tr>
+<td><strong>SUMMARY</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Changes In Cash</td>
+<td>Total cash change</td>
+</tr>
+<tr>
+<td>Effect Of Exchange Rate Changes</td>
+<td>FX impact on cash</td>
+</tr>
+<tr>
+<td>Beginning Cash Position</td>
+<td>Starting cash</td>
+</tr>
+<tr>
+<td>End Cash Position</td>
+<td>Ending cash</td>
+</tr>
+<tr>
+<td>Free Cash Flow</td>
+<td>Operating cash minus CapEx</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-financial-statements-quarterly">2. Financial Statements (Quarterly)</h2>
+<p>Same fields as annual statements:</p>
+<ul>
+<li><code>fundamentals/quarterly_income_statement/{TICKER}.parquet</code></li>
+<li><code>fundamentals/quarterly_balance_sheet/{TICKER}.parquet</code></li>
+<li><code>fundamentals/quarterly_cash_flow/{TICKER}.parquet</code></li>
+</ul>
+<hr>
+<h2 id="3-analyst-estimates">3. Analyst Estimates</h2>
+<h3 id="earnings-estimate">Earnings Estimate</h3>
+<p><strong>File:</strong> <code>fundamentals/earnings_estimate/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>avg</td>
+<td>Average EPS estimate</td>
+</tr>
+<tr>
+<td>low</td>
+<td>Low EPS estimate</td>
+</tr>
+<tr>
+<td>high</td>
+<td>High EPS estimate</td>
+</tr>
+<tr>
+<td>yearAgoEps</td>
+<td>EPS from same period last year</td>
+</tr>
+<tr>
+<td>numberOfAnalysts</td>
+<td>Number of analysts</td>
+</tr>
+<tr>
+<td>growth</td>
+<td>Expected growth rate</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Periods:</strong> 0q (current quarter), +1q (next quarter), 0y (current year), +1y (next year)</p>
+<hr>
+<h3 id="revenue-estimate">Revenue Estimate</h3>
+<p><strong>File:</strong> <code>fundamentals/revenue_estimate/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>avg</td>
+<td>Average revenue estimate</td>
+</tr>
+<tr>
+<td>low</td>
+<td>Low revenue estimate</td>
+</tr>
+<tr>
+<td>high</td>
+<td>High revenue estimate</td>
+</tr>
+<tr>
+<td>numberOfAnalysts</td>
+<td>Number of analysts</td>
+</tr>
+<tr>
+<td>yearAgoRevenue</td>
+<td>Revenue from same period last year</td>
+</tr>
+<tr>
+<td>growth</td>
+<td>Expected growth rate</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="analyst-price-targets">Analyst Price Targets</h3>
+<p><strong>File:</strong> <code>fundamentals/analyst_price_targets/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>current</td>
+<td>Current stock price</td>
+</tr>
+<tr>
+<td>high</td>
+<td>Highest analyst target</td>
+</tr>
+<tr>
+<td>low</td>
+<td>Lowest analyst target</td>
+</tr>
+<tr>
+<td>mean</td>
+<td>Average target price</td>
+</tr>
+<tr>
+<td>median</td>
+<td>Median target price</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="eps-trend">EPS Trend</h3>
+<p><strong>File:</strong> <code>fundamentals/eps_trend/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>current</td>
+<td>Current EPS estimate</td>
+</tr>
+<tr>
+<td>7daysAgo</td>
+<td>Estimate 7 days ago</td>
+</tr>
+<tr>
+<td>30daysAgo</td>
+<td>Estimate 30 days ago</td>
+</tr>
+<tr>
+<td>60daysAgo</td>
+<td>Estimate 60 days ago</td>
+</tr>
+<tr>
+<td>90daysAgo</td>
+<td>Estimate 90 days ago</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="growth-estimates">Growth Estimates</h3>
+<p><strong>File:</strong> <code>fundamentals/growth_estimates/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stockTrend</td>
+<td>Stock growth trend</td>
+</tr>
+<tr>
+<td>indexTrend</td>
+<td>Index comparison trend</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Periods:</strong> 0q, +1q, 0y, +1y, LTG (long-term growth)</p>
+<hr>
+<h3 id="earnings-history">Earnings History</h3>
+<p><strong>File:</strong> <code>fundamentals/earnings_history/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>epsActual</td>
+<td>Actual reported EPS</td>
+</tr>
+<tr>
+<td>epsEstimate</td>
+<td>Expected EPS</td>
+</tr>
+<tr>
+<td>epsDifference</td>
+<td>Actual minus estimate</td>
+</tr>
+<tr>
+<td>surprisePercent</td>
+<td>Surprise as percentage</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4-analyst-recommendations">4. Analyst Recommendations</h2>
+<h3 id="recommendations">Recommendations</h3>
+<p><strong>File:</strong> <code>fundamentals/recommendations/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>period</td>
+<td>Time period</td>
+</tr>
+<tr>
+<td>strongBuy</td>
+<td>Number of strong buy ratings</td>
+</tr>
+<tr>
+<td>buy</td>
+<td>Number of buy ratings</td>
+</tr>
+<tr>
+<td>hold</td>
+<td>Number of hold ratings</td>
+</tr>
+<tr>
+<td>sell</td>
+<td>Number of sell ratings</td>
+</tr>
+<tr>
+<td>strongSell</td>
+<td>Number of strong sell ratings</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="recommendations-summary">Recommendations Summary</h3>
+<p><strong>File:</strong> <code>fundamentals/recommendations_summary/{TICKER}.parquet</code></p>
+<p>Same structure as recommendations, but summarized.</p>
+<hr>
+<h3 id="upgradesdowngrades">Upgrades/Downgrades</h3>
+<p><strong>File:</strong> <code>fundamentals/upgrades_downgrades/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Firm</td>
+<td>Analyst firm name</td>
+</tr>
+<tr>
+<td>ToGrade</td>
+<td>New rating</td>
+</tr>
+<tr>
+<td>FromGrade</td>
+<td>Previous rating</td>
+</tr>
+<tr>
+<td>Action</td>
+<td>Action taken (upgrade/downgrade)</td>
+</tr>
+<tr>
+<td>priceTargetAction</td>
+<td>Price target action</td>
+</tr>
+<tr>
+<td>currentPriceTarget</td>
+<td>New price target</td>
+</tr>
+<tr>
+<td>priorPriceTarget</td>
+<td>Previous price target</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5-holder-data">5. Holder Data</h2>
+<h3 id="major-holders">Major Holders</h3>
+<p><strong>File:</strong> <code>holders/major_holders/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insidersPercentHeld</td>
+<td>Percentage held by insiders</td>
+</tr>
+<tr>
+<td>institutionsPercentHeld</td>
+<td>Percentage held by institutions</td>
+</tr>
+<tr>
+<td>institutionsFloatPercentHeld</td>
+<td>Institutional % of float</td>
+</tr>
+<tr>
+<td>institutionsCount</td>
+<td>Number of institutional holders</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="institutional-holders">Institutional Holders</h3>
+<p><strong>File:</strong> <code>holders/institutional_holders/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date Reported</td>
+<td>Reporting date</td>
+</tr>
+<tr>
+<td>Holder</td>
+<td>Institution name</td>
+</tr>
+<tr>
+<td>pctHeld</td>
+<td>Percentage of shares held</td>
+</tr>
+<tr>
+<td>Shares</td>
+<td>Number of shares</td>
+</tr>
+<tr>
+<td>Value</td>
+<td>Dollar value of position</td>
+</tr>
+<tr>
+<td>pctChange</td>
+<td>Change from previous report</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="mutual-fund-holders">Mutual Fund Holders</h3>
+<p><strong>File:</strong> <code>holders/mutualfund_holders/{TICKER}.parquet</code></p>
+<p>Same structure as institutional holders.</p>
+<hr>
+<h3 id="insider-roster">Insider Roster</h3>
+<p><strong>File:</strong> <code>holders/insider_roster_holders/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Insider name</td>
+</tr>
+<tr>
+<td>Position</td>
+<td>Title/role</td>
+</tr>
+<tr>
+<td>URL</td>
+<td>Profile link</td>
+</tr>
+<tr>
+<td>Most Recent Transaction</td>
+<td>Last transaction type</td>
+</tr>
+<tr>
+<td>Latest Transaction Date</td>
+<td>Date of last transaction</td>
+</tr>
+<tr>
+<td>Shares Owned Directly</td>
+<td>Direct ownership</td>
+</tr>
+<tr>
+<td>Position Direct Date</td>
+<td>Date of position</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="6-insider-activity">6. Insider Activity</h2>
+<h3 id="insider-transactions">Insider Transactions</h3>
+<p><strong>File:</strong> <code>fundamentals/insider_transactions/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shares</td>
+<td>Number of shares</td>
+</tr>
+<tr>
+<td>Value</td>
+<td>Transaction value</td>
+</tr>
+<tr>
+<td>URL</td>
+<td>Filing link</td>
+</tr>
+<tr>
+<td>Text</td>
+<td>Transaction description</td>
+</tr>
+<tr>
+<td>Insider</td>
+<td>Insider name</td>
+</tr>
+<tr>
+<td>Position</td>
+<td>Title/role</td>
+</tr>
+<tr>
+<td>Transaction</td>
+<td>Transaction type</td>
+</tr>
+<tr>
+<td>Start Date</td>
+<td>Transaction date</td>
+</tr>
+<tr>
+<td>Ownership</td>
+<td>Ownership type</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="insider-purchases-summary">Insider Purchases Summary</h3>
+<p><strong>File:</strong> <code>fundamentals/insider_purchases/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Purchases</td>
+<td>Total shares purchased (6 months)</td>
+</tr>
+<tr>
+<td>Sales</td>
+<td>Total shares sold (6 months)</td>
+</tr>
+<tr>
+<td>Net Shares Purchased (Sold)</td>
+<td>Net insider activity</td>
+</tr>
+<tr>
+<td>Total Insider Shares Held</td>
+<td>Total insider ownership</td>
+</tr>
+<tr>
+<td>% Net Shares Purchased (Sold)</td>
+<td>Net as % of holdings</td>
+</tr>
+<tr>
+<td>% Buy Shares</td>
+<td>Buy % of total</td>
+</tr>
+<tr>
+<td>% Sell Shares</td>
+<td>Sell % of total</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-historical-data">7. Historical Data</h2>
+<h3 id="dividends">Dividends</h3>
+<p><strong>File:</strong> <code>fundamentals/dividends/{TICKER}.parquet</code></p>
+<p>Historical dividend payments with dates and amounts.</p>
+<hr>
+<h3 id="stock-splits">Stock Splits</h3>
+<p><strong>File:</strong> <code>fundamentals/splits/{TICKER}.parquet</code></p>
+<p>Historical stock split events with dates and ratios.</p>
+<hr>
+<h3 id="actions-combined">Actions (Combined)</h3>
+<p><strong>File:</strong> <code>fundamentals/actions/{TICKER}.parquet</code></p>
+<p>Combined dividends and splits history.</p>
+<hr>
+<h2 id="8-calendar">8. Calendar</h2>
+<p><strong>File:</strong> <code>fundamentals/calendar/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dividend Date</td>
+<td>Next dividend payment date</td>
+</tr>
+<tr>
+<td>Ex-Dividend Date</td>
+<td>Ex-dividend date</td>
+</tr>
+<tr>
+<td>Earnings Date</td>
+<td>Next earnings announcement</td>
+</tr>
+<tr>
+<td>Earnings High</td>
+<td>High earnings estimate</td>
+</tr>
+<tr>
+<td>Earnings Low</td>
+<td>Low earnings estimate</td>
+</tr>
+<tr>
+<td>Earnings Average</td>
+<td>Average earnings estimate</td>
+</tr>
+<tr>
+<td>Revenue High</td>
+<td>High revenue estimate</td>
+</tr>
+<tr>
+<td>Revenue Low</td>
+<td>Low revenue estimate</td>
+</tr>
+<tr>
+<td>Revenue Average</td>
+<td>Average revenue estimate</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="9-news--filings">9. News &amp; Filings</h2>
+<h3 id="news">News</h3>
+<p><strong>File:</strong> <code>fundamentals/news/{TICKER}.parquet</code></p>
+<p>Recent news articles about the company (structure varies).</p>
+<hr>
+<h3 id="sec-filings">SEC Filings</h3>
+<p><strong>File:</strong> <code>fundamentals/sec_filings/{TICKER}.parquet</code></p>
+<p>Recent SEC filing links and metadata.</p>
+<hr>
+<h2 id="10-price-data">10. Price Data</h2>
+<p><strong>File:</strong> <code>prices/{TICKER}.parquet</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date</td>
+<td>Trading date</td>
+</tr>
+<tr>
+<td>Open</td>
+<td>Opening price</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Day high</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Day low</td>
+</tr>
+<tr>
+<td>Close</td>
+<td>Closing price</td>
+</tr>
+<tr>
+<td>Volume</td>
+<td>Trading volume</td>
+</tr>
+<tr>
+<td>Dividends</td>
+<td>Dividend amount (if any)</td>
+</tr>
+<tr>
+<td>Stock Splits</td>
+<td>Split ratio (if any)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="11-metadata-company-info">11. Metadata (Company Info)</h2>
+<p><strong>File:</strong> <code>metadata/{TICKER}.json</code></p>
+<h3 id="identification">Identification</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>symbol</td>
+<td>Ticker symbol</td>
+</tr>
+<tr>
+<td>shortName</td>
+<td>Short company name</td>
+</tr>
+<tr>
+<td>longName</td>
+<td>Full company name</td>
+</tr>
+<tr>
+<td>displayName</td>
+<td>Display name</td>
+</tr>
+</tbody>
+</table>
+<h3 id="business-info">Business Info</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sector</td>
+<td>Business sector</td>
+</tr>
+<tr>
+<td>sectorKey</td>
+<td>Sector identifier</td>
+</tr>
+<tr>
+<td>sectorDisp</td>
+<td>Sector display name</td>
+</tr>
+<tr>
+<td>industry</td>
+<td>Industry classification</td>
+</tr>
+<tr>
+<td>industryKey</td>
+<td>Industry identifier</td>
+</tr>
+<tr>
+<td>industryDisp</td>
+<td>Industry display name</td>
+</tr>
+<tr>
+<td>longBusinessSummary</td>
+<td>Company description</td>
+</tr>
+<tr>
+<td>fullTimeEmployees</td>
+<td>Number of employees</td>
+</tr>
+<tr>
+<td>website</td>
+<td>Company website</td>
+</tr>
+<tr>
+<td>irWebsite</td>
+<td>Investor relations site</td>
+</tr>
+</tbody>
+</table>
+<h3 id="location">Location</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>address1</td>
+<td>Street address</td>
+</tr>
+<tr>
+<td>city</td>
+<td>City</td>
+</tr>
+<tr>
+<td>state</td>
+<td>State/province</td>
+</tr>
+<tr>
+<td>zip</td>
+<td>Postal code</td>
+</tr>
+<tr>
+<td>country</td>
+<td>Country</td>
+</tr>
+<tr>
+<td>phone</td>
+<td>Phone number</td>
+</tr>
+</tbody>
+</table>
+<h3 id="exchange-info">Exchange Info</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>exchange</td>
+<td>Exchange code</td>
+</tr>
+<tr>
+<td>fullExchangeName</td>
+<td>Exchange name</td>
+</tr>
+<tr>
+<td>quoteType</td>
+<td>Security type</td>
+</tr>
+<tr>
+<td>market</td>
+<td>Market identifier</td>
+</tr>
+<tr>
+<td>currency</td>
+<td>Trading currency</td>
+</tr>
+<tr>
+<td>financialCurrency</td>
+<td>Reporting currency</td>
+</tr>
+</tbody>
+</table>
+<h3 id="current-trading">Current Trading</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>currentPrice</td>
+<td>Current price</td>
+</tr>
+<tr>
+<td>regularMarketPrice</td>
+<td>Regular session price</td>
+</tr>
+<tr>
+<td>regularMarketOpen</td>
+<td>Session open</td>
+</tr>
+<tr>
+<td>regularMarketDayHigh</td>
+<td>Session high</td>
+</tr>
+<tr>
+<td>regularMarketDayLow</td>
+<td>Session low</td>
+</tr>
+<tr>
+<td>regularMarketVolume</td>
+<td>Session volume</td>
+</tr>
+<tr>
+<td>regularMarketChange</td>
+<td>Price change</td>
+</tr>
+<tr>
+<td>regularMarketChangePercent</td>
+<td>% change</td>
+</tr>
+<tr>
+<td>previousClose</td>
+<td>Prior close</td>
+</tr>
+<tr>
+<td>bid</td>
+<td>Current bid</td>
+</tr>
+<tr>
+<td>ask</td>
+<td>Current ask</td>
+</tr>
+<tr>
+<td>bidSize</td>
+<td>Bid size</td>
+</tr>
+<tr>
+<td>askSize</td>
+<td>Ask size</td>
+</tr>
+<tr>
+<td>volume</td>
+<td>Volume</td>
+</tr>
+<tr>
+<td>averageVolume</td>
+<td>Average volume</td>
+</tr>
+<tr>
+<td>averageVolume10days</td>
+<td>10-day avg volume</td>
+</tr>
+<tr>
+<td>averageDailyVolume10Day</td>
+<td>10-day avg daily volume</td>
+</tr>
+<tr>
+<td>averageDailyVolume3Month</td>
+<td>3-month avg daily volume</td>
+</tr>
+</tbody>
+</table>
+<h3 id="price-metrics">Price Metrics</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fiftyTwoWeekHigh</td>
+<td>52-week high</td>
+</tr>
+<tr>
+<td>fiftyTwoWeekLow</td>
+<td>52-week low</td>
+</tr>
+<tr>
+<td>fiftyTwoWeekRange</td>
+<td>52-week range</td>
+</tr>
+<tr>
+<td>fiftyTwoWeekHighChange</td>
+<td>Change from 52w high</td>
+</tr>
+<tr>
+<td>fiftyTwoWeekHighChangePercent</td>
+<td>% from 52w high</td>
+</tr>
+<tr>
+<td>fiftyTwoWeekLowChange</td>
+<td>Change from 52w low</td>
+</tr>
+<tr>
+<td>fiftyTwoWeekLowChangePercent</td>
+<td>% from 52w low</td>
+</tr>
+<tr>
+<td>fiftyTwoWeekChangePercent</td>
+<td>52-week % change</td>
+</tr>
+<tr>
+<td>52WeekChange</td>
+<td>52-week change</td>
+</tr>
+<tr>
+<td>allTimeHigh</td>
+<td>All-time high</td>
+</tr>
+<tr>
+<td>allTimeLow</td>
+<td>All-time low</td>
+</tr>
+<tr>
+<td>fiftyDayAverage</td>
+<td>50-day moving average</td>
+</tr>
+<tr>
+<td>fiftyDayAverageChange</td>
+<td>Change from 50-day MA</td>
+</tr>
+<tr>
+<td>fiftyDayAverageChangePercent</td>
+<td>% from 50-day MA</td>
+</tr>
+<tr>
+<td>twoHundredDayAverage</td>
+<td>200-day moving average</td>
+</tr>
+<tr>
+<td>twoHundredDayAverageChange</td>
+<td>Change from 200-day MA</td>
+</tr>
+<tr>
+<td>twoHundredDayAverageChangePercent</td>
+<td>% from 200-day MA</td>
+</tr>
+</tbody>
+</table>
+<h3 id="valuation-ratios">Valuation Ratios</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>marketCap</td>
+<td>Market capitalization</td>
+</tr>
+<tr>
+<td>enterpriseValue</td>
+<td>Enterprise value</td>
+</tr>
+<tr>
+<td>trailingPE</td>
+<td>P/E ratio (TTM)</td>
+</tr>
+<tr>
+<td>forwardPE</td>
+<td>Forward P/E ratio</td>
+</tr>
+<tr>
+<td>priceToBook</td>
+<td>Price-to-book ratio</td>
+</tr>
+<tr>
+<td>priceToSalesTrailing12Months</td>
+<td>Price-to-sales (TTM)</td>
+</tr>
+<tr>
+<td>priceEpsCurrentYear</td>
+<td>P/E current year</td>
+</tr>
+<tr>
+<td>enterpriseToRevenue</td>
+<td>EV/Revenue</td>
+</tr>
+<tr>
+<td>enterpriseToEbitda</td>
+<td>EV/EBITDA</td>
+</tr>
+<tr>
+<td>trailingPegRatio</td>
+<td>PEG ratio</td>
+</tr>
+</tbody>
+</table>
+<h3 id="earnings--profitability">Earnings &amp; Profitability</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>trailingEps</td>
+<td>EPS (TTM)</td>
+</tr>
+<tr>
+<td>forwardEps</td>
+<td>Forward EPS</td>
+</tr>
+<tr>
+<td>epsTrailingTwelveMonths</td>
+<td>EPS TTM</td>
+</tr>
+<tr>
+<td>epsCurrentYear</td>
+<td>Current year EPS</td>
+</tr>
+<tr>
+<td>earningsQuarterlyGrowth</td>
+<td>Quarterly earnings growth</td>
+</tr>
+<tr>
+<td>earningsGrowth</td>
+<td>Earnings growth rate</td>
+</tr>
+<tr>
+<td>revenueGrowth</td>
+<td>Revenue growth rate</td>
+</tr>
+<tr>
+<td>grossMargins</td>
+<td>Gross margin</td>
+</tr>
+<tr>
+<td>operatingMargins</td>
+<td>Operating margin</td>
+</tr>
+<tr>
+<td>profitMargins</td>
+<td>Profit margin</td>
+</tr>
+<tr>
+<td>ebitdaMargins</td>
+<td>EBITDA margin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="financial-health">Financial Health</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>totalRevenue</td>
+<td>Total revenue</td>
+</tr>
+<tr>
+<td>grossProfits</td>
+<td>Gross profits</td>
+</tr>
+<tr>
+<td>ebitda</td>
+<td>EBITDA</td>
+</tr>
+<tr>
+<td>netIncomeToCommon</td>
+<td>Net income</td>
+</tr>
+<tr>
+<td>freeCashflow</td>
+<td>Free cash flow</td>
+</tr>
+<tr>
+<td>operatingCashflow</td>
+<td>Operating cash flow</td>
+</tr>
+<tr>
+<td>totalCash</td>
+<td>Total cash</td>
+</tr>
+<tr>
+<td>totalCashPerShare</td>
+<td>Cash per share</td>
+</tr>
+<tr>
+<td>totalDebt</td>
+<td>Total debt</td>
+</tr>
+<tr>
+<td>debtToEquity</td>
+<td>Debt-to-equity ratio</td>
+</tr>
+<tr>
+<td>currentRatio</td>
+<td>Current ratio</td>
+</tr>
+<tr>
+<td>quickRatio</td>
+<td>Quick ratio</td>
+</tr>
+<tr>
+<td>bookValue</td>
+<td>Book value per share</td>
+</tr>
+<tr>
+<td>returnOnAssets</td>
+<td>Return on assets</td>
+</tr>
+<tr>
+<td>returnOnEquity</td>
+<td>Return on equity</td>
+</tr>
+<tr>
+<td>revenuePerShare</td>
+<td>Revenue per share</td>
+</tr>
+</tbody>
+</table>
+<h3 id="shares--ownership">Shares &amp; Ownership</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sharesOutstanding</td>
+<td>Shares outstanding</td>
+</tr>
+<tr>
+<td>floatShares</td>
+<td>Public float</td>
+</tr>
+<tr>
+<td>impliedSharesOutstanding</td>
+<td>Implied shares</td>
+</tr>
+<tr>
+<td>heldPercentInsiders</td>
+<td>Insider ownership %</td>
+</tr>
+<tr>
+<td>heldPercentInstitutions</td>
+<td>Institutional ownership %</td>
+</tr>
+<tr>
+<td>sharesShort</td>
+<td>Shares sold short</td>
+</tr>
+<tr>
+<td>sharesShortPriorMonth</td>
+<td>Prior month short interest</td>
+</tr>
+<tr>
+<td>sharesShortPreviousMonthDate</td>
+<td>Prior short date</td>
+</tr>
+<tr>
+<td>shortRatio</td>
+<td>Short ratio</td>
+</tr>
+<tr>
+<td>shortPercentOfFloat</td>
+<td>Short % of float</td>
+</tr>
+<tr>
+<td>sharesPercentSharesOut</td>
+<td>Short % of shares</td>
+</tr>
+<tr>
+<td>dateShortInterest</td>
+<td>Short interest date</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dividends-1">Dividends</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dividendRate</td>
+<td>Annual dividend rate</td>
+</tr>
+<tr>
+<td>dividendYield</td>
+<td>Dividend yield</td>
+</tr>
+<tr>
+<td>exDividendDate</td>
+<td>Ex-dividend date</td>
+</tr>
+<tr>
+<td>dividendDate</td>
+<td>Payment date</td>
+</tr>
+<tr>
+<td>lastDividendDate</td>
+<td>Last dividend date</td>
+</tr>
+<tr>
+<td>lastDividendValue</td>
+<td>Last dividend amount</td>
+</tr>
+<tr>
+<td>trailingAnnualDividendRate</td>
+<td>TTM dividend rate</td>
+</tr>
+<tr>
+<td>trailingAnnualDividendYield</td>
+<td>TTM dividend yield</td>
+</tr>
+<tr>
+<td>fiveYearAvgDividendYield</td>
+<td>5-year avg yield</td>
+</tr>
+<tr>
+<td>payoutRatio</td>
+<td>Dividend payout ratio</td>
+</tr>
+</tbody>
+</table>
+<h3 id="analyst-ratings">Analyst Ratings</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>recommendationKey</td>
+<td>Rating (buy/hold/sell)</td>
+</tr>
+<tr>
+<td>recommendationMean</td>
+<td>Mean rating score</td>
+</tr>
+<tr>
+<td>averageAnalystRating</td>
+<td>Average rating text</td>
+</tr>
+<tr>
+<td>numberOfAnalystOpinions</td>
+<td>Number of analysts</td>
+</tr>
+<tr>
+<td>targetHighPrice</td>
+<td>High price target</td>
+</tr>
+<tr>
+<td>targetLowPrice</td>
+<td>Low price target</td>
+</tr>
+<tr>
+<td>targetMeanPrice</td>
+<td>Mean price target</td>
+</tr>
+<tr>
+<td>targetMedianPrice</td>
+<td>Median price target</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risk-metrics">Risk Metrics</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>beta</td>
+<td>Beta coefficient</td>
+</tr>
+<tr>
+<td>overallRisk</td>
+<td>Overall risk score</td>
+</tr>
+<tr>
+<td>auditRisk</td>
+<td>Audit risk score</td>
+</tr>
+<tr>
+<td>boardRisk</td>
+<td>Board risk score</td>
+</tr>
+<tr>
+<td>compensationRisk</td>
+<td>Compensation risk score</td>
+</tr>
+<tr>
+<td>shareHolderRightsRisk</td>
+<td>Shareholder rights risk</td>
+</tr>
+</tbody>
+</table>
+<h3 id="other">Other</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SandP52WeekChange</td>
+<td>S&amp;P 52-week change</td>
+</tr>
+<tr>
+<td>lastSplitDate</td>
+<td>Last stock split date</td>
+</tr>
+<tr>
+<td>lastSplitFactor</td>
+<td>Last split ratio</td>
+</tr>
+<tr>
+<td>mostRecentQuarter</td>
+<td>Most recent quarter end</td>
+</tr>
+<tr>
+<td>lastFiscalYearEnd</td>
+<td>Last fiscal year end</td>
+</tr>
+<tr>
+<td>nextFiscalYearEnd</td>
+<td>Next fiscal year end</td>
+</tr>
+<tr>
+<td>governanceEpochDate</td>
+<td>Governance data date</td>
+</tr>
+<tr>
+<td>companyOfficers</td>
+<td>List of executives</td>
+</tr>
+<tr>
+<td>executiveTeam</td>
+<td>Executive team info</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="using-this-data">Using This Data</h2>
+<h3 id="in-ratio-formulas">In Ratio Formulas</h3>
+<p>Use these prefixes to reference data:</p>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Data Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IS:</td>
+<td>Income Statement</td>
+</tr>
+<tr>
+<td>BS:</td>
+<td>Balance Sheet</td>
+</tr>
+<tr>
+<td>CF:</td>
+<td>Cash Flow</td>
+</tr>
+</tbody>
+</table>
+<p>Example formulas:</p>
+<ul>
+<li><code>IS: Net Income / BS: Total Assets</code> (ROA)</li>
+<li><code>BS: Total Debt / BS: Stockholders Equity</code> (Debt to Equity)</li>
+<li><code>CF: Free Cash Flow / IS: Net Income</code> (FCF Conversion)</li>
+</ul>
+<hr>
+<p><em>Document generated: December 2025</em>
+<em>Data source: Yahoo Finance via yfinance library</em></p>
+<nav class="guide-pager" aria-label="Guide navigation"><a class="button button-secondary" href="/docs/guides/07-quick-reference/">Previous: Quick Reference</a><a class="button button-secondary" href="/docs/guides/09-color-reference/">Next: Color Reference</a></nav></div></div></main><footer class="site-footer"><div class="container footer-inner"><span>FinForge - MIT License</span><nav class="footer-links" aria-label="Legal"><a href="/docs/disclaimer/">Financial disclaimer</a><a href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></footer></body></html>

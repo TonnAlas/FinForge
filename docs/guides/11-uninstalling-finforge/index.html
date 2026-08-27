@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="description" content="FinForge brings live stock data, side-by-side charts, and a familiar Excel dashboard together in one simple app for investors."><meta name="generator" content="Astro v7.2.3"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"><title>Uninstalling FinForge - FinForge</title><link rel="stylesheet" href="/_astro/Layout.CQluC8CQ.css"></head><body><header class="site-header"><div class="container header-inner"><a class="brand" href="/"><span class="brand-mark">&gt;ƒ</span><span class="brand-name">FinForge</span></a><nav class="site-nav" aria-label="Primary navigation"><a href="/" class="nav-link">Home</a><a href="/docs/" class="nav-link">Docs</a><a href="/docs/installation/" class="nav-link">Installation</a><a href="/docs/features/" class="nav-link">Features</a><a href="/docs/roadmap/" class="nav-link">Roadmap</a><a class="nav-link external" href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></header><main class="container main"><div class="docs-grid"><aside class="docs-sidebar"><a href="/docs/">Overview</a><a href="/docs/installation/">Installation</a><a href="/docs/features/">Features</a><a href="/docs/roadmap/">Roadmap</a><a href="/docs/guides/">Guides</a><a href="/docs/disclaimer/">Disclaimer</a><div class="docs-sidebar-label">User guides</div><a href="/docs/guides/01-getting-started/">Getting Started</a><a href="/docs/guides/02-ticker-management/">Ticker Management</a><a href="/docs/guides/03-importing-data/">Importing Data to Excel</a><a href="/docs/guides/04-creating-ratios/">Creating Ratios</a><a href="/docs/guides/05-assigning-ratios/">Assigning Ratios to Excel</a><a href="/docs/guides/06-advanced-ratio-features/">Advanced Ratio Features</a><a href="/docs/guides/07-quick-reference/">Quick Reference</a><a href="/docs/guides/08-available-data-reference/">Available Data Reference</a><a href="/docs/guides/09-color-reference/">Color Reference</a><a href="/docs/guides/10-data-cleanup/">Data Cleanup System</a><a href="/docs/guides/11-uninstalling-finforge/" class="active">Uninstalling FinForge</a><a href="/docs/guides/complete-user-guide/">Complete User Guide</a><a href="/docs/guides/13-ranking/">Ranking</a></aside><div class="docs-content"><h1 id="uninstalling-finforge">Uninstalling FinForge</h1>
+<p>This guide explains how to reverse FinForge setup actions using the uninstall scripts.</p>
+<hr>
+<h2 id="purpose">Purpose</h2>
+<p>FinForge setup creates and configures environment components such as:</p>
+<ul>
+<li>Project virtual environment (<code>.venv</code>)</li>
+<li>xlwings Excel add-in (current Windows user)</li>
+<li>xlwings user configuration (<code>%USERPROFILE%\.xlwings\xlwings.conf</code>)</li>
+<li>Generated workbook (<code>FinForge.xlsm</code>) if created from template</li>
+<li>Setup temp files (<code>%SystemDrive%\fftmp</code>)</li>
+</ul>
+<p>The uninstall flow lets you remove these items interactively.</p>
+<hr>
+<h2 id="files-involved">Files Involved</h2>
+<ul>
+<li><code>uninstall.bat</code></li>
+<li><code>Installation/unconfigure_xlwings.ps1</code></li>
+</ul>
+<hr>
+<h2 id="how-it-works">How It Works</h2>
+<h3 id="1-uninstallbat">1) <code>uninstall.bat</code></h3>
+<p>Main interactive uninstall wizard.</p>
+<h4 id="behavior">Behavior</h4>
+<ul>
+<li>Prompts for confirmation before uninstall starts</li>
+<li>Asks what to remove using Yes/No questions</li>
+<li>Executes cleanup in ordered steps</li>
+<li>Shows warnings for partial failures and continues where possible</li>
+</ul>
+<h4 id="cleanup-steps">Cleanup Steps</h4>
+<ol>
+<li>Remove xlwings add-in (<code>xlwings addin remove</code>) if selected</li>
+<li>Run <code>Installation/unconfigure_xlwings.ps1</code> if selected</li>
+<li>Remove <code>.venv</code> folder if selected</li>
+<li>Delete <code>FinForge.xlsm</code> if selected</li>
+<li>Delete <code>Temporary/launch_diagnostics.log</code> if selected</li>
+<li>Delete <code>%SystemDrive%\fftmp</code> if selected</li>
+</ol>
+<h4 id="internal-routines">Internal Routines</h4>
+<ul>
+<li>
+<p><code>:prompt_yes_no</code></p>
+<ul>
+<li>Input:
+<ul>
+<li>Question text (string)</li>
+<li>Default answer (<code>Y</code> or <code>N</code>)</li>
+<li>Output variable name</li>
+</ul>
+</li>
+<li>Output:
+<ul>
+<li>Sets target variable to <code>Y</code> or <code>N</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><code>:remove_xlwings_addin</code></p>
+<ul>
+<li>Input: none</li>
+<li>Output:
+<ul>
+<li>Attempts add-in removal if xlwings command is available</li>
+<li>Returns success even when skipped</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-installationunconfigure_xlwingsps1">2) <code>Installation/unconfigure_xlwings.ps1</code></h3>
+<p>Safe xlwings config remover.</p>
+<h4 id="behavior-1">Behavior</h4>
+<ul>
+<li>Reads <code>%USERPROFILE%\.xlwings\xlwings.conf</code></li>
+<li>Parses <code>INTERPRETER_WIN</code> and <code>PYTHONPATH</code></li>
+<li>Removes config only if it points to the current project directory</li>
+<li>Leaves unrelated xlwings configuration untouched</li>
+<li>Removes <code>%USERPROFILE%\.xlwings</code> only when empty</li>
+</ul>
+<h4 id="parameters">Parameters</h4>
+<ul>
+<li><code>-ProjectDir</code> (string, optional)
+<ul>
+<li>Project root path</li>
+<li>If omitted, script derives it from its own location</li>
+</ul>
+</li>
+</ul>
+<h4 id="output">Output</h4>
+<ul>
+<li>Exit code <code>0</code> for success/skip</li>
+<li>Exit code <code>1</code> only for unexpected script errors</li>
+</ul>
+<hr>
+<h2 id="usage">Usage</h2>
+<h3 id="recommended-explorer">Recommended (Explorer)</h3>
+<ol>
+<li>Open the project folder</li>
+<li>Double-click <code>uninstall.bat</code></li>
+<li>Answer each prompt</li>
+</ol>
+<h3 id="command-line">Command Line</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="powershell"><code><span class="line"><span style="color:#E1E4E8">cd C:\FinForge</span></span>
+<span class="line"><span style="color:#E1E4E8">.</span><span style="color:#F97583">/</span><span style="color:#79B8FF">uninstall.bat</span></span></code></pre>
+<hr>
+<h2 id="what-is-not-removed">What Is Not Removed</h2>
+<p>Uninstall intentionally does not delete:</p>
+<ul>
+<li>Source code files</li>
+<li>Guides and documentation</li>
+<li>Project structure</li>
+<li>Downloaded Python installation itself</li>
+</ul>
+<p>This keeps the repository reusable after uninstall.</p>
+<hr>
+<h2 id="assumptions-and-limitations">Assumptions and Limitations</h2>
+<ul>
+<li>Windows-only flow (batch and PowerShell scripts)</li>
+<li>xlwings add-in removal is user-scoped</li>
+<li>Workbook deletion is optional because it may contain user edits</li>
+<li>If files are locked (for example by Excel), deletion can fail with a warning</li>
+</ul>
+<hr>
+<h2 id="reinstall">Reinstall</h2>
+<p>To install again after uninstall:</p>
+<ol>
+<li>Run <code>setup.bat</code></li>
+<li>Launch with <code>launch_finforge.bat</code></li>
+</ol>
+<nav class="guide-pager" aria-label="Guide navigation"><a class="button button-secondary" href="/docs/guides/10-data-cleanup/">Previous: Data Cleanup System</a><a class="button button-secondary" href="/docs/guides/complete-user-guide/">Next: Complete User Guide</a></nav></div></div></main><footer class="site-footer"><div class="container footer-inner"><span>FinForge - MIT License</span><nav class="footer-links" aria-label="Legal"><a href="/docs/disclaimer/">Financial disclaimer</a><a href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></footer></body></html>

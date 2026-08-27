@@ -1,0 +1,292 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="description" content="FinForge brings live stock data, side-by-side charts, and a familiar Excel dashboard together in one simple app for investors."><meta name="generator" content="Astro v7.2.3"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"><title>Creating Ratios - FinForge</title><link rel="stylesheet" href="/_astro/Layout.CQluC8CQ.css"></head><body><header class="site-header"><div class="container header-inner"><a class="brand" href="/"><span class="brand-mark">&gt;ƒ</span><span class="brand-name">FinForge</span></a><nav class="site-nav" aria-label="Primary navigation"><a href="/" class="nav-link">Home</a><a href="/docs/" class="nav-link">Docs</a><a href="/docs/installation/" class="nav-link">Installation</a><a href="/docs/features/" class="nav-link">Features</a><a href="/docs/roadmap/" class="nav-link">Roadmap</a><a class="nav-link external" href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></header><main class="container main"><div class="docs-grid"><aside class="docs-sidebar"><a href="/docs/">Overview</a><a href="/docs/installation/">Installation</a><a href="/docs/features/">Features</a><a href="/docs/roadmap/">Roadmap</a><a href="/docs/guides/">Guides</a><a href="/docs/disclaimer/">Disclaimer</a><div class="docs-sidebar-label">User guides</div><a href="/docs/guides/01-getting-started/">Getting Started</a><a href="/docs/guides/02-ticker-management/">Ticker Management</a><a href="/docs/guides/03-importing-data/">Importing Data to Excel</a><a href="/docs/guides/04-creating-ratios/" class="active">Creating Ratios</a><a href="/docs/guides/05-assigning-ratios/">Assigning Ratios to Excel</a><a href="/docs/guides/06-advanced-ratio-features/">Advanced Ratio Features</a><a href="/docs/guides/07-quick-reference/">Quick Reference</a><a href="/docs/guides/08-available-data-reference/">Available Data Reference</a><a href="/docs/guides/09-color-reference/">Color Reference</a><a href="/docs/guides/10-data-cleanup/">Data Cleanup System</a><a href="/docs/guides/11-uninstalling-finforge/">Uninstalling FinForge</a><a href="/docs/guides/complete-user-guide/">Complete User Guide</a><a href="/docs/guides/13-ranking/">Ranking</a></aside><div class="docs-content"><h1 id="creating-ratios">Creating Ratios</h1>
+<p>Learn how to create custom financial ratios using the Ratio Maker tool.</p>
+<hr>
+<h2 id="what-are-financial-ratios">What are Financial Ratios?</h2>
+<p>Financial ratios are calculations that use financial statement data to measure:</p>
+<ul>
+<li>Profitability (e.g., Profit Margin, ROE)</li>
+<li>Liquidity (e.g., Current Ratio, Quick Ratio)</li>
+<li>Leverage (e.g., Debt-to-Equity)</li>
+<li>Efficiency (e.g., Asset Turnover)</li>
+<li>Valuation (e.g., P/E Ratio, P/B Ratio)</li>
+</ul>
+<hr>
+<h2 id="opening-the-ratio-maker">Opening the Ratio Maker</h2>
+<h3 id="from-excel">From Excel</h3>
+<ol>
+<li>Open <code>FinForge.xlsm</code></li>
+<li>Run the macro: <code>OpenRatioMaker()</code>
+<ul>
+<li>Press <code>Alt + F8</code></li>
+<li>Select <code>OpenRatioMaker</code></li>
+<li>Click Run</li>
+</ul>
+</li>
+</ol>
+<h3 id="from-python">From Python</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="powershell"><code><span class="line"><span style="color:#E1E4E8">cd </span><span style="color:#F97583">&lt;</span><span style="color:#E1E4E8">project</span><span style="color:#F97583">-</span><span style="color:#E1E4E8">root</span><span style="color:#F97583">&gt;</span></span>
+<span class="line"><span style="color:#E1E4E8">.\.venv\Scripts\Activate.ps1</span></span>
+<span class="line"><span style="color:#E1E4E8">python Importing</span><span style="color:#F97583">/</span><span style="color:#E1E4E8">ratio_maker.py</span></span></code></pre>
+<h3 id="from-electron-ui">From Electron UI</h3>
+<ol>
+<li>Open the FinForge workspace window</li>
+<li>Click the <strong>Ratios</strong> tab</li>
+<li>Use the formula builder with token buttons and field pickers</li>
+<li>Save ratios directly to the shared config</li>
+</ol>
+<hr>
+<h2 id="creating-your-first-ratio">Creating Your First Ratio</h2>
+<h3 id="step-1-click-new-ratio">Step 1: Click “New Ratio”</h3>
+<p>The Create Ratio dialog opens.</p>
+<h3 id="step-2-enter-ratio-name">Step 2: Enter Ratio Name</h3>
+<p>Give your ratio a descriptive name:</p>
+<ul>
+<li>“Gross Margin”</li>
+<li>“Current Ratio”</li>
+<li>“Debt to Equity”</li>
+</ul>
+<h3 id="step-3-build-the-formula">Step 3: Build the Formula</h3>
+<p>Use the field selector and operators to build your formula.</p>
+<p><strong>Available Data Sources:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Source</th>
+<th>Example Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IS:</code></td>
+<td>Income Statement</td>
+<td>Total Revenue, Net Income, EBITDA</td>
+</tr>
+<tr>
+<td><code>BS:</code></td>
+<td>Balance Sheet</td>
+<td>Total Assets, Total Debt, Cash</td>
+</tr>
+<tr>
+<td><code>CF:</code></td>
+<td>Cash Flow</td>
+<td>Operating Cash Flow, Free Cash Flow</td>
+</tr>
+<tr>
+<td><code>P:</code></td>
+<td>Price/Market Data</td>
+<td>Closing Price, Volume, High, Low</td>
+</tr>
+<tr>
+<td><code>RATIO:</code></td>
+<td>Other Ratios</td>
+<td>Use your previously created ratios</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Available Operators:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Operation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>+</code></td>
+<td>Addition</td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td>Subtraction</td>
+</tr>
+<tr>
+<td><code>*</code></td>
+<td>Multiplication</td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td>Division</td>
+</tr>
+<tr>
+<td><code>(</code></td>
+<td>Open parenthesis</td>
+</tr>
+<tr>
+<td><code>)</code></td>
+<td>Close parenthesis</td>
+</tr>
+</tbody>
+</table>
+<h3 id="step-4-add-notes-optional">Step 4: Add Notes (Optional)</h3>
+<p>Add a description or notes about the ratio:</p>
+<ul>
+<li>What it measures</li>
+<li>How to interpret it</li>
+<li>Reference ranges</li>
+</ul>
+<h3 id="step-5-save">Step 5: Save</h3>
+<p>Click Save to store the ratio in <code>ratio_config.json</code>.</p>
+<hr>
+<h2 id="formula-examples">Formula Examples</h2>
+<h3 id="profitability-ratios">Profitability Ratios</h3>
+<p><strong>Gross Margin</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>(IS: Total Revenue - IS: Cost Of Revenue) / IS: Total Revenue</span></span></code></pre>
+<p><strong>Operating Margin</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Operating Income / IS: Total Revenue</span></span></code></pre>
+<p><strong>Net Profit Margin</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Net Income / IS: Total Revenue</span></span></code></pre>
+<p><strong>Return on Assets (ROA)</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Net Income / BS: Total Assets</span></span></code></pre>
+<p><strong>Return on Equity (ROE)</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Net Income / BS: Stockholders Equity</span></span></code></pre>
+<h3 id="liquidity-ratios">Liquidity Ratios</h3>
+<p><strong>Current Ratio</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Current Assets / BS: Current Liabilities</span></span></code></pre>
+<p><strong>Quick Ratio</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>(BS: Current Assets - BS: Inventory) / BS: Current Liabilities</span></span></code></pre>
+<h3 id="leverage-ratios">Leverage Ratios</h3>
+<p><strong>Debt to Equity</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Total Debt / BS: Stockholders Equity</span></span></code></pre>
+<p><strong>Debt to Assets</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Total Debt / BS: Total Assets</span></span></code></pre>
+<h3 id="efficiency-ratios">Efficiency Ratios</h3>
+<p><strong>Asset Turnover</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Total Revenue / BS: Total Assets</span></span></code></pre>
+<h3 id="using-other-ratios">Using Other Ratios</h3>
+<p><strong>ROE using DuPont Analysis</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>RATIO: Net Profit Margin * RATIO: Asset Turnover * RATIO: Equity Multiplier</span></span></code></pre>
+<h3 id="using-numbers">Using Numbers</h3>
+<p><strong>Interest Coverage (example with constant)</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: EBIT / IS: Interest Expense</span></span></code></pre>
+<p><strong>Half of Net Debt</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Net Debt / 2</span></span></code></pre>
+<hr>
+<h2 id="understanding-syntax-highlighting">Understanding Syntax Highlighting</h2>
+<p>As you type, the formula is color-coded:</p>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green</td>
+<td>Income Statement fields (IS:)</td>
+</tr>
+<tr>
+<td>Light Blue</td>
+<td>Balance Sheet fields (BS:)</td>
+</tr>
+<tr>
+<td>Purple</td>
+<td>Price/Cash Flow fields</td>
+</tr>
+<tr>
+<td>Orange</td>
+<td>Operators (+, -, *, /)</td>
+</tr>
+<tr>
+<td>Yellow</td>
+<td>Parentheses</td>
+</tr>
+<tr>
+<td>Gold</td>
+<td>Other Ratios (RATIO:)</td>
+</tr>
+<tr>
+<td>Light Blue</td>
+<td>Numbers</td>
+</tr>
+<tr>
+<td>Red + Wavy</td>
+<td>Errors (typos, invalid fields)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="using-the-fraction-display">Using the Fraction Display</h2>
+<p>For visual clarity, you can toggle fraction display:</p>
+<ol>
+<li>Check “Use Fraction Display” checkbox</li>
+<li>The division button changes to show a fraction bar</li>
+<li>Formulas are easier to read visually</li>
+</ol>
+<hr>
+<h2 id="editing-existing-ratios">Editing Existing Ratios</h2>
+<ol>
+<li>Select the ratio in the list</li>
+<li>Click <strong>Edit</strong></li>
+<li>Modify the name, formula, or notes</li>
+<li>Click <strong>Save</strong></li>
+</ol>
+<p><strong>Note:</strong> If the ratio is assigned to an Excel column, the column header is automatically updated with the new name.</p>
+<hr>
+<h2 id="deleting-ratios">Deleting Ratios</h2>
+<ol>
+<li>Select the ratio in the list</li>
+<li>Click <strong>Delete</strong></li>
+<li>Confirm the deletion</li>
+</ol>
+<p><strong>Warning:</strong> If the ratio is assigned to an Excel column, unassign it first.</p>
+<hr>
+<h2 id="where-are-ratios-stored">Where are Ratios Stored?</h2>
+<p>Ratios are saved in: <code>Importing/ratio_config.json</code></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="json"><code><span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#79B8FF">  "ratios"</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#79B8FF">    "Gross Margin"</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#79B8FF">      "formula"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"(IS: Total Revenue - IS: Cost Of Revenue) / IS: Total Revenue"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">      "notes"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"Measures profitability after direct costs"</span></span>
+<span class="line"><span style="color:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#79B8FF">    "Current Ratio"</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#79B8FF">      "formula"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"BS: Current Assets / BS: Current Liabilities"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">      "notes"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"Measures short-term liquidity"</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<hr>
+<h2 id="tips-for-creating-good-ratios">Tips for Creating Good Ratios</h2>
+<ol>
+<li><strong>Use descriptive names</strong> - “Gross Margin” not “GM1”</li>
+<li><strong>Add notes</strong> - Document what the ratio measures</li>
+<li><strong>Test with known values</strong> - Verify calculations are correct</li>
+<li><strong>Use parentheses</strong> - Ensure correct order of operations</li>
+<li><strong>Check field names</strong> - Use exact field names from the data</li>
+</ol>
+<hr>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="red-error-highlighting">Red Error Highlighting</h3>
+<p><strong>Cause:</strong> Invalid field name
+<strong>Solution:</strong> Check spelling, use the field selector dropdown</p>
+<h3 id="field-not-found-error">“Field not found” Error</h3>
+<p><strong>Cause:</strong> Field doesn’t exist in the data
+<strong>Solution:</strong> See <a href="../08-available-data-reference/">Available Data Reference</a> for valid field names</p>
+<h3 id="calculation-shows-na">Calculation Shows #N/A</h3>
+<p><strong>Cause:</strong></p>
+<ul>
+<li>Data missing for the ticker</li>
+<li>Division by zero</li>
+</ul>
+<p><strong>Solution:</strong></p>
+<ul>
+<li>Verify data exists for the ticker</li>
+<li>Add logic to handle zero denominators</li>
+</ul>
+<h3 id="ratio-not-appearing-in-manager">Ratio Not Appearing in Manager</h3>
+<p><strong>Cause:</strong> Save failed or file permission issue
+<strong>Solution:</strong></p>
+<ul>
+<li>Check if ratio_config.json is writable</li>
+<li>Try saving again</li>
+</ul>
+<hr>
+<h2 id="next-steps">Next Steps</h2>
+<p>After creating ratios:</p>
+<ul>
+<li><a href="../05-assigning-ratios/">Assign them to Excel columns</a></li>
+<li><a href="../05-assigning-ratios/">View in the Ratios sheet</a></li>
+</ul>
+<nav class="guide-pager" aria-label="Guide navigation"><a class="button button-secondary" href="/docs/guides/03-importing-data/">Previous: Importing Data to Excel</a><a class="button button-secondary" href="/docs/guides/05-assigning-ratios/">Next: Assigning Ratios to Excel</a></nav></div></div></main><footer class="site-footer"><div class="container footer-inner"><span>FinForge - MIT License</span><nav class="footer-links" aria-label="Legal"><a href="/docs/disclaimer/">Financial disclaimer</a><a href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></footer></body></html>

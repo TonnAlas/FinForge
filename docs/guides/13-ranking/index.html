@@ -1,0 +1,182 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="description" content="FinForge brings live stock data, side-by-side charts, and a familiar Excel dashboard together in one simple app for investors."><meta name="generator" content="Astro v7.2.3"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"><title>Ranking - FinForge</title><link rel="stylesheet" href="/_astro/Layout.CQluC8CQ.css"></head><body><header class="site-header"><div class="container header-inner"><a class="brand" href="/"><span class="brand-mark">&gt;ƒ</span><span class="brand-name">FinForge</span></a><nav class="site-nav" aria-label="Primary navigation"><a href="/" class="nav-link">Home</a><a href="/docs/" class="nav-link">Docs</a><a href="/docs/installation/" class="nav-link">Installation</a><a href="/docs/features/" class="nav-link">Features</a><a href="/docs/roadmap/" class="nav-link">Roadmap</a><a class="nav-link external" href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></header><main class="container main"><div class="docs-grid"><aside class="docs-sidebar"><a href="/docs/">Overview</a><a href="/docs/installation/">Installation</a><a href="/docs/features/">Features</a><a href="/docs/roadmap/">Roadmap</a><a href="/docs/guides/">Guides</a><a href="/docs/disclaimer/">Disclaimer</a><div class="docs-sidebar-label">User guides</div><a href="/docs/guides/01-getting-started/">Getting Started</a><a href="/docs/guides/02-ticker-management/">Ticker Management</a><a href="/docs/guides/03-importing-data/">Importing Data to Excel</a><a href="/docs/guides/04-creating-ratios/">Creating Ratios</a><a href="/docs/guides/05-assigning-ratios/">Assigning Ratios to Excel</a><a href="/docs/guides/06-advanced-ratio-features/">Advanced Ratio Features</a><a href="/docs/guides/07-quick-reference/">Quick Reference</a><a href="/docs/guides/08-available-data-reference/">Available Data Reference</a><a href="/docs/guides/09-color-reference/">Color Reference</a><a href="/docs/guides/10-data-cleanup/">Data Cleanup System</a><a href="/docs/guides/11-uninstalling-finforge/">Uninstalling FinForge</a><a href="/docs/guides/complete-user-guide/">Complete User Guide</a><a href="/docs/guides/13-ranking/" class="active">Ranking</a></aside><div class="docs-content"><h1 id="ranking">Ranking</h1>
+<p>The <strong>Ranking</strong> tab scores a group of stocks across the metrics you choose and produces a single ranked score for each one. Instead of looking at each ratio on its own, you pick the metrics that matter to you, tell FinForge which direction is “good” (higher or lower), assign each metric a weight, and the app combines everything into one 0-100 score per stock.</p>
+<hr>
+<h2 id="opening-the-ranking-tab">Opening the Ranking Tab</h2>
+<ol>
+<li>Launch the FinForge workspace (see <a href="/docs/guides/getting-started/">Getting Started</a>)</li>
+<li>In the sidebar, expand <strong>Data</strong></li>
+<li>Click <strong>Ranking</strong></li>
+</ol>
+<p>The Ranking screen has three main areas:</p>
+<ul>
+<li><strong>Left panel</strong> – choose tickers, choose metrics, and manage presets</li>
+<li><strong>Scoring cards</strong> – one card per selected metric, where you set the weight and curve</li>
+<li><strong>Ticker cards panel</strong> – the results, showing each stock’s points and total score</li>
+</ul>
+<hr>
+<h2 id="quick-start">Quick Start</h2>
+<ol>
+<li><strong>Choose tickers</strong> – in the left panel’s Tickers subtab, select the stocks to rank</li>
+<li><strong>Choose metrics</strong> – in the Metrics subtab, toggle on the metrics to score</li>
+<li><strong>Click Analyze</strong> – FinForge computes the latest value of each metric for every selected stock</li>
+<li><strong>Read the results</strong> – the bottom Ticker cards panel shows each stock’s points and total score</li>
+</ol>
+<hr>
+<h2 id="step-1-select-tickers">Step 1: Select Tickers</h2>
+<p>In the left panel, click the <strong>Tickers</strong> icon (top of the panel).</p>
+<ul>
+<li>Type in the <strong>Search tickers</strong> box to filter the list</li>
+<li>Click a ticker row to select or deselect it</li>
+<li>Use <strong>All</strong> to select every imported ticker</li>
+<li>Use <strong>Remove all</strong> to clear the selection</li>
+<li>The selected count is shown at the bottom</li>
+</ul>
+<hr>
+<h2 id="step-2-select-metrics">Step 2: Select Metrics</h2>
+<p>Click the <strong>Metrics</strong> icon (middle of the left panel).</p>
+<ul>
+<li>Metrics are grouped by folder (the same folders used in the Metrics tab)</li>
+<li>Use <strong>Search metrics</strong> to filter</li>
+<li>Click a metric row to add or remove it</li>
+<li><strong>Show selected</strong> filters the list to only the metrics you have chosen</li>
+<li><strong>Remove all</strong> clears the metric selection</li>
+</ul>
+<hr>
+<h2 id="step-3-set-weights-and-curves">Step 3: Set Weights and Curves</h2>
+<p>Every selected metric appears as a scoring card on the right. Each card controls how that metric contributes to the final score.</p>
+<h3 id="max-pts-weight">Max pts (Weight)</h3>
+<ul>
+<li>The <strong>Max pts</strong> box is the metric’s weight</li>
+<li>A metric can earn at most this many points</li>
+<li>A bigger Max pts means the metric matters more in the final ranking</li>
+</ul>
+<h3 id="direction">Direction</h3>
+<p>Choose which direction is “better”:</p>
+<ul>
+<li><strong>Higher</strong> – larger values score more points (e.g., ROE, revenue growth)</li>
+<li><strong>Lower</strong> – smaller values score more points (e.g., debt-to-equity)</li>
+<li><strong>Target</strong> – only available for the Bell curve; values near the center score best</li>
+</ul>
+<h3 id="curve-type">Curve Type</h3>
+<p>The curve determines how a raw value is converted into points:</p>
+<table>
+<thead>
+<tr>
+<th>Curve</th>
+<th>What it does</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Percentile</td>
+<td>Ranks each stock against the others in your selection; outlier-robust</td>
+<td>None (automatic)</td>
+</tr>
+<tr>
+<td>Bell</td>
+<td>Full points at a center value, falling off to the sides</td>
+<td>Center, Steepness</td>
+</tr>
+<tr>
+<td>S-Curve</td>
+<td>Smooth transition from low to high points around a midpoint</td>
+<td>Midpoint, Slope</td>
+</tr>
+<tr>
+<td>Linear</td>
+<td>Straight-line scoring between a low and high anchor</td>
+<td>Low anchor, High anchor</td>
+</tr>
+<tr>
+<td>Steps</td>
+<td>Score is set by which bucket (bin) the value falls into</td>
+<td>Thresholds, Points per bin</td>
+</tr>
+<tr>
+<td>Custom</td>
+<td>Draw your own curve by adding points</td>
+<td>Points, Smoothness</td>
+</tr>
+</tbody>
+</table>
+<h3 id="curve-parameters-and-the-mini-chart">Curve Parameters and the Mini-Chart</h3>
+<ul>
+<li>Each card shows a small chart of the curve with one dot per selected stock</li>
+<li><strong>Yellow handles</strong> on the curve can be dragged to reshape it; you can also type values into the parameter boxes (blank = automatic)</li>
+<li>When a parameter is left blank, FinForge derives it from your selected stocks (e.g., median, range)</li>
+</ul>
+<p>Per-curve controls:</p>
+<ul>
+<li><strong>Percentile</strong> – no parameters; fully automatic</li>
+<li><strong>Bell</strong> – drag the <strong>center</strong> handle to move the peak and the <strong>width</strong> handle to change steepness</li>
+<li><strong>S-Curve</strong> – drag the <strong>midpoint</strong> and <strong>slope</strong> handles</li>
+<li><strong>Linear</strong> – drag the <strong>low</strong> and <strong>high</strong> anchor handles</li>
+<li><strong>Steps</strong> – drag a threshold handle sideways to move a boundary, or drag a score handle up/down; click empty chart space to insert a new threshold; edit the Thresholds / Points columns below the chart</li>
+<li><strong>Custom</strong> – click empty chart space to add a point, drag a point to move it, right-click a point to delete it; the Smoothness slider blends straight lines (0) with smooth curves (1); edit points in the list below the chart</li>
+</ul>
+<hr>
+<h2 id="step-4-run-the-analysis">Step 4: Run the Analysis</h2>
+<p>Click <strong>Analyze</strong> in the toolbar to compute (or refresh) the ranking. FinForge takes the latest available value of each metric for each selected stock, converts each value to points, and combines them into a 0-100 score.</p>
+<ul>
+<li><strong>Collapse all</strong> – collapses every scoring card to keep the screen tidy</li>
+<li>The status text (top-right of the toolbar) shows what is happening</li>
+</ul>
+<hr>
+<h2 id="how-the-scoring-works">How the Scoring Works</h2>
+<ul>
+<li>Each stock’s score = <strong>100 x (points earned) / (maximum points available)</strong></li>
+<li>Every metric that has data for a stock contributes its points; metrics with missing data are skipped for that stock and the score is re-normalized, so a missing value never unfairly penalizes a stock</li>
+<li>Scores are always shown on a 0-100 scale</li>
+</ul>
+<hr>
+<h2 id="reading-the-results">Reading the Results</h2>
+<h3 id="ticker-cards-panel-bottom">Ticker Cards Panel (bottom)</h3>
+<p>After you click Analyze, the panel at the bottom shows each selected stock:</p>
+<ul>
+<li>One <strong>Pts</strong> column per metric (the metric’s max points is shown in the header)</li>
+<li>A trailing <strong>Total</strong> column showing <code>total points / max points</code></li>
+<li>Use the <strong>Search tickers</strong> box to filter the rows</li>
+<li><strong>Click a ticker row</strong> to focus it – the charts draw a guide line on that stock so you can see where it sits on each curve</li>
+</ul>
+<h3 id="results-table-full-screen">Results Table (full screen)</h3>
+<p>Click <strong>Results</strong> in the toolbar to open a full-screen, sortable table:</p>
+<ul>
+<li>Columns: Ticker, one points column per metric, and a Total column</li>
+<li>Click any column header to sort:
+<ul>
+<li><strong>Ticker</strong> – A-Z, then Z-A</li>
+<li><strong>Metric</strong> – by that metric’s points (stocks with no data always sort last)</li>
+<li><strong>Total</strong> – click repeatedly to cycle: total points down, total points up, score down, score up</li>
+</ul>
+</li>
+<li>Click <strong>Back</strong> to return to the ranking screen</li>
+</ul>
+<h3 id="advanced-view-single-metric">Advanced View (single metric)</h3>
+<p>Click <strong>Advanced</strong> to open a full-screen, enlarged view of one metric’s scoring card:</p>
+<ul>
+<li>Use the <strong>metric dropdown</strong> (top-left) to switch between metrics; metrics already added show an “added” label</li>
+<li><strong>Create new metric</strong> jumps to the Metrics tab and starts the editor</li>
+<li>All curve editing works exactly as in the grid (drag handles, add points, pan the chart)</li>
+<li>Click <strong>Back</strong> to return to the ranking grid</li>
+</ul>
+<hr>
+<h2 id="saving-and-loading-presets">Saving and Loading Presets</h2>
+<p>The left panel’s <strong>Presets</strong> subtab lets you save and restore your ranking configuration (tickers + metrics + curves + weights):</p>
+<ul>
+<li><strong>Name</strong> – type a name for the preset</li>
+<li><strong>Save</strong> – save the current configuration under that name</li>
+<li><strong>Load</strong> – pick a preset from the dropdown to restore it</li>
+<li><strong>New</strong> – clear the current configuration to start fresh</li>
+<li><strong>Delete</strong> – remove the currently loaded preset</li>
+</ul>
+<hr>
+<h2 id="tips">Tips</h2>
+<ol>
+<li><strong>Pick metrics that fit your strategy</strong> – a mix of profitability, growth, and valuation metrics usually ranks better than several similar ones</li>
+<li><strong>Use weights deliberately</strong> – raise Max pts on the metrics that matter most to you</li>
+<li><strong>Watch the direction</strong> – make sure “Higher” vs “Lower” matches what good looks like for each metric</li>
+<li><strong>Missing data is handled</strong> – stocks without a metric’s data are scored on the remaining metrics, so a stock is not penalized for missing a single value</li>
+<li><strong>Save good setups as presets</strong> – you can quickly re-run a ranking you like on new data</li>
+</ol>
+<nav class="guide-pager" aria-label="Guide navigation"><a class="button button-secondary" href="/docs/guides/complete-user-guide/">Previous: Complete User Guide</a></nav></div></div></main><footer class="site-footer"><div class="container footer-inner"><span>FinForge - MIT License</span><nav class="footer-links" aria-label="Legal"><a href="/docs/disclaimer/">Financial disclaimer</a><a href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></footer></body></html>

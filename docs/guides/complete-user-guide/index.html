@@ -1,0 +1,1934 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="description" content="FinForge brings live stock data, side-by-side charts, and a familiar Excel dashboard together in one simple app for investors."><meta name="generator" content="Astro v7.2.3"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"><title>Complete User Guide - FinForge</title><link rel="stylesheet" href="/_astro/Layout.CQluC8CQ.css"></head><body><header class="site-header"><div class="container header-inner"><a class="brand" href="/"><span class="brand-mark">&gt;ƒ</span><span class="brand-name">FinForge</span></a><nav class="site-nav" aria-label="Primary navigation"><a href="/" class="nav-link">Home</a><a href="/docs/" class="nav-link">Docs</a><a href="/docs/installation/" class="nav-link">Installation</a><a href="/docs/features/" class="nav-link">Features</a><a href="/docs/roadmap/" class="nav-link">Roadmap</a><a class="nav-link external" href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></header><main class="container main"><div class="docs-grid"><aside class="docs-sidebar"><a href="/docs/">Overview</a><a href="/docs/installation/">Installation</a><a href="/docs/features/">Features</a><a href="/docs/roadmap/">Roadmap</a><a href="/docs/guides/">Guides</a><a href="/docs/disclaimer/">Disclaimer</a><div class="docs-sidebar-label">User guides</div><a href="/docs/guides/01-getting-started/">Getting Started</a><a href="/docs/guides/02-ticker-management/">Ticker Management</a><a href="/docs/guides/03-importing-data/">Importing Data to Excel</a><a href="/docs/guides/04-creating-ratios/">Creating Ratios</a><a href="/docs/guides/05-assigning-ratios/">Assigning Ratios to Excel</a><a href="/docs/guides/06-advanced-ratio-features/">Advanced Ratio Features</a><a href="/docs/guides/07-quick-reference/">Quick Reference</a><a href="/docs/guides/08-available-data-reference/">Available Data Reference</a><a href="/docs/guides/09-color-reference/">Color Reference</a><a href="/docs/guides/10-data-cleanup/">Data Cleanup System</a><a href="/docs/guides/11-uninstalling-finforge/">Uninstalling FinForge</a><a href="/docs/guides/complete-user-guide/" class="active">Complete User Guide</a><a href="/docs/guides/13-ranking/">Ranking</a></aside><div class="docs-content"><h1 id="finforge---complete-user-guide">FinForge - Complete User Guide</h1>
+<p>Welcome to FinForge! This comprehensive guide covers everything you need to know to use the application effectively.</p>
+<hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li>Getting Started</li>
+<li>Ticker Management</li>
+<li>Importing Data to Excel</li>
+<li>Creating Financial Ratios</li>
+<li>Assigning Ratios to Excel</li>
+<li>Advanced Ratio Features</li>
+<li>Quick Reference</li>
+<li>Available Data Reference</li>
+<li>Color Reference</li>
+<li>Data Cleanup System</li>
+<li>Troubleshooting</li>
+</ol>
+<hr>
+<h1 id="1-getting-started">1. Getting Started</h1>
+<h2 id="what-is-finforge">What is FinForge?</h2>
+<p>FinForge is a financial analysis tool that:</p>
+<ul>
+<li>Fetches real-time stock data from Yahoo Finance</li>
+<li>Stores data efficiently in Parquet format</li>
+<li>Imports financial statements into Excel</li>
+<li>Lets you create custom financial ratios</li>
+<li>Calculates and displays ratios for multiple tickers</li>
+</ul>
+<hr>
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="step-1-launch-the-application">Step 1: Launch the Application</h3>
+<p><strong>Option A - Using the Batch File (Recommended)</strong></p>
+<ol>
+<li>Double-click <code>launch_finforge.bat</code> in the main folder</li>
+<li>The FinForge window will open</li>
+</ol>
+<h3 id="step-2-open-the-workspace">Step 2: Open the Workspace</h3>
+<ol>
+<li>In the launcher, click <strong>Open statement import window</strong></li>
+<li>The main workspace opens with sidebar navigation (Imports, Ratios, Company Profile, Research)</li>
+</ol>
+<h3 id="step-3-add-your-first-ticker">Step 3: Add Your First Ticker</h3>
+<ol>
+<li>Go to the <strong>Imports</strong> tab</li>
+<li>Type a ticker symbol (e.g., <code>AAPL</code>) in the search bar</li>
+<li>Select the ticker from search results and add it to the import list</li>
+<li>Data fetching starts automatically in the background</li>
+</ol>
+<h3 id="step-4-import-financial-data-to-excel">Step 4: Import Financial Data to Excel</h3>
+<ol>
+<li>In the Imports tab, choose <strong>Balance sheet</strong> or <strong>Income statement</strong> scope</li>
+<li>Select the line items you want to print</li>
+<li>Click <strong>Import</strong> to send data to Excel</li>
+</ol>
+<hr>
+<h2 id="system-requirements">System Requirements</h2>
+<ul>
+<li>Windows 10 or later</li>
+<li>Microsoft Excel (with macros enabled)</li>
+<li>Python 3.10+ (included in .venv)</li>
+<li>Node.js 18+ (for Electron, auto-installed by setup)</li>
+<li>Internet connection (for data fetching)</li>
+</ul>
+<hr>
+<h2 id="first-time-setup">First-Time Setup</h2>
+<p>If this is your first time using the app:</p>
+<ol>
+<li><strong>Run <code>setup.bat</code></strong> to install all dependencies</li>
+<li><strong>Enable Excel Macros</strong>
+<ul>
+<li>Open Excel, go to File &gt; Options &gt; Trust Center</li>
+<li>Click Trust Center Settings &gt; Macro Settings</li>
+<li>Select “Enable all macros”</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="folder-structure">Folder Structure</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>FinForge/</span></span>
+<span class="line"><span>  FinForge.xlsm             &lt;- Main Excel workbook</span></span>
+<span class="line"><span>  launch_finforge.bat       &lt;- Quick launcher</span></span>
+<span class="line"><span>  setup.bat                 &lt;- First-time setup</span></span>
+<span class="line"><span>  data/                     &lt;- All fetched data stored here</span></span>
+<span class="line"><span>    fundamentals/           &lt;- Financial statements</span></span>
+<span class="line"><span>    holders/                &lt;- Holder information</span></span>
+<span class="line"><span>    metadata/               &lt;- Company info</span></span>
+<span class="line"><span>    prices/                 &lt;- Price history</span></span>
+<span class="line"><span>  ElectronHome/             &lt;- Electron desktop UI</span></span>
+<span class="line"><span>  Guides/                   &lt;- Documentation</span></span>
+<span class="line"><span>    User/                   &lt;- User guides</span></span>
+<span class="line"><span>    Developer/              &lt;- Technical docs</span></span>
+<span class="line"><span>  Importing/                &lt;- Import scripts</span></span>
+<span class="line"><span>  Internal/                 &lt;- Core modules</span></span>
+<span class="line"><span>  Ticker_management/        &lt;- Ticker CRUD</span></span>
+<span class="line"><span>  data_management/          &lt;- Data persistence</span></span></code></pre>
+<hr>
+<h1 id="2-ticker-management">2. Ticker Management</h1>
+<p>Learn how to add, edit, and manage stock tickers in your portfolio.</p>
+<hr>
+<h2 id="opening-the-ticker-manager">Opening the Ticker Manager</h2>
+<p>The ticker management is built into FinForge. Launch it by:</p>
+<ul>
+<li>Double-clicking <code>launch_finforge.bat</code>, or</li>
+<li>Running from command line (see Getting Started)</li>
+</ul>
+<hr>
+<h2 id="adding-tickers">Adding Tickers</h2>
+<h3 id="single-ticker">Single Ticker</h3>
+<ol>
+<li>Type the ticker symbol in the input field (e.g., <code>MSFT</code>)</li>
+<li>Click <strong>Add</strong> or press Enter</li>
+<li>The ticker appears in the list</li>
+<li>Data fetching starts automatically in the background</li>
+</ol>
+<p><strong>Example:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Input: AAPL</span></span>
+<span class="line"><span>Result: Apple Inc. added to list, data fetching begins</span></span></code></pre>
+<h3 id="validation-rules">Validation Rules</h3>
+<ul>
+<li>Tickers must be 1-5 letters only</li>
+<li>No numbers or special characters</li>
+<li>Duplicates are not allowed</li>
+</ul>
+<hr>
+<h2 id="removing-tickers">Removing Tickers</h2>
+<h3 id="delete-a-single-ticker">Delete a Single Ticker</h3>
+<ol>
+<li>Find the ticker in the list</li>
+<li>Click the <strong>X</strong> (delete) button next to it</li>
+<li>Confirm the deletion</li>
+</ol>
+<h3 id="what-happens-to-the-data">What Happens to the Data?</h3>
+<p>When you remove a ticker:</p>
+<ol>
+<li>The ticker is removed from your list immediately</li>
+<li>The data is <strong>scheduled for deletion</strong> in 3 days</li>
+<li>If you re-add the ticker within 3 days, the data is preserved</li>
+<li>After 3 days, data is permanently deleted on next app launch</li>
+</ol>
+<hr>
+<h2 id="editing-tickers">Editing Tickers</h2>
+<ol>
+<li>Find the ticker in the list</li>
+<li>Click the <strong>Edit</strong> button</li>
+<li>Enter the new ticker symbol</li>
+<li>Click OK</li>
+</ol>
+<p><strong>Note:</strong> Editing a ticker schedules the old ticker’s data for deletion.</p>
+<hr>
+<h2 id="selecting-tickers-for-launch">Selecting Tickers for Launch</h2>
+<p>When launching the Excel dashboard:</p>
+<ol>
+<li>Click on tickers to select/deselect them</li>
+<li>Selected tickers will be highlighted</li>
+<li>Click <strong>Launch Dashboard</strong> to open Excel with selected tickers</li>
+</ol>
+<hr>
+<h2 id="fetching-data">Fetching Data</h2>
+<h3 id="automatic-fetching">Automatic Fetching</h3>
+<p>Data is fetched automatically when you:</p>
+<ul>
+<li>Add a new ticker</li>
+<li>Launch the dashboard with tickers that need updates</li>
+</ul>
+<h3 id="what-data-is-fetched">What Data is Fetched?</h3>
+<p>For each ticker, the app fetches:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Data Types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Financials</td>
+<td>Income statement, balance sheet, cash flow (annual and quarterly)</td>
+</tr>
+<tr>
+<td>Analyst</td>
+<td>Earnings estimates, revenue estimates, price targets, recommendations</td>
+</tr>
+<tr>
+<td>Holders</td>
+<td>Major, institutional, mutual fund holders, insider roster</td>
+</tr>
+<tr>
+<td>Insider</td>
+<td>Transactions, purchases summary</td>
+</tr>
+<tr>
+<td>Historical</td>
+<td>Dividends, splits, price history</td>
+</tr>
+<tr>
+<td>Other</td>
+<td>News, SEC filings, calendar, company info</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="where-is-ticker-data-stored">Where is Ticker Data Stored?</h2>
+<p>Tickers are saved in: <code>data/tickers.json</code></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="json"><code><span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#79B8FF">  "tickers"</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">"MSFT"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"AAPL"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"GOOGL"</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<p>Stock data is stored in: <code>data/</code> folder as Parquet files</p>
+<hr>
+<h1 id="3-importing-data-to-excel">3. Importing Data to Excel</h1>
+<p>Learn how to import financial statement data from your stored Parquet files into Excel.</p>
+<hr>
+<h2 id="overview">Overview</h2>
+<p>The import system transfers data from Parquet files to your Excel workbook:</p>
+<ul>
+<li>Balance sheet data goes to the “balance sheets” sheet</li>
+<li>Income statement data goes to the “income statements” sheet</li>
+</ul>
+<hr>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Before importing:</p>
+<ol>
+<li>Have tickers with fetched data (see Ticker Management)</li>
+<li>Have Excel workbook open (<code>FinForge.xlsm</code>)</li>
+<li>Tickers should be listed in Row 4 of the respective sheet</li>
+</ol>
+<hr>
+<h2 id="importing-balance-sheets">Importing Balance Sheets</h2>
+<h3 id="from-excel-vba-macro">From Excel (VBA Macro)</h3>
+<ol>
+<li>Open <code>FinForge.xlsm</code></li>
+<li>Go to the “balance sheets” sheet</li>
+<li>Run the macro: <code>ImportBalanceSheets()</code>
+<ul>
+<li>Press <code>Alt + F8</code></li>
+<li>Select <code>ImportBalanceSheets</code></li>
+<li>Click Run</li>
+</ul>
+</li>
+</ol>
+<h3 id="from-python">From Python</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="powershell"><code><span class="line"><span style="color:#E1E4E8">cd </span><span style="color:#F97583">&lt;</span><span style="color:#E1E4E8">your</span><span style="color:#F97583">-</span><span style="color:#E1E4E8">finforge</span><span style="color:#F97583">-</span><span style="color:#E1E4E8">folder</span><span style="color:#F97583">&gt;</span></span>
+<span class="line"><span style="color:#E1E4E8">.\.venv\Scripts\Activate.ps1</span></span>
+<span class="line"><span style="color:#E1E4E8">python </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">c </span><span style="color:#9ECBFF">"from Importing.import_balance_sheets import main; main()"</span></span></code></pre>
+<h3 id="what-gets-imported">What Gets Imported</h3>
+<table>
+<thead>
+<tr>
+<th>Row</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4</td>
+<td>Ticker symbols (you place these)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Most recent date</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Second most recent date</td>
+</tr>
+<tr>
+<td>7+</td>
+<td>Financial line items</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example Layout:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>       A          B              C              D</span></span>
+<span class="line"><span>4   INDEX       MSFT           AAPL           GOOGL</span></span>
+<span class="line"><span>5              2024-06-30     2024-06-30     2024-06-30</span></span>
+<span class="line"><span>6              2024-03-31     2024-03-31     2024-03-31</span></span>
+<span class="line"><span>7   Total Assets  $411.9B       $352.5B        $402.3B</span></span>
+<span class="line"><span>8   Cash          $18.3B        $28.4B         $24.0B</span></span>
+<span class="line"><span>...</span></span></code></pre>
+<hr>
+<h2 id="importing-income-statements">Importing Income Statements</h2>
+<h3 id="from-excel-vba-macro-1">From Excel (VBA Macro)</h3>
+<ol>
+<li>Open <code>FinForge.xlsm</code></li>
+<li>Go to the “income statements” sheet</li>
+<li>Run the macro: <code>ImportIncomeStatements()</code>
+<ul>
+<li>Press <code>Alt + F8</code></li>
+<li>Select <code>ImportIncomeStatements</code></li>
+<li>Click Run</li>
+</ul>
+</li>
+</ol>
+<h3 id="from-python-1">From Python</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="powershell"><code><span class="line"><span style="color:#E1E4E8">cd </span><span style="color:#F97583">&lt;</span><span style="color:#E1E4E8">your</span><span style="color:#F97583">-</span><span style="color:#E1E4E8">finforge</span><span style="color:#F97583">-</span><span style="color:#E1E4E8">folder</span><span style="color:#F97583">&gt;</span></span>
+<span class="line"><span style="color:#E1E4E8">.\.venv\Scripts\Activate.ps1</span></span>
+<span class="line"><span style="color:#E1E4E8">python </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">c </span><span style="color:#9ECBFF">"from Importing.import_income_statements import main; main()"</span></span></code></pre>
+<hr>
+<h2 id="customizing-which-items-to-import">Customizing Which Items to Import</h2>
+<h3 id="using-the-settings-sheet">Using the Settings Sheet</h3>
+<ol>
+<li>Go to the “Settings” sheet in Excel</li>
+<li>Find the section for Balance Sheet or Income Statement items</li>
+<li>List the items you want to import (one per row)</li>
+<li>Run the import again</li>
+</ol>
+<p><strong>Example Settings:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Balance Sheet Items:</span></span>
+<span class="line"><span>  Total Assets</span></span>
+<span class="line"><span>  Total Liabilities</span></span>
+<span class="line"><span>  Stockholders Equity</span></span>
+<span class="line"><span>  Cash And Cash Equivalents</span></span>
+<span class="line"><span>  Total Debt</span></span></code></pre>
+<hr>
+<h2 id="understanding-color-codes">Understanding Color Codes</h2>
+<p>After importing, cells are color-coded:</p>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Orange text</td>
+<td>Data found and imported successfully</td>
+</tr>
+<tr>
+<td>Red text</td>
+<td>Data not available for this ticker</td>
+</tr>
+<tr>
+<td>White text</td>
+<td>Empty/no value</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="tips-for-successful-imports">Tips for Successful Imports</h2>
+<h3 id="setting-up-tickers">Setting Up Tickers</h3>
+<ol>
+<li>In the import sheet (balance sheets or income statements)</li>
+<li>Go to Row 4</li>
+<li>Column A should say “INDEX”</li>
+<li>Enter ticker symbols in columns B, C, D, etc.</li>
+</ol>
+<p><strong>Example:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Row 4: INDEX | MSFT | AAPL | GOOGL | AMZN</span></span></code></pre>
+<h3 id="after-adding-new-tickers">After Adding New Tickers</h3>
+<ol>
+<li>First, fetch data using the launcher or fetch script</li>
+<li>Then run the import macro</li>
+<li>Data will populate for the new tickers</li>
+</ol>
+<h3 id="refreshing-data">Refreshing Data</h3>
+<p>To update with latest data:</p>
+<ol>
+<li>Run the fetch script to get new data from Yahoo Finance</li>
+<li>Run the import macro to update Excel</li>
+</ol>
+<hr>
+<h1 id="4-creating-financial-ratios">4. Creating Financial Ratios</h1>
+<p>Learn how to create custom financial ratios using the Ratio Maker tool.</p>
+<hr>
+<h2 id="what-are-financial-ratios">What are Financial Ratios?</h2>
+<p>Financial ratios are calculations that use financial statement data to measure:</p>
+<ul>
+<li>Profitability (e.g., Profit Margin, ROE)</li>
+<li>Liquidity (e.g., Current Ratio, Quick Ratio)</li>
+<li>Leverage (e.g., Debt-to-Equity)</li>
+<li>Efficiency (e.g., Asset Turnover)</li>
+<li>Valuation (e.g., P/E Ratio, P/B Ratio)</li>
+</ul>
+<hr>
+<h2 id="opening-the-ratio-maker">Opening the Ratio Maker</h2>
+<h3 id="from-excel">From Excel</h3>
+<ol>
+<li>Open <code>FinForge.xlsm</code></li>
+<li>Run the macro: <code>OpenRatioMaker()</code>
+<ul>
+<li>Press <code>Alt + F8</code></li>
+<li>Select <code>OpenRatioMaker</code></li>
+<li>Click Run</li>
+</ul>
+</li>
+</ol>
+<h3 id="from-python-2">From Python</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="powershell"><code><span class="line"><span style="color:#E1E4E8">cd </span><span style="color:#F97583">&lt;</span><span style="color:#E1E4E8">your</span><span style="color:#F97583">-</span><span style="color:#E1E4E8">finforge</span><span style="color:#F97583">-</span><span style="color:#E1E4E8">folder</span><span style="color:#F97583">&gt;</span></span>
+<span class="line"><span style="color:#E1E4E8">.\.venv\Scripts\Activate.ps1</span></span>
+<span class="line"><span style="color:#E1E4E8">python Importing</span><span style="color:#F97583">/</span><span style="color:#E1E4E8">ratio_maker.py</span></span></code></pre>
+<hr>
+<h2 id="creating-your-first-ratio">Creating Your First Ratio</h2>
+<h3 id="step-1-click-new-ratio">Step 1: Click “New Ratio”</h3>
+<p>The Create Ratio dialog opens.</p>
+<h3 id="step-2-enter-ratio-name">Step 2: Enter Ratio Name</h3>
+<p>Give your ratio a descriptive name:</p>
+<ul>
+<li>“Gross Margin”</li>
+<li>“Current Ratio”</li>
+<li>“Debt to Equity”</li>
+</ul>
+<h3 id="step-3-build-the-formula">Step 3: Build the Formula</h3>
+<p>Use the field selector and operators to build your formula.</p>
+<p><strong>Available Data Sources:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Source</th>
+<th>Example Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IS:</code></td>
+<td>Income Statement</td>
+<td>Total Revenue, Net Income, EBITDA</td>
+</tr>
+<tr>
+<td><code>BS:</code></td>
+<td>Balance Sheet</td>
+<td>Total Assets, Total Debt, Cash</td>
+</tr>
+<tr>
+<td><code>CF:</code></td>
+<td>Cash Flow</td>
+<td>Operating Cash Flow, Free Cash Flow</td>
+</tr>
+<tr>
+<td><code>RATIO:</code></td>
+<td>Other Ratios</td>
+<td>Use your previously created ratios</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Available Operators:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Operation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>+</code></td>
+<td>Addition</td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td>Subtraction</td>
+</tr>
+<tr>
+<td><code>*</code></td>
+<td>Multiplication</td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td>Division</td>
+</tr>
+<tr>
+<td><code>(</code></td>
+<td>Open parenthesis</td>
+</tr>
+<tr>
+<td><code>)</code></td>
+<td>Close parenthesis</td>
+</tr>
+</tbody>
+</table>
+<h3 id="step-4-add-notes-optional">Step 4: Add Notes (Optional)</h3>
+<p>Add a description or notes about the ratio:</p>
+<ul>
+<li>What it measures</li>
+<li>How to interpret it</li>
+<li>Reference ranges</li>
+</ul>
+<h3 id="step-5-save">Step 5: Save</h3>
+<p>Click Save to store the ratio in <code>ratio_config.json</code>.</p>
+<hr>
+<h2 id="formula-examples">Formula Examples</h2>
+<h3 id="profitability-ratios">Profitability Ratios</h3>
+<p><strong>Gross Margin</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>(IS: Total Revenue - IS: Cost Of Revenue) / IS: Total Revenue</span></span></code></pre>
+<p><strong>Operating Margin</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Operating Income / IS: Total Revenue</span></span></code></pre>
+<p><strong>Net Profit Margin</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Net Income / IS: Total Revenue</span></span></code></pre>
+<p><strong>Return on Assets (ROA)</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Net Income / BS: Total Assets</span></span></code></pre>
+<p><strong>Return on Equity (ROE)</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Net Income / BS: Stockholders Equity</span></span></code></pre>
+<h3 id="liquidity-ratios">Liquidity Ratios</h3>
+<p><strong>Current Ratio</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Current Assets / BS: Current Liabilities</span></span></code></pre>
+<p><strong>Quick Ratio</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>(BS: Current Assets - BS: Inventory) / BS: Current Liabilities</span></span></code></pre>
+<h3 id="leverage-ratios">Leverage Ratios</h3>
+<p><strong>Debt to Equity</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Total Debt / BS: Stockholders Equity</span></span></code></pre>
+<p><strong>Debt to Assets</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Total Debt / BS: Total Assets</span></span></code></pre>
+<h3 id="efficiency-ratios">Efficiency Ratios</h3>
+<p><strong>Asset Turnover</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Total Revenue / BS: Total Assets</span></span></code></pre>
+<h3 id="using-other-ratios">Using Other Ratios</h3>
+<p><strong>ROE using DuPont Analysis</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>RATIO: Net Profit Margin * RATIO: Asset Turnover * RATIO: Equity Multiplier</span></span></code></pre>
+<hr>
+<h2 id="understanding-syntax-highlighting">Understanding Syntax Highlighting</h2>
+<p>As you type, the formula is color-coded:</p>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green</td>
+<td>Income Statement fields (IS:)</td>
+</tr>
+<tr>
+<td>Light Blue</td>
+<td>Balance Sheet fields (BS:)</td>
+</tr>
+<tr>
+<td>Purple</td>
+<td>Price/Cash Flow fields</td>
+</tr>
+<tr>
+<td>Orange</td>
+<td>Operators (+, -, *, /)</td>
+</tr>
+<tr>
+<td>Yellow</td>
+<td>Parentheses</td>
+</tr>
+<tr>
+<td>Gold</td>
+<td>Other Ratios (RATIO:)</td>
+</tr>
+<tr>
+<td>Light Blue</td>
+<td>Numbers</td>
+</tr>
+<tr>
+<td>Red + Wavy</td>
+<td>Errors (typos, invalid fields)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="editing-existing-ratios">Editing Existing Ratios</h2>
+<ol>
+<li>Select the ratio in the list</li>
+<li>Click <strong>Edit</strong></li>
+<li>Modify the name, formula, or notes</li>
+<li>Click <strong>Save</strong></li>
+</ol>
+<p><strong>Note:</strong> If the ratio is assigned to an Excel column, the column header is automatically updated with the new name.</p>
+<hr>
+<h2 id="deleting-ratios">Deleting Ratios</h2>
+<ol>
+<li>Select the ratio in the list</li>
+<li>Click <strong>Delete</strong></li>
+<li>Confirm the deletion</li>
+</ol>
+<p><strong>Warning:</strong> If the ratio is assigned to an Excel column, unassign it first.</p>
+<hr>
+<h2 id="where-are-ratios-stored">Where are Ratios Stored?</h2>
+<p>Ratios are saved in: <code>Importing/ratio_config.json</code></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="json"><code><span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#79B8FF">  "ratios"</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#79B8FF">    "Gross Margin"</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#79B8FF">      "formula"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"(IS: Total Revenue - IS: Cost Of Revenue) / IS: Total Revenue"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">      "notes"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"Measures profitability after direct costs"</span></span>
+<span class="line"><span style="color:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#79B8FF">    "Current Ratio"</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#79B8FF">      "formula"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"BS: Current Assets / BS: Current Liabilities"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">      "notes"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"Measures short-term liquidity"</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<hr>
+<h2 id="tips-for-creating-good-ratios">Tips for Creating Good Ratios</h2>
+<ol>
+<li><strong>Use descriptive names</strong> - “Gross Margin” not “GM1”</li>
+<li><strong>Add notes</strong> - Document what the ratio measures</li>
+<li><strong>Test with known values</strong> - Verify calculations are correct</li>
+<li><strong>Use parentheses</strong> - Ensure correct order of operations</li>
+<li><strong>Check field names</strong> - Use exact field names from the data</li>
+</ol>
+<hr>
+<h1 id="5-assigning-ratios-to-excel">5. Assigning Ratios to Excel</h1>
+<p>Learn how to assign your created ratios to Excel columns for automatic calculation.</p>
+<hr>
+<h2 id="key-features">Key Features</h2>
+<h3 id="what-you-can-do">What You Can Do:</h3>
+<ol>
+<li><strong>Assign Ratios</strong>: Assign any created ratio to Excel columns (B, C, D, etc.)</li>
+<li><strong>View Status</strong>: See which ratios are assigned and to which columns</li>
+<li><strong>View Notes</strong>: Read ratio notes/descriptions</li>
+<li><strong>Unassign Ratios</strong>: Quick one-click unassignment</li>
+<li><strong>Calculate Ratios</strong>: Compute all ratios for all tickers using Parquet data</li>
+<li><strong>Manual Tickers</strong>: Enter tickers manually in Column A</li>
+</ol>
+<h3 id="benefits">Benefits:</h3>
+<ul>
+<li><strong>Fast</strong>: Uses Parquet data for quick calculations</li>
+<li><strong>Reliable</strong>: Minimal VBA, all logic in Python</li>
+<li><strong>Simple</strong>: Clean UI with clear feedback</li>
+<li><strong>Flexible</strong>: Assign any ratio to any column</li>
+</ul>
+<hr>
+<h2 id="excel-layout-ratios-sheet">Excel Layout (Ratios Sheet)</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Row 1: Financial Ratios [Title]</span></span>
+<span class="line"><span>Row 2: [Empty]</span></span>
+<span class="line"><span>Row 3: [Empty]</span></span>
+<span class="line"><span>Row 4: Ticker | Ratio1 Name | Ratio2 Name | Ratio3 Name | ...</span></span>
+<span class="line"><span>Row 5: [Empty - Reserved]</span></span>
+<span class="line"><span>Row 6: AAPL   | 1.2500      | 0.8500      | 2.4500      | ...</span></span>
+<span class="line"><span>Row 7: MSFT   | 1.3000      | 0.9200      | 2.5000      | ...</span></span>
+<span class="line"><span>Row 8: GOOGL  | 1.1800      | 0.7800      | 2.3200      | ...</span></span>
+<span class="line"><span>...</span></span></code></pre>
+<h3 id="column-structure">Column Structure:</h3>
+<ul>
+<li><strong>Column A</strong>: Ticker symbols (enter manually from Row 6 onwards)</li>
+<li><strong>Column B+</strong>: Assigned ratios with calculated values</li>
+</ul>
+<h3 id="row-functions">Row Functions:</h3>
+<ul>
+<li><strong>Row 4</strong>: Ratio names (set by assignment)</li>
+<li><strong>Row 5</strong>: Reserved and left empty</li>
+<li><strong>Row 6+</strong>: Your data (tickers + calculated ratios)</li>
+</ul>
+<hr>
+<h2 id="how-to-use">How to Use</h2>
+<h3 id="step-1-open-ratio-manager">Step 1: Open Ratio Manager</h3>
+<p><strong>From Excel:</strong></p>
+<ul>
+<li>Run VBA macro: <code>OpenRatioManager()</code></li>
+<li>Or create a button assigned to this macro</li>
+</ul>
+<p><strong>From Python:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">python </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">c </span><span style="color:#9ECBFF">"from Internal.Ratios.ratio_manager_ui import launch_ratio_manager; launch_ratio_manager()"</span></span></code></pre>
+<h3 id="step-2-assign-a-ratio">Step 2: Assign a Ratio</h3>
+<p>In Ratio Manager UI:</p>
+<ol>
+<li>Select a ratio from the list</li>
+<li>Click <strong>“Assign to Column”</strong></li>
+<li>Enter column letter (B, C, D, etc.)</li>
+<li>Click OK</li>
+</ol>
+<p>Result: Ratio name appears in Row 4, Row 5 stays empty</p>
+<p><strong>Rules:</strong></p>
+<ul>
+<li>Can only assign to columns B and onwards</li>
+<li>Cannot assign same ratio to multiple columns</li>
+<li>Cannot assign to a column that’s already in use</li>
+</ul>
+<h3 id="step-3-view-ratio-notes">Step 3: View Ratio Notes</h3>
+<p>In Ratio Manager UI:</p>
+<ol>
+<li>Select a ratio</li>
+<li>Click <strong>“View Notes”</strong></li>
+<li>Read notes in popup dialog</li>
+</ol>
+<h3 id="step-4-enter-tickers">Step 4: Enter Tickers</h3>
+<p>In Excel (Ratios sheet):</p>
+<ol>
+<li>Go to Column A, Row 6</li>
+<li>Type ticker symbol (e.g., “AAPL”)</li>
+<li>Continue adding tickers in rows below</li>
+</ol>
+<h3 id="step-5-calculate-ratios">Step 5: Calculate Ratios</h3>
+<p><strong>Option A - From Excel:</strong></p>
+<ul>
+<li>Run VBA macro: <code>RefreshRatios()</code></li>
+</ul>
+<p><strong>Option B - From Python:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">python </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">c </span><span style="color:#9ECBFF">"from Internal.Ratios.ratio_calculator import calculate_ratios; calculate_ratios()"</span></span></code></pre>
+<p><strong>What Happens:</strong></p>
+<ul>
+<li>System reads all tickers from Column A</li>
+<li>Loads financial data from Parquet files</li>
+<li>Calculates each assigned ratio for each ticker</li>
+<li>Writes results to Excel</li>
+<li>Shows progress dialog</li>
+</ul>
+<h3 id="step-6-update-an-assignment">Step 6: Update an Assignment</h3>
+<ol>
+<li>Reassign the ratio in Row 4 if needed</li>
+<li>Refresh the sheet so the new layout recalculates</li>
+</ol>
+<hr>
+<h2 id="vba-macros">VBA Macros</h2>
+<h3 id="essential-functions">Essential Functions:</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>' Open the Ratio Manager UI</span></span>
+<span class="line"><span>OpenRatioManager()</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>' Calculate all ratios</span></span>
+<span class="line"><span>RefreshRatios()</span></span></code></pre>
+<h3 id="setting-up-buttons">Setting Up Buttons:</h3>
+<ol>
+<li><strong>Insert Developer Tab</strong> &gt; Insert &gt; Button</li>
+<li><strong>Assign macro</strong> to button:
+<ul>
+<li>“Manage Ratios” &gt; <code>OpenRatioManager</code></li>
+<li>“Calculate Ratios” &gt; <code>RefreshRatios</code></li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="example-workflow">Example Workflow</h2>
+<h3 id="complete-example">Complete Example:</h3>
+<ol>
+<li>
+<p><strong>Create Ratios</strong> (using Ratio Maker)</p>
+<ul>
+<li>Current Ratio: <code>BS: Current Assets / BS: Current Liabilities</code></li>
+<li>Quick Ratio: <code>BS: Cash / BS: Current Liabilities</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Open Ratio Manager</strong></p>
+<ul>
+<li>See both ratios as “Not assigned”</li>
+</ul>
+</li>
+<li>
+<p><strong>Assign Ratios</strong></p>
+<ul>
+<li>Current Ratio &gt; Column B</li>
+<li>Quick Ratio &gt; Column C</li>
+</ul>
+</li>
+<li>
+<p><strong>Enter Tickers</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>A7: AAPL</span></span>
+<span class="line"><span>A8: MSFT</span></span>
+<span class="line"><span>A9: GOOGL</span></span></code></pre>
+</li>
+<li>
+<p><strong>Calculate</strong></p>
+<ul>
+<li>Click “Refresh ratios sheet” in FinForge or run <code>RefreshRatios()</code></li>
+<li>See results:</li>
+</ul>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>B7: 1.2500    C7: 0.8500</span></span>
+<span class="line"><span>B8: 1.3000    C8: 0.9200</span></span>
+<span class="line"><span>B9: 1.1800    C9: 0.7800</span></span></code></pre>
+</li>
+<li>
+<p><strong>Update if Needed</strong></p>
+<ul>
+<li>Adjust the Row 4 assignments, then refresh again</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="best-practices">Best Practices</h2>
+<ol>
+<li><strong>Create ratios first</strong> before trying to assign</li>
+<li><strong>Enter tickers</strong> before calculating</li>
+<li><strong>Use meaningful ratio names</strong> for easy identification</li>
+<li><strong>Add notes</strong> to ratios to remember what they do</li>
+<li><strong>Refresh data</strong> regularly to keep ratios up to date</li>
+<li><strong>Save Excel</strong> after assigning ratios</li>
+</ol>
+<hr>
+<h1 id="6-advanced-ratio-features">6. Advanced Ratio Features</h1>
+<h2 id="horizontal-operator-layout">Horizontal Operator Layout</h2>
+<p>All operators and buttons are arranged <strong>left-to-right</strong> for an intuitive workflow.</p>
+<p><strong>Operator Buttons:</strong></p>
+<ul>
+<li><code>+</code> Addition</li>
+<li><code>-</code> Subtraction</li>
+<li><code>*</code> Multiplication</li>
+<li><code>/</code> or division sign Division (toggleable)</li>
+<li><code>(</code> Opening parenthesis</li>
+<li><code>)</code> Closing parenthesis</li>
+</ul>
+<hr>
+<h2 id="real-time-syntax-highlighting">Real-Time Syntax Highlighting</h2>
+<p>As you type or insert items, the formula is <strong>immediately color-coded</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Color</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Operators</strong></td>
+<td>Orange (#FF9800)</td>
+<td><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code></td>
+</tr>
+<tr>
+<td><strong>Brackets</strong></td>
+<td>Yellow (#FFD700)</td>
+<td><code>(</code>, <code>)</code></td>
+</tr>
+<tr>
+<td><strong>Income Statement</strong></td>
+<td>Green (#81C784)</td>
+<td><code>IS: Revenue</code>, <code>IS: Net Income</code></td>
+</tr>
+<tr>
+<td><strong>Balance Sheet</strong></td>
+<td>Light Blue (#81D4FA)</td>
+<td><code>BS: Total Assets</code>, <code>BS: Cash</code></td>
+</tr>
+<tr>
+<td><strong>Price Data</strong></td>
+<td>Purple (#CE93D8)</td>
+<td><code>P: Closing Price</code></td>
+</tr>
+<tr>
+<td><strong>Functions</strong></td>
+<td>Yellow-Orange (#FFC107)</td>
+<td><code>AVERAGE</code>, <code>SUM</code>, <code>MAX</code></td>
+</tr>
+<tr>
+<td><strong>Numbers</strong></td>
+<td>Light Blue (#90CAF9)</td>
+<td><code>100</code>, <code>1.5</code>, <code>0.25</code></td>
+</tr>
+<tr>
+<td><strong>Errors</strong></td>
+<td>Red (#F44336)</td>
+<td>Invalid fields, typos</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="error-detection-and-highlighting">Error Detection and Highlighting</h2>
+<p>Invalid tokens are automatically detected and marked with:</p>
+<ul>
+<li><strong>Red text color</strong></li>
+<li><strong>Wavy red underline</strong></li>
+</ul>
+<p><strong>Examples of errors:</strong></p>
+<ul>
+<li>Typos: <code>IS: Reveneu</code> (misspelled)</li>
+<li>Invalid fields: <code>XYZ: Unknown</code></li>
+<li>Incomplete operators: <code>IS: Revenue +</code> (missing right operand)</li>
+</ul>
+<hr>
+<h2 id="advanced-functions">Advanced Functions</h2>
+<p>Advanced functions are coming soon. Currently supported features include:</p>
+<ul>
+<li>Basic price data (Close, Open, High, Low, Volume)</li>
+<li>Historical price offsets using <code>[-XD]</code> syntax</li>
+<li>Calculated fields (Change, Change Percent)</li>
+</ul>
+<hr>
+<h2 id="color-legend">Color Legend</h2>
+<p>A built-in <strong>color legend</strong> appears above the formula preview showing:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Operators  Brackets  IS: Items  BS: Items  P: Items  Errors</span></span></code></pre>
+<p>Each bullet is colored to match its syntax highlighting.</p>
+<hr>
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="example-1-simple-ratio-with-highlighting">Example 1: Simple Ratio with Highlighting</h3>
+<p><strong>Gross Margin Formula:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>(IS: Revenue - IS: Cost of Revenue) / IS: Revenue</span></span></code></pre>
+<p><strong>How it appears:</strong></p>
+<ul>
+<li><code>(</code> and <code>)</code> in <strong>yellow</strong></li>
+<li><code>IS: Revenue</code> in <strong>green</strong></li>
+<li><code>-</code> and <code>/</code> in <strong>orange</strong></li>
+<li><code>IS: Cost of Revenue</code> in <strong>green</strong></li>
+</ul>
+<h3 id="example-2-price-data-with-historical-offset">Example 2: Price Data with Historical Offset</h3>
+<p><strong>10-Day Price Change Percent:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>P: Change Percent [-10D]</span></span></code></pre>
+<p><strong>How it appears:</strong></p>
+<ul>
+<li><code>P: Change Percent</code> in <strong>purple</strong></li>
+<li><code>[-10D]</code> offset in <strong>brackets</strong></li>
+<li><code>(</code> and <code>)</code> in <strong>yellow</strong></li>
+<li><code>IS: Revenue</code> in <strong>green</strong></li>
+<li><code>50</code> in <strong>light blue</strong></li>
+</ul>
+<h3 id="example-3-error-detection">Example 3: Error Detection</h3>
+<p><strong>Typo in field name:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Reveneu / IS: Cost</span></span></code></pre>
+<p><strong>How it appears:</strong></p>
+<ul>
+<li><code>IS:</code> in <strong>green</strong> (valid prefix)</li>
+<li><code>Reveneu</code> in <strong>red with wavy underline</strong> (invalid field)</li>
+<li><code>/</code> in <strong>orange</strong></li>
+<li><code>IS: Cost</code> in <strong>red with wavy underline</strong> (incomplete field name)</li>
+</ul>
+<hr>
+<h2 id="best-practices-1">Best Practices</h2>
+<h3 id="use-color-feedback">Use Color Feedback</h3>
+<ul>
+<li><strong>Green/Blue/Purple</strong> = Valid fields</li>
+<li><strong>Orange/Yellow</strong> = Valid operators/brackets</li>
+<li><strong>Red</strong> = Fix immediately!</li>
+</ul>
+<h3 id="validation-before-saving">Validation Before Saving</h3>
+<ol>
+<li>Check for <strong>red errors</strong></li>
+<li>Verify all fields are <strong>green</strong>, <strong>blue</strong>, or <strong>purple</strong></li>
+<li>Ensure operators are <strong>orange</strong> or <strong>yellow</strong></li>
+</ol>
+<hr>
+<h1 id="7-quick-reference">7. Quick Reference</h1>
+<h2 id="color-guide-at-a-glance">Color Guide (At-a-Glance)</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Orange     &gt;  Operators       &gt;  + - * /</span></span>
+<span class="line"><span>Yellow     &gt;  Brackets        &gt;  ( )</span></span>
+<span class="line"><span>Green      &gt;  IS: Items       &gt;  Revenue, Net Income, EBITDA</span></span>
+<span class="line"><span>Light Blue &gt;  BS: Items       &gt;  Total Assets, Cash, Debt</span></span>
+<span class="line"><span>Purple     &gt;  P: Items        &gt;  Close Price, Change Percent</span></span>
+<span class="line"><span>Light Blue &gt;  Numbers         &gt;  100, 1.5, 3.14</span></span>
+<span class="line"><span>Red + Wave &gt;  Errors          &gt;  Typos, invalid fields</span></span></code></pre>
+<hr>
+<h2 id="button-layout-horizontal">Button Layout (Horizontal)</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Operators:  [ + ]  [ - ]  [ * ]  [ / ]  [ ( ]  [ ) ]</span></span></code></pre>
+<hr>
+<h2 id="common-formulas">Common Formulas</h2>
+<h3 id="gross-margin">Gross Margin</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>(IS: Revenue - IS: Cost of Revenue) / IS: Revenue</span></span></code></pre>
+<h3 id="current-ratio">Current Ratio</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Current Assets / BS: Current Liabilities</span></span></code></pre>
+<h3 id="pe-ratio">P/E Ratio</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>P: Closing Price / IS: Earnings Per Share</span></span></code></pre>
+<h3 id="roe-return-on-equity">ROE (Return on Equity)</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Net Income / BS: Total Equity</span></span></code></pre>
+<h3 id="debt-to-equity">Debt-to-Equity</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Total Debt / BS: Total Equity</span></span></code></pre>
+<h3 id="operating-margin">Operating Margin</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Operating Income / IS: Revenue</span></span></code></pre>
+<h3 id="working-capital">Working Capital</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Current Assets - BS: Current Liabilities</span></span></code></pre>
+<hr>
+<h2 id="pre-save-checklist">Pre-Save Checklist</h2>
+<ol>
+<li>No red errors</li>
+<li>All fields are green/blue/purple</li>
+<li>Operators are orange/yellow</li>
+<li>Brackets match</li>
+<li>Formula makes sense</li>
+</ol>
+<hr>
+<h2 id="quick-actions">Quick Actions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Add field</td>
+<td>Select &gt; Insert Field</td>
+</tr>
+<tr>
+<td>Add operator</td>
+<td>Click operator button</td>
+</tr>
+<tr>
+<td>Add function</td>
+<td>Click Advanced Functions</td>
+</tr>
+<tr>
+<td>Add notes</td>
+<td>Click Notes</td>
+</tr>
+<tr>
+<td>Save ratio</td>
+<td>Click green Save</td>
+</tr>
+<tr>
+<td>Cancel</td>
+<td>Click Cancel</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="file-locations">File Locations</h2>
+<ul>
+<li><strong>Ratio Config</strong>: <code>Importing/ratio_config.json</code></li>
+<li><strong>Main App</strong>: <code>Importing/ratio_maker.py</code></li>
+</ul>
+<hr>
+<h1 id="8-available-data-reference">8. Available Data Reference</h1>
+<p>This section lists all data fetched from Yahoo Finance and stored in Parquet format.</p>
+<hr>
+<h2 id="data-storage-structure">Data Storage Structure</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>data/</span></span>
+<span class="line"><span>  fundamentals/</span></span>
+<span class="line"><span>    income_statement/{TICKER}.parquet</span></span>
+<span class="line"><span>    balance_sheet/{TICKER}.parquet</span></span>
+<span class="line"><span>    cash_flow/{TICKER}.parquet</span></span>
+<span class="line"><span>    quarterly_income_statement/{TICKER}.parquet</span></span>
+<span class="line"><span>    quarterly_balance_sheet/{TICKER}.parquet</span></span>
+<span class="line"><span>    quarterly_cash_flow/{TICKER}.parquet</span></span>
+<span class="line"><span>    earnings_estimate/{TICKER}.parquet</span></span>
+<span class="line"><span>    revenue_estimate/{TICKER}.parquet</span></span>
+<span class="line"><span>    analyst_price_targets/{TICKER}.parquet</span></span>
+<span class="line"><span>    eps_trend/{TICKER}.parquet</span></span>
+<span class="line"><span>    growth_estimates/{TICKER}.parquet</span></span>
+<span class="line"><span>    earnings_history/{TICKER}.parquet</span></span>
+<span class="line"><span>    recommendations/{TICKER}.parquet</span></span>
+<span class="line"><span>    recommendations_summary/{TICKER}.parquet</span></span>
+<span class="line"><span>    upgrades_downgrades/{TICKER}.parquet</span></span>
+<span class="line"><span>    insider_transactions/{TICKER}.parquet</span></span>
+<span class="line"><span>    insider_purchases/{TICKER}.parquet</span></span>
+<span class="line"><span>    calendar/{TICKER}.parquet</span></span>
+<span class="line"><span>    dividends/{TICKER}.parquet</span></span>
+<span class="line"><span>    splits/{TICKER}.parquet</span></span>
+<span class="line"><span>    actions/{TICKER}.parquet</span></span>
+<span class="line"><span>    news/{TICKER}.parquet</span></span>
+<span class="line"><span>    sec_filings/{TICKER}.parquet</span></span>
+<span class="line"><span>  holders/</span></span>
+<span class="line"><span>    major_holders/{TICKER}.parquet</span></span>
+<span class="line"><span>    institutional_holders/{TICKER}.parquet</span></span>
+<span class="line"><span>    mutualfund_holders/{TICKER}.parquet</span></span>
+<span class="line"><span>    insider_roster_holders/{TICKER}.parquet</span></span>
+<span class="line"><span>  prices/</span></span>
+<span class="line"><span>    {TICKER}.parquet</span></span>
+<span class="line"><span>  metadata/</span></span>
+<span class="line"><span>    {TICKER}.json</span></span></code></pre>
+<hr>
+<h2 id="income-statement-fields">Income Statement Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total Revenue</td>
+<td>Total revenue from all sources</td>
+</tr>
+<tr>
+<td>Operating Revenue</td>
+<td>Revenue from core operations</td>
+</tr>
+<tr>
+<td>Cost Of Revenue</td>
+<td>Direct costs of goods/services sold</td>
+</tr>
+<tr>
+<td>Gross Profit</td>
+<td>Revenue minus cost of revenue</td>
+</tr>
+<tr>
+<td>Operating Expense</td>
+<td>Operating costs (R&amp;D, SG&amp;A, etc.)</td>
+</tr>
+<tr>
+<td>Research And Development</td>
+<td>R&amp;D spending</td>
+</tr>
+<tr>
+<td>Selling General And Administration</td>
+<td>SG&amp;A expenses</td>
+</tr>
+<tr>
+<td>Operating Income</td>
+<td>Profit from core operations</td>
+</tr>
+<tr>
+<td>Pretax Income</td>
+<td>Income before taxes</td>
+</tr>
+<tr>
+<td>Tax Provision</td>
+<td>Income tax expense</td>
+</tr>
+<tr>
+<td>Net Income</td>
+<td>Net income attributable to company</td>
+</tr>
+<tr>
+<td>Net Income Common Stockholders</td>
+<td>Net income for common shareholders</td>
+</tr>
+<tr>
+<td>Basic EPS</td>
+<td>Earnings per share (basic)</td>
+</tr>
+<tr>
+<td>Diluted EPS</td>
+<td>Earnings per share (diluted)</td>
+</tr>
+<tr>
+<td>EBIT</td>
+<td>Earnings before interest and taxes</td>
+</tr>
+<tr>
+<td>EBITDA</td>
+<td>Earnings before interest, taxes, depreciation and amortization</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="balance-sheet-fields">Balance Sheet Fields</h2>
+<h3 id="assets">Assets</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total Assets</td>
+<td>Sum of all assets</td>
+</tr>
+<tr>
+<td>Current Assets</td>
+<td>Assets convertible to cash within 1 year</td>
+</tr>
+<tr>
+<td>Cash And Cash Equivalents</td>
+<td>Cash on hand</td>
+</tr>
+<tr>
+<td>Receivables</td>
+<td>Money owed to company</td>
+</tr>
+<tr>
+<td>Inventory</td>
+<td>Goods held for sale</td>
+</tr>
+<tr>
+<td>Total Non Current Assets</td>
+<td>Long-term assets</td>
+</tr>
+<tr>
+<td>Net PPE</td>
+<td>Property, plant and equipment (net)</td>
+</tr>
+<tr>
+<td>Goodwill</td>
+<td>Goodwill from acquisitions</td>
+</tr>
+</tbody>
+</table>
+<h3 id="liabilities">Liabilities</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total Liabilities Net Minority Interest</td>
+<td>All liabilities</td>
+</tr>
+<tr>
+<td>Current Liabilities</td>
+<td>Debts due within 1 year</td>
+</tr>
+<tr>
+<td>Accounts Payable</td>
+<td>Supplier payables</td>
+</tr>
+<tr>
+<td>Current Debt</td>
+<td>Short-term borrowings</td>
+</tr>
+<tr>
+<td>Long Term Debt</td>
+<td>Long-term borrowings</td>
+</tr>
+</tbody>
+</table>
+<h3 id="equity">Equity</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total Equity Gross Minority Interest</td>
+<td>Total equity</td>
+</tr>
+<tr>
+<td>Stockholders Equity</td>
+<td>Shareholder equity</td>
+</tr>
+<tr>
+<td>Common Stock</td>
+<td>Common shares value</td>
+</tr>
+<tr>
+<td>Retained Earnings</td>
+<td>Accumulated profits</td>
+</tr>
+</tbody>
+</table>
+<h3 id="calculated-metrics">Calculated Metrics</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Net Debt</td>
+<td>Total debt minus cash</td>
+</tr>
+<tr>
+<td>Total Debt</td>
+<td>Sum of all debt</td>
+</tr>
+<tr>
+<td>Working Capital</td>
+<td>Current assets minus current liabilities</td>
+</tr>
+<tr>
+<td>Invested Capital</td>
+<td>Equity plus debt</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="cash-flow-statement-fields">Cash Flow Statement Fields</h2>
+<h3 id="operating-activities">Operating Activities</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Operating Cash Flow</td>
+<td>Cash from operations</td>
+</tr>
+<tr>
+<td>Net Income From Continuing Operations</td>
+<td>Starting net income</td>
+</tr>
+<tr>
+<td>Depreciation Amortization Depletion</td>
+<td>Non-cash depreciation</td>
+</tr>
+<tr>
+<td>Stock Based Compensation</td>
+<td>Stock-based comp expense</td>
+</tr>
+<tr>
+<td>Change In Working Capital</td>
+<td>Working capital changes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="investing-activities">Investing Activities</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Investing Cash Flow</td>
+<td>Cash used in investing</td>
+</tr>
+<tr>
+<td>Capital Expenditure</td>
+<td>CapEx spending</td>
+</tr>
+<tr>
+<td>Purchase Of Investment</td>
+<td>Investment purchases</td>
+</tr>
+<tr>
+<td>Sale Of Investment</td>
+<td>Investment sales</td>
+</tr>
+</tbody>
+</table>
+<h3 id="financing-activities">Financing Activities</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Financing Cash Flow</td>
+<td>Cash from financing</td>
+</tr>
+<tr>
+<td>Issuance Of Debt</td>
+<td>New debt raised</td>
+</tr>
+<tr>
+<td>Repayment Of Debt</td>
+<td>Debt repayments</td>
+</tr>
+<tr>
+<td>Common Stock Issuance</td>
+<td>Common stock issued</td>
+</tr>
+<tr>
+<td>Cash Dividends Paid</td>
+<td>Dividend payments</td>
+</tr>
+</tbody>
+</table>
+<h3 id="summary">Summary</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Changes In Cash</td>
+<td>Total cash change</td>
+</tr>
+<tr>
+<td>Free Cash Flow</td>
+<td>Operating cash minus CapEx</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="analyst-estimates">Analyst Estimates</h2>
+<h3 id="earnings-estimate">Earnings Estimate</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>avg</td>
+<td>Average EPS estimate</td>
+</tr>
+<tr>
+<td>low</td>
+<td>Low EPS estimate</td>
+</tr>
+<tr>
+<td>high</td>
+<td>High EPS estimate</td>
+</tr>
+<tr>
+<td>yearAgoEps</td>
+<td>EPS from same period last year</td>
+</tr>
+<tr>
+<td>numberOfAnalysts</td>
+<td>Number of analysts</td>
+</tr>
+<tr>
+<td>growth</td>
+<td>Expected growth rate</td>
+</tr>
+</tbody>
+</table>
+<h3 id="revenue-estimate">Revenue Estimate</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>avg</td>
+<td>Average revenue estimate</td>
+</tr>
+<tr>
+<td>low</td>
+<td>Low revenue estimate</td>
+</tr>
+<tr>
+<td>high</td>
+<td>High revenue estimate</td>
+</tr>
+<tr>
+<td>numberOfAnalysts</td>
+<td>Number of analysts</td>
+</tr>
+</tbody>
+</table>
+<h3 id="analyst-price-targets">Analyst Price Targets</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>current</td>
+<td>Current stock price</td>
+</tr>
+<tr>
+<td>high</td>
+<td>Highest analyst target</td>
+</tr>
+<tr>
+<td>low</td>
+<td>Lowest analyst target</td>
+</tr>
+<tr>
+<td>mean</td>
+<td>Average target price</td>
+</tr>
+<tr>
+<td>median</td>
+<td>Median target price</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="holder-data">Holder Data</h2>
+<h3 id="major-holders">Major Holders</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insidersPercentHeld</td>
+<td>Percentage held by insiders</td>
+</tr>
+<tr>
+<td>institutionsPercentHeld</td>
+<td>Percentage held by institutions</td>
+</tr>
+<tr>
+<td>institutionsFloatPercentHeld</td>
+<td>Institutional % of float</td>
+</tr>
+<tr>
+<td>institutionsCount</td>
+<td>Number of institutional holders</td>
+</tr>
+</tbody>
+</table>
+<h3 id="institutional-holders">Institutional Holders</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Holder</td>
+<td>Institution name</td>
+</tr>
+<tr>
+<td>pctHeld</td>
+<td>Percentage of shares held</td>
+</tr>
+<tr>
+<td>Shares</td>
+<td>Number of shares</td>
+</tr>
+<tr>
+<td>Value</td>
+<td>Dollar value of position</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="price-data">Price Data</h2>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date</td>
+<td>Trading date</td>
+</tr>
+<tr>
+<td>Open</td>
+<td>Opening price</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Day high</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Day low</td>
+</tr>
+<tr>
+<td>Close</td>
+<td>Closing price</td>
+</tr>
+<tr>
+<td>Volume</td>
+<td>Trading volume</td>
+</tr>
+<tr>
+<td>Dividends</td>
+<td>Dividend amount (if any)</td>
+</tr>
+<tr>
+<td>Stock Splits</td>
+<td>Split ratio (if any)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="using-this-data-in-ratio-formulas">Using This Data in Ratio Formulas</h2>
+<p>Use these prefixes to reference data:</p>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Data Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IS:</td>
+<td>Income Statement</td>
+</tr>
+<tr>
+<td>BS:</td>
+<td>Balance Sheet</td>
+</tr>
+<tr>
+<td>CF:</td>
+<td>Cash Flow</td>
+</tr>
+</tbody>
+</table>
+<p>Example formulas:</p>
+<ul>
+<li><code>IS: Net Income / BS: Total Assets</code> (ROA)</li>
+<li><code>BS: Total Debt / BS: Stockholders Equity</code> (Debt to Equity)</li>
+<li><code>CF: Free Cash Flow / IS: Net Income</code> (FCF Conversion)</li>
+</ul>
+<hr>
+<h1 id="9-color-reference">9. Color Reference</h1>
+<h2 id="syntax-highlighting-color-palette">Syntax Highlighting Color Palette</h2>
+<h3 id="operator-colors">Operator Colors</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>ORANGE (#FF9800) - Arithmetic Operators</span></span>
+<span class="line"><span>  + (addition)</span></span>
+<span class="line"><span>  - (subtraction)</span></span>
+<span class="line"><span>  * (multiplication)</span></span>
+<span class="line"><span>  / (division)</span></span></code></pre>
+<h3 id="bracket-colors">Bracket Colors</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>YELLOW (#FFD700) - Grouping Brackets</span></span>
+<span class="line"><span>  ( (open parenthesis)</span></span>
+<span class="line"><span>  ) (close parenthesis)</span></span></code></pre>
+<h3 id="financial-item-colors">Financial Item Colors</h3>
+<h4 id="income-statement-items">Income Statement Items</h4>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>GREEN (#81C784) - Income Statement Fields</span></span>
+<span class="line"><span>  IS: Revenue</span></span>
+<span class="line"><span>  IS: Net Income</span></span>
+<span class="line"><span>  IS: Operating Income</span></span>
+<span class="line"><span>  IS: EBITDA</span></span>
+<span class="line"><span>  ... (any field prefixed with "IS:")</span></span></code></pre>
+<h4 id="balance-sheet-items">Balance Sheet Items</h4>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>LIGHT BLUE (#81D4FA) - Balance Sheet Fields</span></span>
+<span class="line"><span>  BS: Total Assets</span></span>
+<span class="line"><span>  BS: Total Equity</span></span>
+<span class="line"><span>  BS: Total Liabilities</span></span>
+<span class="line"><span>  BS: Cash</span></span>
+<span class="line"><span>  ... (any field prefixed with "BS:")</span></span></code></pre>
+<h4 id="pricemarket-data">Price/Market Data</h4>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>PURPLE (#CE93D8) - Price &amp; Market Data</span></span>
+<span class="line"><span>  P: Closing Price</span></span>
+<span class="line"><span>  P: Opening Price</span></span>
+<span class="line"><span>  P: Volume</span></span>
+<span class="line"><span>  ... (any field prefixed with "P:")</span></span></code></pre>
+<h3 id="function-colors">Function Colors</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>YELLOW-ORANGE (#FFC107) - Advanced Functions</span></span>
+<span class="line"><span>  AVERAGE</span></span>
+<span class="line"><span>  SUM</span></span>
+<span class="line"><span>  MAX</span></span>
+<span class="line"><span>  MIN</span></span>
+<span class="line"><span>  MEDIAN</span></span>
+<span class="line"><span>  STDEV</span></span></code></pre>
+<h3 id="number-colors">Number Colors</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>LIGHT BLUE (#90CAF9) - Numeric Literals</span></span>
+<span class="line"><span>  100</span></span>
+<span class="line"><span>  1.5</span></span>
+<span class="line"><span>  0.25</span></span></code></pre>
+<h3 id="error-colors">Error Colors</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>RED (#F44336) - Invalid Tokens/Errors</span></span>
+<span class="line"><span>  - Misspelled field names</span></span>
+<span class="line"><span>  - Unknown prefixes</span></span>
+<span class="line"><span>  - Unrecognized tokens</span></span>
+<span class="line"><span>  - Typos</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>  Visual indicators:</span></span>
+<span class="line"><span>  - Red text color</span></span>
+<span class="line"><span>  - Wavy red underline</span></span></code></pre>
+<hr>
+<h2 id="example-formulas-with-color-coding">Example Formulas with Color Coding</h2>
+<h3 id="gross-margin-1">Gross Margin</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>(IS: Revenue - IS: Cost of Revenue) / IS: Revenue</span></span></code></pre>
+<p><strong>Colors:</strong></p>
+<ul>
+<li><code>(</code>, <code>)</code> = Yellow</li>
+<li><code>IS: Revenue</code> = Green (appears twice)</li>
+<li><code>IS: Cost of Revenue</code> = Green</li>
+<li><code>-</code>, <code>/</code> = Orange</li>
+</ul>
+<h3 id="current-ratio-1">Current Ratio</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>BS: Current Assets / BS: Current Liabilities</span></span></code></pre>
+<p><strong>Colors:</strong></p>
+<ul>
+<li><code>BS: Current Assets</code> = Light Blue</li>
+<li><code>BS: Current Liabilities</code> = Light Blue</li>
+<li><code>/</code> = Orange</li>
+</ul>
+<h3 id="pe-ratio-1">P/E Ratio</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>P: Closing Price / IS: Earnings Per Share</span></span></code></pre>
+<p><strong>Colors:</strong></p>
+<ul>
+<li><code>P: Closing Price</code> = Purple</li>
+<li><code>IS: Earnings Per Share</code> = Green</li>
+<li><code>/</code> = Orange</li>
+</ul>
+<h3 id="error-example-typo">Error Example (Typo)</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>IS: Reveneu / BS: Totl Assets</span></span></code></pre>
+<p><strong>Colors:</strong></p>
+<ul>
+<li><code>IS:</code> = Green (valid prefix)</li>
+<li><code>Reveneu</code> = Red + wavy underline (invalid)</li>
+<li><code>/</code> = Orange</li>
+<li><code>BS:</code> = Light Blue (valid prefix)</li>
+<li><code>Totl Assets</code> = Red + wavy underline (invalid)</li>
+</ul>
+<hr>
+<h2 id="dark-theme-background-colors">Dark Theme Background Colors</h2>
+<h3 id="dialog-background">Dialog Background</h3>
+<ul>
+<li><strong>Main</strong>: #121212 (Very Dark Gray)</li>
+<li><strong>Input Fields</strong>: #1E1E1E (Dark Gray)</li>
+<li><strong>Borders</strong>: #2C2C2C (Medium Dark Gray)</li>
+</ul>
+<h3 id="text-colors">Text Colors</h3>
+<ul>
+<li><strong>Primary Text</strong>: #E0E0E0 (Light Gray)</li>
+<li><strong>Secondary Text</strong>: #B0B0B0 (Medium Gray)</li>
+</ul>
+<h3 id="accent-colors">Accent Colors</h3>
+<ul>
+<li><strong>Primary Accent</strong>: #29B6F6 (Light Blue)</li>
+<li><strong>Success</strong>: #4CAF50 (Green)</li>
+<li><strong>Danger</strong>: #E57373 (Red)</li>
+<li><strong>Warning</strong>: #FFA726 (Orange)</li>
+</ul>
+<hr>
+<h1 id="10-data-cleanup-system">10. Data Cleanup System</h1>
+<h2 id="overview-1">Overview</h2>
+<p>FinForge includes an automatic data cleanup system that manages parquet file storage when tickers are removed or changed. This prevents the system from accumulating unused data while providing a safety window to recover accidentally deleted tickers.</p>
+<hr>
+<h2 id="how-it-works">How It Works</h2>
+<h3 id="delayed-deletion-3-day-grace-period">Delayed Deletion (3-Day Grace Period)</h3>
+<p>When you remove or change a ticker in the UI, the system does NOT immediately delete the data. Instead:</p>
+<ol>
+<li>The ticker is added to a pending deletions list (<code>data/pending_deletions.json</code>)</li>
+<li>A deletion date is set for 3 days in the future</li>
+<li>The actual data deletion occurs on the next app launch after the 3-day period</li>
+</ol>
+<h3 id="automatic-cleanup-on-startup">Automatic Cleanup on Startup</h3>
+<p>Every time you launch FinForge:</p>
+<ol>
+<li>The system checks <code>pending_deletions.json</code> for any tickers past their deletion date</li>
+<li>For each ticker past its 3-day grace period, all associated data is permanently deleted</li>
+<li>The pending deletions list is updated</li>
+</ol>
+<h3 id="recovery-window">Recovery Window</h3>
+<p>If you accidentally remove a ticker, you have 3 days to re-add it:</p>
+<ul>
+<li>Simply add the ticker again using the launcher</li>
+<li>The pending deletion will be automatically cancelled</li>
+<li>Your existing data will be preserved</li>
+</ul>
+<hr>
+<h2 id="what-gets-deleted">What Gets Deleted</h2>
+<p>When a ticker’s data is permanently deleted, the following files are affected:</p>
+<table>
+<thead>
+<tr>
+<th>Data Type</th>
+<th>File Location</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Price History</td>
+<td><code>data/prices/{TICKER}.parquet</code></td>
+<td>File deleted</td>
+</tr>
+<tr>
+<td>Metadata</td>
+<td><code>data/metadata/{TICKER}.json</code></td>
+<td>File deleted</td>
+</tr>
+<tr>
+<td>Income Statement</td>
+<td><code>data/fundamentals/income_statement/{TICKER}.parquet</code></td>
+<td>File deleted</td>
+</tr>
+<tr>
+<td>Balance Sheet</td>
+<td><code>data/fundamentals/balance_sheet/{TICKER}.parquet</code></td>
+<td>File deleted</td>
+</tr>
+<tr>
+<td>Cash Flow</td>
+<td><code>data/fundamentals/cash_flow/{TICKER}.parquet</code></td>
+<td>File deleted</td>
+</tr>
+<tr>
+<td>Recommendations</td>
+<td><code>data/fundamentals/recommendations/{TICKER}.parquet</code></td>
+<td>File deleted</td>
+</tr>
+<tr>
+<td>Major Holders</td>
+<td><code>data/holders/major_holders/{TICKER}.parquet</code></td>
+<td>File deleted</td>
+</tr>
+<tr>
+<td>Institutional Holders</td>
+<td><code>data/holders/institutional_holders/{TICKER}.parquet</code></td>
+<td>File deleted</td>
+</tr>
+<tr>
+<td>Mutual Fund Holders</td>
+<td><code>data/holders/mutualfund_holders/{TICKER}.parquet</code></td>
+<td>File deleted</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="actions-that-trigger-deletion-scheduling">Actions That Trigger Deletion Scheduling</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Remove ticker (delete button)</td>
+<td>Ticker scheduled for deletion in 3 days</td>
+</tr>
+<tr>
+<td>Edit ticker to new symbol</td>
+<td>Old ticker scheduled for deletion in 3 days</td>
+</tr>
+<tr>
+<td>Clear all tickers</td>
+<td>Each ticker scheduled for deletion in 3 days</td>
+</tr>
+</tbody>
+</table>
+<h2 id="actions-that-cancel-scheduled-deletions">Actions That Cancel Scheduled Deletions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Add a ticker that was pending deletion</td>
+<td>Deletion cancelled, data preserved</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="pending-deletions-file">Pending Deletions File</h2>
+<p>The pending deletions are tracked in <code>data/pending_deletions.json</code>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="json"><code><span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#79B8FF">  "TICKER1"</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#79B8FF">    "scheduled_date"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"2025-12-06T21:28:50.896922"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">    "deletion_date"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"2025-12-09T21:28:50.896910"</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<ul>
+<li><code>scheduled_date</code>: When the ticker was removed from the UI</li>
+<li><code>deletion_date</code>: When the data will be permanently deleted</li>
+</ul>
+<hr>
+<h1 id="11-troubleshooting">11. Troubleshooting</h1>
+<h2 id="ticker-management-issues">Ticker Management Issues</h2>
+<h3 id="invalid-ticker-error">“Invalid Ticker” Error</h3>
+<p><strong>Cause:</strong> Ticker contains numbers or is too long
+<strong>Solution:</strong> Use only letters, 1-5 characters</p>
+<h3 id="duplicate-ticker-message">“Duplicate Ticker” Message</h3>
+<p><strong>Cause:</strong> Ticker already exists in your list
+<strong>Solution:</strong> Check your list, ticker is already there</p>
+<h3 id="data-not-fetching">Data Not Fetching</h3>
+<p><strong>Cause:</strong> Network issue or invalid ticker symbol
+<strong>Solution:</strong></p>
+<ol>
+<li>Check your internet connection</li>
+<li>Verify the ticker exists on Yahoo Finance</li>
+<li>Check the terminal for error messages</li>
+</ol>
+<h3 id="ticker-shows-no-data">Ticker Shows No Data</h3>
+<p><strong>Cause:</strong> Yahoo Finance doesn’t have data for this ticker
+<strong>Solution:</strong> Some tickers (especially foreign or OTC) have limited data</p>
+<hr>
+<h2 id="import-issues">Import Issues</h2>
+<h3 id="no-data-appears">No Data Appears</h3>
+<p><strong>Possible Causes:</strong></p>
+<ol>
+<li>Tickers not in Row 4</li>
+<li>Data not fetched yet</li>
+<li>Column A doesn’t say “INDEX”</li>
+</ol>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>Verify tickers are in Row 4, starting from column B</li>
+<li>Run the fetch script first</li>
+<li>Ensure column A, Row 4 contains “INDEX”</li>
+</ol>
+<h3 id="cannot-find-data-error">“Cannot find data” Error</h3>
+<p><strong>Cause:</strong> Parquet file doesn’t exist for the ticker
+<strong>Solution:</strong> Run the fetch script to download data</p>
+<h3 id="import-takes-too-long">Import Takes Too Long</h3>
+<p><strong>Cause:</strong> Many tickers or slow disk access
+<strong>Solution:</strong></p>
+<ul>
+<li>Import fewer tickers at once</li>
+<li>Close other Excel workbooks</li>
+<li>Wait for the process to complete</li>
+</ul>
+<hr>
+<h2 id="ratio-issues">Ratio Issues</h2>
+<h3 id="red-error-highlighting">Red Error Highlighting</h3>
+<p><strong>Cause:</strong> Invalid field name
+<strong>Solution:</strong> Check spelling, use the field selector dropdown</p>
+<h3 id="field-not-found-error">“Field not found” Error</h3>
+<p><strong>Cause:</strong> Field doesn’t exist in the data
+<strong>Solution:</strong> See Available Data Reference for valid field names</p>
+<h3 id="calculation-shows-na">Calculation Shows #N/A</h3>
+<p><strong>Cause:</strong></p>
+<ul>
+<li>Data missing for the ticker</li>
+<li>Division by zero</li>
+</ul>
+<p><strong>Solution:</strong></p>
+<ul>
+<li>Verify data exists for the ticker</li>
+<li>Add logic to handle zero denominators</li>
+</ul>
+<h3 id="ratio-not-appearing-in-manager">Ratio Not Appearing in Manager</h3>
+<p><strong>Cause:</strong> Save failed or file permission issue
+<strong>Solution:</strong></p>
+<ul>
+<li>Check if ratio_config.json is writable</li>
+<li>Try saving again</li>
+</ul>
+<hr>
+<h2 id="ratio-assignment-issues">Ratio Assignment Issues</h2>
+<h3 id="no-ratios-found">“No ratios found”</h3>
+<p><strong>Solution:</strong> Create ratios first using Ratio Maker</p>
+<h3 id="no-tickers-found">“No tickers found”</h3>
+<p><strong>Solution:</strong> Enter tickers in Column A starting from Row 6</p>
+<h3 id="failed-to-load-parquet-data">“Failed to load Parquet data”</h3>
+<p><strong>Solution:</strong> Make sure data files exist. Run data import first if needed.</p>
+<h3 id="column-already-in-use">“Column already in use”</h3>
+<p><strong>Solution:</strong> Reassign the ratio in Row 4 and refresh the sheet</p>
+<h3 id="calculation-shows-na-1">Calculation shows “N/A”</h3>
+<p><strong>Reason:</strong> Financial data not found for that ticker/item
+<strong>Check:</strong> Ticker spelling and data availability</p>
+<h3 id="calculation-shows-div0">Calculation shows “DIV/0”</h3>
+<p><strong>Reason:</strong> Denominator is zero
+<strong>Normal:</strong> Some ratios can legitimately be undefined</p>
+<hr>
+<h2 id="general-tips">General Tips</h2>
+<ol>
+<li><strong>Always fetch data first</strong> before trying to import or calculate</li>
+<li><strong>Check your internet connection</strong> if data fetching fails</li>
+<li><strong>Verify ticker symbols</strong> exist on Yahoo Finance</li>
+<li><strong>Enable Excel macros</strong> for full functionality</li>
+<li><strong>Save your work frequently</strong> when working with Excel</li>
+</ol>
+<hr>
+<h1 id="support">Support</h1>
+<p>For additional help:</p>
+<ul>
+<li>Check the Guides folder for more documentation</li>
+<li>Review the Developer guides for technical details</li>
+<li>Ensure all prerequisites are installed correctly</li>
+</ul>
+<hr>
+<p><em>Document Version: 1.0</em>
+<em>Last Updated: December 2025</em>
+<em>Data Source: Yahoo Finance via yfinance library</em></p>
+<nav class="guide-pager" aria-label="Guide navigation"><a class="button button-secondary" href="/docs/guides/11-uninstalling-finforge/">Previous: Uninstalling FinForge</a><a class="button button-secondary" href="/docs/guides/13-ranking/">Next: Ranking</a></nav></div></div></main><footer class="site-footer"><div class="container footer-inner"><span>FinForge - MIT License</span><nav class="footer-links" aria-label="Legal"><a href="/docs/disclaimer/">Financial disclaimer</a><a href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></footer></body></html>

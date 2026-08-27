@@ -1,0 +1,282 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="description" content="FinForge brings live stock data, side-by-side charts, and a familiar Excel dashboard together in one simple app for investors."><meta name="generator" content="Astro v7.2.3"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"><title>Assigning Ratios to Excel - FinForge</title><link rel="stylesheet" href="/_astro/Layout.CQluC8CQ.css"></head><body><header class="site-header"><div class="container header-inner"><a class="brand" href="/"><span class="brand-mark">&gt;ƒ</span><span class="brand-name">FinForge</span></a><nav class="site-nav" aria-label="Primary navigation"><a href="/" class="nav-link">Home</a><a href="/docs/" class="nav-link">Docs</a><a href="/docs/installation/" class="nav-link">Installation</a><a href="/docs/features/" class="nav-link">Features</a><a href="/docs/roadmap/" class="nav-link">Roadmap</a><a class="nav-link external" href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></header><main class="container main"><div class="docs-grid"><aside class="docs-sidebar"><a href="/docs/">Overview</a><a href="/docs/installation/">Installation</a><a href="/docs/features/">Features</a><a href="/docs/roadmap/">Roadmap</a><a href="/docs/guides/">Guides</a><a href="/docs/disclaimer/">Disclaimer</a><div class="docs-sidebar-label">User guides</div><a href="/docs/guides/01-getting-started/">Getting Started</a><a href="/docs/guides/02-ticker-management/">Ticker Management</a><a href="/docs/guides/03-importing-data/">Importing Data to Excel</a><a href="/docs/guides/04-creating-ratios/">Creating Ratios</a><a href="/docs/guides/05-assigning-ratios/" class="active">Assigning Ratios to Excel</a><a href="/docs/guides/06-advanced-ratio-features/">Advanced Ratio Features</a><a href="/docs/guides/07-quick-reference/">Quick Reference</a><a href="/docs/guides/08-available-data-reference/">Available Data Reference</a><a href="/docs/guides/09-color-reference/">Color Reference</a><a href="/docs/guides/10-data-cleanup/">Data Cleanup System</a><a href="/docs/guides/11-uninstalling-finforge/">Uninstalling FinForge</a><a href="/docs/guides/complete-user-guide/">Complete User Guide</a><a href="/docs/guides/13-ranking/">Ranking</a></aside><div class="docs-content"><h1 id="ratio-assignment-system---user-guide">Ratio Assignment System - User Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>A clean, efficient ratio management system with minimal VBA dependency. All logic is in Python for reliability and ease of maintenance.</p>
+<hr>
+<h2 id="key-features">Key Features</h2>
+<h3 id="what-you-can-do">What You Can Do:</h3>
+<ol>
+<li><strong>Assign Ratios</strong>: Assign any created ratio to Excel columns (B, C, D, etc.)</li>
+<li><strong>View Status</strong>: See which ratios are assigned and to which columns</li>
+<li><strong>View Notes</strong>: Read ratio notes/descriptions</li>
+<li><strong>Calculate Ratios</strong>: Compute all ratios for all tickers using Parquet data</li>
+<li><strong>Manual Tickers</strong>: Enter tickers manually in Column A</li>
+</ol>
+<h3 id="benefits">Benefits:</h3>
+<ul>
+<li><strong>Fast</strong>: Uses Parquet data for quick calculations</li>
+<li><strong>Reliable</strong>: Minimal VBA, all logic in Python</li>
+<li><strong>Simple</strong>: Clean UI with clear feedback</li>
+<li><strong>Flexible</strong>: Assign any ratio to any column</li>
+</ul>
+<hr>
+<h2 id="excel-layout-ratios-sheet">Excel Layout (Ratios Sheet)</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Row 1: Financial Ratios [Title]</span></span>
+<span class="line"><span>Row 2: [Empty]</span></span>
+<span class="line"><span>Row 3: [Empty]</span></span>
+<span class="line"><span>Row 4: Ticker | Ratio1 Name | Ratio2 Name | Ratio3 Name | ...</span></span>
+<span class="line"><span>Row 5: [Empty - Reserved]</span></span>
+<span class="line"><span>Row 6: AAPL | 1.2500 | 0.8500 | 2.4500 | ...</span></span>
+<span class="line"><span>Row 7: MSFT | 1.3000 | 0.9200 | 2.5000 | ...</span></span>
+<span class="line"><span>Row 8: GOOGL | 1.1800 | 0.7800 | 2.3200 | ...</span></span>
+<span class="line"><span>...</span></span></code></pre>
+<h3 id="column-structure">Column Structure:</h3>
+<ul>
+<li><strong>Column A</strong>: Ticker symbols (enter manually from Row 6 onwards)</li>
+<li><strong>Column B+</strong>: Assigned ratios with calculated values</li>
+</ul>
+<h3 id="row-functions">Row Functions:</h3>
+<ul>
+<li><strong>Row 4</strong>: Ratio names (set by assignment)</li>
+<li><strong>Row 5</strong>: Reserved and left empty</li>
+<li><strong>Row 6+</strong>: Your data (tickers + calculated ratios)</li>
+</ul>
+<hr>
+<h2 id="how-to-use">How to Use</h2>
+<h3 id="1-open-ratio-manager">1. Open Ratio Manager</h3>
+<p><strong>From Excel:</strong></p>
+<ul>
+<li>Run VBA macro: <code>OpenRatioManager()</code></li>
+</ul>
+<p><strong>From Python:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">python </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">c </span><span style="color:#9ECBFF">"from Internal.Ratios.ratio_manager_ui import launch_ratio_manager; launch_ratio_manager()"</span></span></code></pre>
+<h3 id="2-assign-a-ratio">2. Assign a Ratio</h3>
+<p>In Ratio Manager UI:</p>
+<ol>
+<li>Select a ratio from the list</li>
+<li>Click <strong>“Assign to Column”</strong></li>
+<li>Enter column letter (B, C, D, etc.)</li>
+<li>Click OK</li>
+</ol>
+<p>Result: Ratio name appears in Row 4, Row 5 stays empty</p>
+<p><strong>Rules:</strong></p>
+<ul>
+<li>Can only assign to columns B and onwards</li>
+<li>Cannot assign same ratio to multiple columns</li>
+<li>Cannot assign to a column that is already in use</li>
+</ul>
+<h3 id="3-view-ratio-notes">3. View Ratio Notes</h3>
+<p>In Ratio Manager UI:</p>
+<ol>
+<li>Select a ratio</li>
+<li>Click <strong>“View Notes”</strong></li>
+<li>Read notes in popup dialog</li>
+</ol>
+<h3 id="4-enter-tickers">4. Enter Tickers</h3>
+<p>In Excel (Ratios sheet):</p>
+<ol>
+<li>Go to Column A, Row 6</li>
+<li>Type ticker symbol (e.g., “AAPL”)</li>
+<li>Continue adding tickers in rows below</li>
+</ol>
+<h3 id="5-calculate-ratios">5. Calculate Ratios</h3>
+<p><strong>From the FinForge Workspace:</strong></p>
+<ol>
+<li>Open the FinForge workspace window</li>
+<li>Go to the Ratios tab</li>
+<li>Click <strong>“Refresh ratios sheet”</strong></li>
+</ol>
+<p><strong>Option A - From Excel:</strong></p>
+<ul>
+<li>Run VBA macro: <code>RefreshRatios()</code></li>
+</ul>
+<p><strong>Option B - From Python:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">python </span><span style="color:#F97583">-</span><span style="color:#E1E4E8">c </span><span style="color:#9ECBFF">"from Internal.Ratios.ratio_calculator import calculate_ratios; calculate_ratios()"</span></span></code></pre>
+<p><strong>What Happens:</strong></p>
+<ul>
+<li>System reads all tickers from Column A</li>
+<li>Loads financial data from Parquet files</li>
+<li>Calculates each assigned ratio for each ticker</li>
+<li>Writes results to Excel</li>
+<li>Shows progress dialog</li>
+</ul>
+<h3 id="6-update-an-assignment">6. Update an Assignment</h3>
+<ol>
+<li>Open Ratio Manager</li>
+<li>Change the ratio assignment in Row 4 if needed</li>
+<li>Refresh the sheet so calculations use the updated layout</li>
+</ol>
+<hr>
+<h2 id="vba-macros-minimal">VBA Macros (Minimal)</h2>
+<h3 id="essential-functions">Essential Functions:</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>' Open the Ratio Manager UI</span></span>
+<span class="line"><span>OpenRatioManager()</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>' Calculate all ratios</span></span>
+<span class="line"><span>RefreshRatios()</span></span></code></pre>
+<h3 id="setting-up-buttons">Setting Up Buttons:</h3>
+<ol>
+<li><strong>Insert Developer Tab</strong> -&gt; Insert -&gt; Button</li>
+<li><strong>Assign macro</strong> to button:
+<ul>
+<li>“Manage Ratios” -&gt; <code>OpenRatioManager</code></li>
+<li>“Calculate Ratios” -&gt; <code>RefreshRatios</code></li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="file-structure">File Structure</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>FinForge/</span></span>
+<span class="line"><span>+-- Internal/Ratios/</span></span>
+<span class="line"><span>|   +-- ratio_handeling.py       (Config management)</span></span>
+<span class="line"><span>|   +-- ratio_manager_ui.py      (Main UI)</span></span>
+<span class="line"><span>|   +-- ratio_calculator.py      (Calculation engine)</span></span>
+<span class="line"><span>+-- Importing/</span></span>
+<span class="line"><span>|   +-- ratio_config.json        (Ratio storage)</span></span>
+<span class="line"><span>|   +-- ratio_maker.py           (Create ratios)</span></span>
+<span class="line"><span>+-- data/</span></span>
+<span class="line"><span>|   +-- fundamentals/            (Financial data in Parquet)</span></span></code></pre>
+<hr>
+<h2 id="example-workflow">Example Workflow</h2>
+<h3 id="complete-example">Complete Example:</h3>
+<ol>
+<li>
+<p><strong>Create Ratios</strong> (using Ratio Maker)</p>
+<ul>
+<li>Current Ratio: <code>BS: Current Assets / BS: Current Liabilities</code></li>
+<li>Quick Ratio: <code>BS: Cash / BS: Current Liabilities</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Open Ratio Manager</strong></p>
+<ul>
+<li>See both ratios as “Not assigned”</li>
+</ul>
+</li>
+<li>
+<p><strong>Assign Ratios</strong></p>
+<ul>
+<li>Current Ratio -&gt; Column B</li>
+<li>Quick Ratio -&gt; Column C</li>
+</ul>
+</li>
+<li>
+<p><strong>Enter Tickers</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>A7: AAPL</span></span>
+<span class="line"><span>A8: MSFT</span></span>
+<span class="line"><span>A9: GOOGL</span></span></code></pre>
+</li>
+<li>
+<p><strong>Calculate</strong></p>
+<ul>
+<li>Click “Refresh ratios sheet” in FinForge or run <code>RefreshRatios()</code></li>
+<li>See results:</li>
+</ul>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>B7: 1.2500    C7: 0.8500</span></span>
+<span class="line"><span>B8: 1.3000    C8: 0.9200</span></span>
+<span class="line"><span>B9: 1.1800    C9: 0.7800</span></span></code></pre>
+</li>
+<li>
+<p><strong>Update if Needed</strong></p>
+<ul>
+<li>Adjust the Row 4 assignments, then refresh again</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="no-ratios-found">“No ratios found”</h3>
+<ul>
+<li><strong>Solution</strong>: Create ratios first using Ratio Maker</li>
+</ul>
+<h3 id="no-tickers-found">“No tickers found”</h3>
+<ul>
+<li><strong>Solution</strong>: Enter tickers in Column A starting from Row 6</li>
+</ul>
+<h3 id="failed-to-load-parquet-data">“Failed to load Parquet data”</h3>
+<ul>
+<li><strong>Solution</strong>: Make sure <code>data/balance_sheet.parquet</code> and <code>data/income_statement.parquet</code> exist</li>
+<li>Run data import first if needed</li>
+</ul>
+<h3 id="column-already-in-use">“Column already in use”</h3>
+<ul>
+<li><strong>Solution</strong>: Reassign the ratio in Row 4 and refresh the sheet</li>
+</ul>
+<h3 id="calculation-shows-na">Calculation shows “N/A”</h3>
+<ul>
+<li><strong>Reason</strong>: Financial data not found for that ticker/item</li>
+<li><strong>Check</strong>: Ticker spelling and data availability</li>
+</ul>
+<h3 id="calculation-shows-div0">Calculation shows “DIV/0”</h3>
+<ul>
+<li><strong>Reason</strong>: Denominator is zero</li>
+<li><strong>Normal</strong>: Some ratios can legitimately be undefined</li>
+</ul>
+<hr>
+<h2 id="ui-features">UI Features</h2>
+<h3 id="ratio-manager-window">Ratio Manager Window:</h3>
+<ul>
+<li><strong>Title</strong>: Shows current mode</li>
+<li><strong>List</strong>: All ratios with assignment status
+<ul>
+<li>Green = Assigned (shows column)</li>
+<li>Gray = Not assigned</li>
+</ul>
+</li>
+<li><strong>Buttons</strong>:
+<ul>
+<li>Assign to Column</li>
+<li>View Notes</li>
+<li>Refresh list</li>
+<li>Close</li>
+</ul>
+</li>
+</ul>
+<h3 id="progress-dialog">Progress Dialog:</h3>
+<ul>
+<li>Shows during calculation</li>
+<li>Real-time progress updates</li>
+<li>Can cancel if needed</li>
+</ul>
+<h3 id="confirmation-dialogs">Confirmation Dialogs:</h3>
+<ul>
+<li>After successful operations</li>
+<li>Error messages if something fails</li>
+</ul>
+<hr>
+<h2 id="performance">Performance</h2>
+<ul>
+<li><strong>Fast Data Access</strong>: Parquet files are optimized for speed</li>
+<li><strong>Efficient Calculation</strong>: Only calculates what’s needed</li>
+<li><strong>Minimal Excel Interaction</strong>: Batch writes for better performance</li>
+<li><strong>Progress Tracking</strong>: Know exactly what’s happening</li>
+</ul>
+<hr>
+<h2 id="safety-features">Safety Features</h2>
+<ul>
+<li><strong>Validation</strong>: Prevents invalid column assignments</li>
+<li><strong>Confirmation</strong>: Asks before unassigning</li>
+<li><strong>Error Handling</strong>: Clear error messages</li>
+<li><strong>Data Preservation</strong>: Careful with existing data</li>
+</ul>
+<hr>
+<h2 id="notes">Notes</h2>
+<ul>
+<li><strong>Column A is Reserved</strong>: Only for tickers</li>
+<li><strong>Row 6 is Reserved</strong>: For future features</li>
+<li><strong>Columns B+</strong>: Available for ratio assignment</li>
+<li><strong>No Limit</strong>: Assign as many ratios as you want</li>
+<li><strong>One Ratio Per Column</strong>: Keeps things clean</li>
+</ul>
+<hr>
+<h2 id="best-practices">Best Practices</h2>
+<ol>
+<li><strong>Create ratios first</strong> before trying to assign</li>
+<li><strong>Enter tickers</strong> before calculating</li>
+<li><strong>Use meaningful ratio names</strong> for easy identification</li>
+<li><strong>Add notes</strong> to ratios to remember what they do</li>
+<li><strong>Refresh data</strong> regularly to keep ratios up to date</li>
+<li><strong>Save Excel</strong> after assigning ratios</li>
+</ol>
+<hr>
+<p>This is a clean, simple, and efficient system. Enjoy!</p>
+<nav class="guide-pager" aria-label="Guide navigation"><a class="button button-secondary" href="/docs/guides/04-creating-ratios/">Previous: Creating Ratios</a><a class="button button-secondary" href="/docs/guides/06-advanced-ratio-features/">Next: Advanced Ratio Features</a></nav></div></div></main><footer class="site-footer"><div class="container footer-inner"><span>FinForge - MIT License</span><nav class="footer-links" aria-label="Legal"><a href="/docs/disclaimer/">Financial disclaimer</a><a href="https://github.com/TonnAlas/FinForge">GitHub</a></nav></div></footer></body></html>
